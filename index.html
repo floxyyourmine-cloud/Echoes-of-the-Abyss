@@ -2673,8 +2673,8 @@
         lines: ['Gerbang di utara menuju Dungeon. Habiskan 5 gelombang untuk membuka pintu ke ruangan berikutnya.', 'Saat genting, tekan B (jika tak ada musuh dekat) untuk kembali ke lobby. Gugur pun akan membawamu pulang ke sini.', 'Poin atribut dari level up bisa dibagi dengan tombol 6-0. Berhati-hatilah, pahlawan.']
       },
       {
-        n: 'RuRu, Pedagang Keliling', kind: 'merchant', x: 212, y: 330, c1: '#7a3a5a', c2: '#d8b878', c3: '#3a2a3a', hair: '#6b3a22', skin: '#e8b898',
-        lines: ['Selamat datang! Aku keliling dari ujung Abyss sampai ke sini demi dagangan paling laris: ramuan!', 'Ramuan memulihkan 60 HP. Tekan R saat bertarung, dan musuh kadang menjatuhkan ramuan baru.', 'Nih, kuisi ulang persediaanmu. Gratis untuk pahlawan yang mau menjaga kita semua!'],
+        n: 'Abeth, Pedagang Keliling', kind: 'merchant', x: 542, y: 340, face: -1, mate: 'Finza', dance: 1, ly: 10, lx: 16, c1: '#7a3a5a', c2: '#d8b878', c3: '#3a2a3a', hair: '#6b3a22', skin: '#e8b898',
+        lines: ['Selamat datang! Aku Abeth, pedagang keliling. Maaf ya, aku sedang berdansa dengan Finza, pasanganku. Kami selalu berdansa di lantai ini setiap sore.', 'Ramuan memulihkan 60 HP. Tekan R saat bertarung, dan musuh kadang menjatuhkan ramuan baru.', 'Finza bilang dagangan terbaik adalah yang membuat pelanggan pulang dengan selamat. Makanya, kuisi ulang persediaanmu. Gratis untuk pahlawan yang menjaga kita semua!'],
         act: () => { p.pot = 5; SFX.pickup(); dn(p.x, p.y - 14, 'Potion penuh (5/5)', 0, '#6f6') }
       },
       {
@@ -2682,8 +2682,8 @@
         lines: ['Kau mendengar gema itu? Abyss belum tidur. Ia hanya menunggu orang-orang lupa.', 'Dulu para pahlawan menaklukkan lima wangsa bayangan. Kini kisah mereka tinggal catatan di arsip tua ini.', 'Pedang, tombak, busur, tongkat, belati: tiap senjata menyimpan ultimate yang mampu membalik jalannya pertempuran.']
       },
       {
-        n: 'Kael, Pelatih Tempur', kind: 'trainer', x: 232, y: 262, c1: '#4a5a6a', c2: '#8a6a3a', c3: '#2e3440', hair: '#2a1a14', skin: '#d9a07a',
-        lines: ['Hei, murid baru! Aku Kael. Aku melatih siapa pun yang tidak takut keringat.', 'Setiap damage yang kau beri mengisi bar ULT di kiri atas. Saat penuh, tekan Q!', 'Selama ultimate aktif kau kebal serangan. Tombak melempar tombak raksasa, belati menghilang seperti ninja!', 'Nih, kuisi bar ULT-mu supaya bisa langsung dicoba di manekin ruang pelatihan (pintu kanan lobby). Hajar!'],
+        n: 'Finza, Pelatih Tempur', kind: 'trainer', x: 518, y: 340, face: 1, mate: 'Abeth', dance: 1, ly: 10, lx: -16, c1: '#4a5a6a', c2: '#8a6a3a', c3: '#2e3440', hair: '#2a1a14', skin: '#d9a07a',
+        lines: ['Hei, murid baru! Aku Finza, pelatih tempur sekaligus pasangan dansa Abeth. Lihat gaunnya? Cantik, kan? Aku melatih siapa pun yang tidak takut keringat.', 'Setiap damage yang kau beri mengisi bar ULT di kiri atas. Saat penuh, tekan Q!', 'Selama ultimate aktif kau kebal serangan. Tombak melempar tombak raksasa, belati menghilang seperti ninja!', 'Nih, kuisi bar ULT-mu supaya bisa langsung dicoba di manekin ruang pelatihan (pintu kanan lobby). Hajar! Lagu belum selesai, jadi aku kembali berdansa dulu!'],
         act: () => { ultAdd(ULT_MAX) }
       }];
     function mkDummy(x) { const e = mk('dummy', x || 1008, 200); e.sw = 0; e.sd = 0; e.st = 0; e.sx = 1; e.tl = 0; e.tv = 0; return e }
@@ -2703,9 +2703,9 @@
       f('#bda06a', -4, -39, 8, 9); f('#8a6a3a', -4, -31, 8, 2); f('#3a2a1a', -3, -36, 2, 2); f('#3a2a1a', 1, -36, 2, 2); f('#3a2a1a', -2, -33, 4, 1);
       g.restore()
     }
-    // ===== NPC tambahan lobby (RuRu, Orin, Kael) =====
+    // ===== NPC tambahan lobby (Abeth, Orin, Finza) =====
     function drawNPCx(n, i) {
-      const x = Math.round(n.x), y = Math.round(n.y), tk = t + i * 1.7, fc = p.x < n.x - 4 ? -1 : 1, talk = dlg && dlg.n === n, bo = Math.round((Math.sin(tk * 1.8) + 1) / 2 * .9), blink = (tk % 4.1) < .13, lx = (p.x - n.x) * fc > -4 ? 1 : 0, K = n.kind, sk = n.skin, Q = [];
+      const x = Math.round(n.x), y = Math.round(n.y), tk = t + i * 1.7, talk = dlg && dlg.n === n, fc = (n.face && !talk) ? n.face : (p.x < n.x - 4 ? -1 : 1), bo = Math.round((Math.sin(tk * 1.8) + 1) / 2 * .9), blink = (tk % 4.1) < .13, lx = (p.x - n.x) * fc > -4 ? 1 : 0, K = n.kind, sk = n.skin, Q = [];
       const r = (a, b, w, h, c, o) => Q.push([a, b, w, h, c, o !== 0]), fl = () => { g.fillStyle = '#120e18'; Q.forEach(q => q[5] && g.fillRect(q[0] - 1, q[1] - 1, q[2] + 2, q[3] + 2)); Q.forEach(q => { g.fillStyle = q[4]; g.fillRect(q[0], q[1], q[2], q[3]) }); Q.length = 0 },
         add = f => { g.save(); g.globalCompositeOperation = 'lighter'; f(); g.restore() }, SH = 'rgba(0,0,0,.25)', HL = 'rgba(255,255,255,.16)';
       g.save(); g.translate(x, y); g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0, 8, K == 'elder' ? 11 : 9, 3, 0, 0, 7); g.fill(); g.scale(fc, 1);
@@ -2746,6 +2746,7 @@
       if (K == 'merchant' && talk) add(() => { const q = g.createRadialGradient(x + fc * 9, y - 12, 0, x + fc * 9, y - 12, 12); q.addColorStop(0, 'rgba(255,120,150,.5)'); q.addColorStop(1, 'rgba(255,120,150,0)'); g.fillStyle = q; g.fillRect(x + fc * 9 - 12, y - 24, 24, 24) })
     }
     function drawNPC(n, i) {
+      if (n.dance) return;
       if (n.kind) { drawNPCx(n, i); return }
       const x = Math.round(n.x), y = Math.round(n.y), tk = t + i * 1.7, w = n.n.includes('Brokk') ? 0 : n.n.includes('Sera') ? 1 : 2,
         fc = w == 0 ? 1 : (p.x < n.x - 4 ? -1 : 1), lx = (p.x - n.x) * fc > -4 ? 1 : 0, ly = p.y > n.y + 8 ? 1 : 0, talk = dlg && dlg.n === n, blink = (tk % 4.3) < .13,
@@ -2841,15 +2842,115 @@
       if (dlg && dist(dlg.n, p) > 70) dlg = null;
       if (P.KeyG) { if (dlg) { dlg.i++; if (dlg.i >= dlg.n.lines.length) { const a = dlg.n.act; dlg = null; if (a) a() } else SFX.point() } else { const n = NP.concat(TN).find(n => dist(n, p) < 36); if (n) { dlg = { n, i: 0 }; SFX.pickup() } } }
     }
+    function coupleFx() {
+      const A = NP.find(n => n.mate === 'Finza'), F = NP.find(n => n.mate === 'Abeth'); if (!A || !F) return;
+      const CX = 530, CY = 340, fy = CY + 12, PI = Math.PI, wx = Math.sin(t * .9) * 6, wy = Math.cos(t * .9) * 2.5,
+        k6 = t % 6, u = k6 < 1.2 ? k6 / 1.2 : -1, tw = u >= 0, s = tw ? Math.sin(u * PI) : 0, sxA = tw ? Math.cos(u * PI * 2) : 1,
+        dxF = 6 * s, fX = CX - 12 + dxF + wx, aX = CX + 12 + wx, yy = CY + wy;
+      F.x = fX; F.y = yy; A.x = aX; A.y = yy;
+      // ---------- lantai dansa ----------
+      g.save();
+      g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(CX, fy + 3, 60, 26, 0, 0, 7); g.fill();
+      g.fillStyle = '#2b2440'; g.beginPath(); g.ellipse(CX, fy, 58, 24, 0, 0, 7); g.fill();
+      g.save(); g.beginPath(); g.ellipse(CX, fy, 58, 24, 0, 0, 7); g.clip();
+      for (let i = -8; i < 8; i++)for (let j = -4; j < 4; j++) { g.fillStyle = (i + j) & 1 ? 'rgba(216,184,120,.16)' : 'rgba(255,120,160,.07)'; g.fillRect(CX + i * 8, fy + j * 8, 8, 8) }
+      g.restore();
+      g.strokeStyle = '#d8b878'; g.lineWidth = 2; g.beginPath(); g.ellipse(CX, fy, 58, 24, 0, 0, 7); g.stroke();
+      g.lineWidth = 1; g.strokeStyle = 'rgba(216,184,120,.55)'; g.beginPath(); g.ellipse(CX, fy, 44, 18, 0, 0, 7); g.stroke();
+      g.restore();
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const q = g.createRadialGradient(CX, fy, 0, CX, fy, 66); q.addColorStop(0, 'rgba(255,130,170,' + (.2 + .07 * Math.sin(t * 2.4)) + ')'); q.addColorStop(1, 'rgba(255,130,170,0)'); g.fillStyle = q; g.fillRect(CX - 66, fy - 66, 132, 132);
+      for (let i = 0; i < 20; i++) { const a = i / 20 * PI * 2, f = .5 + .5 * Math.sin(t * 3 + i * 1.7); g.fillStyle = (i % 2 ? 'rgba(255,217,160,' : 'rgba(255,154,192,') + (.35 + .55 * f) + ')'; g.fillRect(Math.round(CX + Math.cos(a) * 58) - 1, Math.round(fy + Math.sin(a) * 24) - 1, 3, 3) }
+      g.restore();
+      // ---------- penari ----------
+      const dancer = (kind, x, y, sign, o) => {
+        const fin = kind === 'f', sk = fin ? '#d9a07a' : '#e8b898', hair = fin ? '#2a1a14' : '#6b3a22', HL = 'rgba(255,255,255,.16)', SH = 'rgba(0,0,0,.25)', Q = [],
+          r = (a, b, w, h, c, ol) => Q.push([a, b, w, h, c, ol !== 0]),
+          fl = () => { g.fillStyle = '#120e18'; Q.forEach(z => z[5] && g.fillRect(z[0] - 1, z[1] - 1, z[2] + 2, z[3] + 2)); Q.forEach(z => { g.fillStyle = z[4]; g.fillRect(z[0], z[1], z[2], z[3]) }); Q.length = 0 },
+          ln = (x0, y0, x1, y1, w, c) => { const n = Math.max(1, Math.round(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)))); for (let i = 0; i <= n; i++)r(Math.round(x0 + (x1 - x0) * i / n) - (w >> 1), Math.round(y0 + (y1 - y0) * i / n) - (w >> 1), w, w, c) },
+          talk = dlg && dlg.n === (fin ? F : A), blink = (t % 4.1) < .13, sxx = Math.abs(o.sx) < .14 ? (o.sx < 0 ? -.14 : .14) : o.sx;
+        if (o.waist) {
+          g.save(); g.translate(Math.round(x + o.L), Math.round(y - o.bo)); const ex = Math.round(16 - 8 * o.s), ey = Math.round(-2 + 2 * o.s);
+          ln(5, -4, ex, ey, 3, '#22304a'); r(ex - 2, ey - 1, 1, 3, '#d8b878', 0); r(ex - 1, ey - 1, 3, 3, '#f4eee8'); fl(); g.restore(); return
+        }
+        g.save(); g.translate(Math.round(x), Math.round(y)); g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0, 8, fin ? 11 : 14, 3, 0, 0, 7); g.fill();
+        g.scale(sign * sxx, 1);
+        if (fin) {
+          const lf = Math.round(o.lf), rf = Math.round(o.rf), ts = Math.round(Math.sin(t * 3 + 1) * 1.5);
+          r(-10 + ts, -1, 5, 9, '#22304a'); r(-10 + ts, 7, 5, 1, '#d8b878', 0);
+          r(-5, 3, 4, 5 - lf, '#1c1c2a'); r(1, 3, 4, 5 - rf, '#1c1c2a'); r(-3, 3, 1, 5 - lf, '#3a3a52', 0); r(3, 3, 1, 5 - rf, '#3a3a52', 0);
+          r(-6, 7 - lf, 5, 2, '#0c0c12'); r(1, 7 - rf, 5, 2, '#0c0c12'); r(-6, 7 - lf, 3, 1, '#5a5a74', 0); r(1, 7 - rf, 3, 1, '#5a5a74', 0);
+        } else {
+          const fa = o.flare, sw = o.sway, W = i => 7 + i * 1.1 + fa * i / 8;
+          for (let i = 0; i < 9; i++) { const hw = W(i), sh = sw * i / 8; r(Math.round(-hw + sh), 1 + i, Math.round(hw * 2), 1, i % 4 === 3 ? '#a8305a' : '#b83a63') }
+          for (let i = 1; i < 9; i++) { const hw = W(i), sh = sw * i / 8;[-5, -2, 1, 4].forEach((k, j) => r(Math.round(k * hw / 7 + sh), 1 + i, 1, 1, j % 2 ? '#8e2a4c' : '#d8587f', 0)) }
+          { const hw = W(7), sh = sw * 7 / 8; r(Math.round(-hw + sh), 7, Math.round(hw * 2), 1, '#d8b878', 0) }
+          { const hw = W(9), sh = sw * 9 / 8, x0 = Math.round(-hw + sh), w = Math.round(hw * 2); r(x0, 9, w, 1, '#f4e2c8'); for (let k = 1; k < w; k += 3)r(x0 + k, 9, 1, 1, '#c8b898', 0) }
+          [[-6, 4], [2, 5], [-1, 7]].forEach(([a, b]) => { r(a, b, 2, 2, '#e8788f', 0); r(a, b, 1, 1, '#ffc0d4', 0) });
+        }
+        fl(); g.restore();
+        // ----- badan atas -----
+        g.save(); g.translate(Math.round(x + o.L), Math.round(y - o.bo)); g.scale(sign * sxx, 1);
+        if (fin) {
+          ln(-6, -8, -10, -2, 3, '#1a2438'); r(-11, -3, 3, 3, '#f4eee8'); fl();
+          r(-7, -10, 14, 15, '#22304a'); r(4, -9, 3, 13, SH, 0); r(-6, -9, 2, 10, HL, 0);
+          r(-2, -10, 5, 11, '#f4eee8', 0); r(-4, -10, 2, 9, '#1a2438', 0); r(3, -10, 2, 9, '#1a2438', 0); r(-4, -10, 1, 9, '#d8b878', 0); r(4, -10, 1, 9, '#d8b878', 0);
+          r(-2, -3, 5, 6, '#8a1f35', 0); r(0, -2, 1, 1, '#f4e2a8', 0); r(0, 0, 1, 1, '#f4e2a8', 0);
+          r(-7, 2, 14, 2, '#14121f'); r(-1, 2, 2, 2, '#f0c860', 0); r(-7, 4, 14, 1, '#d8b878', 0);
+          r(-3, -10, 2, 3, '#c8283e', 0); r(2, -10, 2, 3, '#c8283e', 0); r(-1, -10, 2, 2, '#9a1f35', 0); r(3, -7, 2, 2, '#ff5c8a', 0);
+          r(-9, -11, 4, 2, '#d8b878'); r(5, -11, 4, 2, '#d8b878'); fl();
+          const hx = Math.round(o.hx), hy = Math.round(o.hy);
+          ln(5, -9, hx, hy, 3, '#22304a'); r(hx - 2, hy - 1, 1, 3, '#d8b878', 0); r(hx - 1, hy - 1, 3, 3, '#f4eee8'); fl();
+        } else {
+          r(-6, -10, 12, 13, '#c8456e'); r(3, -9, 3, 11, SH, 0); r(-5, -9, 2, 9, HL, 0); r(-6, -10, 12, 1, '#f4e2c8', 0); r(-4, -10, 8, 2, sk, 0);
+          r(0, -7, 1, 8, '#f4e2a8', 0); r(-1, -6, 3, 1, '#f4e2a8', 0); r(-1, -3, 3, 1, '#f4e2a8', 0);
+          [[-3, -9], [-1, -8], [1, -8], [3, -9]].forEach(([a, b]) => r(a, b, 1, 1, '#fff', 0));
+          r(-6, 0, 12, 2, '#d8b878'); r(-1, 0, 2, 2, '#f4e2a8', 0);
+          r(-10, -2, 5, 5, '#d8b878'); r(-10, -2, 5, 1, '#f0c860', 0); r(-12 + Math.round(Math.sin(t * 4)), 2, 3, 5, '#d8b878');
+          r(-9, -10, 4, 4, '#f4e2e8'); r(5, -10, 4, 4, '#f4e2e8'); r(-9, -7, 4, 1, '#c8456e', 0); r(5, -7, 4, 1, '#c8456e', 0); fl();
+          const hx = Math.round(o.hx), hy = Math.round(o.hy), ex = Math.round(16 - 8 * o.s), ey = Math.round(-7 + 6 * o.s);
+          ln(5, -8, hx, hy, 3, '#f4e2e8'); r(hx - 2, hy - 1, 1, 3, '#d8b878', 0); r(hx - 1, hy - 1, 3, 3, '#f4eee8');
+          ln(5, -6, ex, ey, 3, '#f4e2e8'); r(ex - 2, ey - 1, 1, 3, '#d8b878', 0); r(ex - 1, ey - 1, 3, 3, '#f4eee8'); fl();
+        }
+        r(-4, -20, 8, 8, sk); r(2, -19, 2, 7, SH, 0); r(-4, -19, 1, 5, HL, 0); r(-5, -17, 1, 2, sk, 0);
+        if (fin) { r(-5, -23, 10, 4, hair); r(-5, -21, 2, 6, hair); r(3, -21, 2, 3, hair); r(-3, -23, 5, 1, '#5a3a2a', 0); r(-9, -21, 4, 7, hair); r(-9, -21, 4, 1, '#5a3a2a', 0); r(-7, -19, 2, 2, '#d8b878') }
+        else { r(-5, -23, 10, 4, hair); r(-5, -21, 2, 8, hair); r(4, -21, 1, 6, hair); r(-3, -27, 6, 4, hair); r(-3, -27, 6, 1, '#8a5a3a', 0); r(-1, -26, 1, 2, '#8a5a3a', 0); r(-4, -24, 8, 1, '#f0c860'); r(0, -25, 1, 1, '#8fe8ff', 0); r(3, -27, 3, 3, '#e04b6b'); r(4, -26, 1, 1, '#ffd34d', 0); r(-5, -14, 1, 2, '#8fe8ff', 0); r(4, -14, 1, 2, '#8fe8ff', 0) }
+        if (blink) { r(-3, -16, 2, 1, '#3a2418', 0); r(1, -16, 2, 1, '#3a2418', 0) } else { r(-3, -17, 2, 2, '#f4eee8', 0); r(1, -17, 2, 2, '#f4eee8', 0); r(-2, -17, 1, 2, '#2a1a14', 0); r(2, -17, 1, 2, '#2a1a14', 0) }
+        r(-3, -19, 2, 1, fin ? hair : '#4a2a18', 0); r(1, -19, 2, 1, fin ? hair : '#4a2a18', 0);
+        if (!fin) { r(-4, -17, 1, 1, '#2a1a14', 0); r(3, -17, 1, 1, '#2a1a14', 0) }
+        r(-4, -15, 1, 1, 'rgba(255,120,130,.6)', 0); r(3, -15, 1, 1, 'rgba(255,120,130,.6)', 0);
+        if (talk && Math.floor(t * 9) % 2) r(-1, -14, 2, 2, '#5a2020', 0); else { r(-1, -14, 2, 1, fin ? '#a86a5a' : '#c8283e', 0); r(-2, -15, 1, 1, fin ? '#a86a5a' : '#c8283e', 0); r(1, -15, 1, 1, fin ? '#a86a5a' : '#c8283e', 0) }
+        fl(); g.restore();
+      };
+      const bo0 = Math.abs(Math.sin(t * 3)), L0 = Math.sin(t * 1.5) * 1.2;
+      const oF = { sx: 1, bo: bo0 * 1.5, L: L0, lf: Math.max(0, Math.sin(t * 3)) * 2.5, rf: Math.max(0, -Math.sin(t * 3)) * 2.5, hx: 12 + 6 * s, hy: -9 - 17 * s, s },
+        oA = { sx: sxA, bo: Math.abs(Math.sin(t * 3 + .4)) * 1.5 + s * 1.5, L: L0, sway: Math.sin(t * 3 + 2) * 2 + s * 2, flare: .8 * Math.sin(t * 3) + 3.5 * s, hx: 12 * (1 - s), hy: -9 - 17 * s, s };
+      dancer('f', fX, yy, 1, oF); dancer('a', aX, yy, -1, oA); dancer('f', fX, yy, 1, Object.assign({ waist: 1 }, oF));
+      // ---------- nada & hati & kilau ----------
+      const note = (nx, ny, c, a) => { g.save(); g.globalAlpha = a; g.fillStyle = '#120e18'; g.fillRect(nx - 1, ny - 1, 5, 4); g.fillRect(nx + 1, ny - 6, 3, 8); g.fillStyle = c; g.fillRect(nx, ny, 3, 2); g.fillRect(nx + 2, ny - 5, 1, 6); g.fillRect(nx + 3, ny - 5, 2, 1); g.fillRect(nx + 4, ny - 4, 1, 1); g.restore() };
+      for (let i = 0; i < 3; i++) { const k = (t * .28 + i / 3) % 1; note(Math.round(CX + (i - 1) * 34 + Math.sin(t * 2 + i) * 6), Math.round(fy - 8 - k * 52), ['#ffe28a', '#ff9ac0', '#8fe8ff'][i], Math.sin(k * PI)) }
+      const heart = (hx, hy, z, a) => {
+        g.save(); g.globalAlpha = a; g.translate(Math.round(hx), Math.round(hy)); g.scale(z, z);
+        const H = [[-3, -3, 3, 2], [1, -3, 3, 2], [-4, -2, 8, 3], [-3, 1, 6, 1], [-2, 2, 4, 1], [-1, 3, 2, 1]];
+        g.fillStyle = '#120e18'; H.forEach(z => g.fillRect(z[0] - 1, z[1] - 1, z[2] + 2, z[3] + 2));
+        g.fillStyle = '#ff5c8a'; H.forEach(z => g.fillRect(z[0], z[1], z[2], z[3])); g.fillStyle = '#ffc0d4'; g.fillRect(-3, -3, 1, 1); g.restore()
+      };
+      const mx = CX + wx, my = yy - 44;
+      heart(mx, my + Math.sin(t * 2.2) * 1.5, 1, 1);
+      for (let i = 0; i < 3; i++) { const k = (t * .35 + i / 3) % 1; heart(mx + Math.sin(k * 6 + i * 2) * 9, my + 10 - k * 18, .6, 1 - k) }
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 8; i++) { const k = (t * .4 + i / 8) % 1, sx = CX + Math.cos(i * 2.4) * 44, sy = fy - 6 - k * 40, a = Math.sin(k * PI) * (.5 + .5 * Math.sin(t * 8 + i)); if (a < .05) continue; g.fillStyle = 'rgba(255,240,200,' + a + ')'; g.fillRect(Math.round(sx) - 2, Math.round(sy), 5, 1); g.fillRect(Math.round(sx), Math.round(sy) - 2, 1, 5) }
+      g.restore();
+    }
     function lobbyDraw() {
       g.save(); g.globalCompositeOperation = 'lighter';
       let q = g.createRadialGradient(320, 26, 0, 320, 26, 70); q.addColorStop(0, 'rgba(170,90,255,' + (.3 + .12 * Math.sin(t * 2.2)) + ')'); q.addColorStop(1, 'rgba(90,30,180,0)'); g.fillStyle = q; g.fillRect(250, 0, 140, 100);
       q = g.createRadialGradient(80, 58, 0, 80, 58, 60); q.addColorStop(0, 'rgba(255,130,40,' + (.4 + .12 * Math.sin(t * 9)) + ')'); q.addColorStop(1, 'rgba(255,100,20,0)'); g.fillStyle = q; g.fillRect(20, 0, 120, 120);
       q = g.createRadialGradient(564, 56, 0, 564, 56, 64); q.addColorStop(0, 'rgba(110,220,255,' + (.3 + .08 * Math.sin(t * 3)) + ')'); q.addColorStop(1, 'rgba(60,160,255,0)'); g.fillStyle = q; g.fillRect(500, 0, 128, 124); g.restore();
       g.save(); g.strokeStyle = 'rgba(180,240,255,.6)'; for (let i = 0; i < 2; i++) { const k = (t * .5 + i * .5) % 1; g.globalAlpha = 1 - k; g.beginPath(); g.ellipse(564, 56, 6 + k * 18, 2 + k * 6, 0, 0, 7); g.stroke() } g.restore();
-      fountainFx(); ambientFx(); NP.forEach(drawNPC);
+      fountainFx(); ambientFx(); NP.forEach(drawNPC); coupleFx();
       g.save(); g.font = 'bold 8px monospace'; g.textAlign = 'center'; g.fillStyle = '#e6d2ff'; g.globalAlpha = .7 + .3 * Math.sin(t * 4); g.fillText('▲ DUNGEON', 320, Math.round(70 + Math.sin(t * 3) * 1.5)); g.restore();
-      g.font = '8px monospace'; NP.forEach(n => { const d = dist(n, p); if (d < 90) { txt(n.n.split(',')[0], n.x, n.y - 26, '#ffe9a8', 'center'); if (d < 36 && !dlg) txt('[G] Bicara', n.x, n.y - 36, '#fff', 'center') } });
+      g.font = '8px monospace'; NP.forEach(n => { const d = dist(n, p); if (d < 90) { txt(n.n.split(',')[0], n.x + (n.lx || 0), n.y - 26 - (n.ly || 0), '#ffe9a8', 'center'); if (d < 36 && !dlg) txt('[G] Bicara', n.x + (n.lx || 0), n.y - 36 - (n.ly || 0), '#fff', 'center') } });
       g.save(); g.font = 'bold 8px monospace'; g.textAlign = 'center'; g.fillStyle = '#ffe0a0'; g.globalAlpha = .7 + .3 * Math.sin(t * 4); g.fillText('PELATIHAN ▶', Math.round(588 + Math.sin(t * 3) * 1.5), 156); g.restore();
     }
     function lobbyHud() {
@@ -3073,7 +3174,7 @@
     // ===== CAMP PELATIHAN: dekorasi + NPC yang sedang berlatih (koordinat dunia x:654..1204) =====
     const TT = [{ x: 878, y: 304, fl: 0, st: [] }, { x: 878, y: 346, fl: 0, st: [] }], TDM = [{ x: 1182, y: 152, tl: 0, tv: 0, fl: 0, k: 0 }, { x: 1182, y: 254, tl: 0, tv: 0, fl: 0, k: 1 }];
     const TN = [
-      { n: 'Rhea, Prajurit Muda', role: 'spar', side: 0, x: 752, y: 104, fc: 1, ph: 0, sk: '#e0b090', hair: '#3a2a1a', c1: '#3a5a8a', c2: '#ffd34d', c3: '#2e3440', lines: ['Hah! Jangan lengah, Bram! Kita sparring sampai salah satu menyerah.', 'Kata Kael, pedang kayu lebih jujur dari pedang baja: tidak ada yang berdarah, tapi pelajarannya sama.'] },
+      { n: 'Rhea, Prajurit Muda', role: 'spar', side: 0, x: 752, y: 104, fc: 1, ph: 0, sk: '#e0b090', hair: '#3a2a1a', c1: '#3a5a8a', c2: '#ffd34d', c3: '#2e3440', lines: ['Hah! Jangan lengah, Bram! Kita sparring sampai salah satu menyerah.', 'Kata Finza, pedang kayu lebih jujur dari pedang baja: tidak ada yang berdarah, tapi pelajarannya sama.'] },
       { n: 'Bram, Rekrut', role: 'spar', side: 1, x: 794, y: 104, fc: -1, ph: 0, sk: '#c9946e', hair: '#6b3a22', c1: '#8a3a3a', c2: '#e8e4f0', c3: '#3a2a2a', lines: ['Rhea itu cepat sekali... tapi tadi aku hampir menang. Hampir.', 'Kalau mau ikut latihan, hajar manekin di arena tengah. DPS-mu muncul di bawahnya.'] },
       { n: 'Lysa, Pemanah', role: 'bow', x: 706, y: 312, fc: 1, ph: .4, tg: TT[0], sk: '#e8c0a0', hair: '#2a6a4a', c1: '#2f6a45', c2: '#c2a06b', c3: '#3a3226', lines: ['Tarik napas, tahan, lepaskan. Memanah itu soal kesabaran, bukan tenaga.', 'Tahan klik kiri lalu lepas untuk panah charged: makin lama ditarik, makin kuat tembusannya.'] },
       { n: 'Veyn, Murid Penyihir', role: 'mage', x: 706, y: 352, fc: 1, ph: 1.1, sk: '#d9b79c', hair: '#e6e6ee', c1: '#5a3a8a', c2: '#b48cff', c3: '#2a2040', lines: ['Sihir itu soal fokus, bukan teriakan. Meski... teriakan kadang membantu.', 'Tongkat menembakkan bola sihir yang meledak. Paling efektif kalau musuh berkelompok!'] },
@@ -4267,6 +4368,125 @@
         if (!dlg && dist(RK, p) < 62) { g.font = '8px monospace'; txt('[G] Rak Senjata', 168, 92, '#fff', 'center') }
       }
       const _ld = lobbyDraw; lobbyDraw = function () { _ld(); try { smith() } catch (e) { } };
+    })();
+    /* ===== DEKOR: BENGKEL BROKK (rapi) & TAMAN SERAPHINE (hijau) ===== */
+    (function () {
+      if (typeof BGL === 'undefined' || typeof WL === 'undefined' || typeof lobbyDraw !== 'function') return;
+      const b = BGL.getContext('2d');
+      let sd = 5; const R2 = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, ri = (a, z) => a + Math.floor(R2() * (z - a + 1));
+      const px = (x, y, w, h, c) => { b.fillStyle = c; b.fillRect(x, y, w, h) }, el = (x, y, rx, ry, c) => { b.fillStyle = c; b.beginPath(); b.ellipse(x, y, rx, ry, 0, 0, 7); b.fill() };
+      const OL = '#120e18', ob = (x, y, w, h, c) => { px(x - 1, y - 1, w + 2, h + 2, OL); px(x, y, w, h, c) };
+      const G = ['#2f6a3c', '#3f8a4c', '#5fae5c', '#7fc86a', '#4a9a52'], FC = ['#f6a0c0', '#fff0a0', '#ffffff', '#c8a0ff', '#ff8a8a'];
+
+      /* ---------- BENGKEL BROKK ---------- */
+      // 1) rapikan: tutup ingot yang berserakan dengan lantai bersih, lalu ganti dengan palet tertata
+      b.drawImage(BGL, 200, 64, 40, 26, 136, 64, 40, 26);
+      px(133, 68, 6, 5, '#8a909e'); px(133, 68, 6, 1, '#d6dde8');
+      el(155, 86, 20, 3, 'rgba(0,0,0,.4)');
+      ob(139, 80, 34, 4, '#6b4d33'); px(139, 80, 34, 1, '#8a6a48');[141, 155, 167].forEach(x => px(x, 84, 4, 3, '#3a2616'));
+      const ing = (x, y, c, h) => { px(x - 1, y - 1, 13, 6, OL); px(x, y, 11, 4, c); px(x, y, 11, 1, h); px(x + 10, y + 1, 1, 3, 'rgba(0,0,0,.25)') };
+      ing(141, 75, '#aeb4c2', '#eef1f7'); ing(155, 75, '#aeb4c2', '#eef1f7'); ing(148, 70, '#aeb4c2', '#eef1f7'); ing(148, 65, '#c9a46b', '#ffe08a');
+      // 2) karpet bengkel di bawah landasan + noda hangus di sekitar tungku
+      el(78, 82, 38, 5, 'rgba(0,0,0,.28)'); el(120, 80, 14, 3, 'rgba(0,0,0,.2)');
+      {
+        const x = 50, y = 86, w = 70, h = 50; px(x + 2, y + 3, w, h, 'rgba(0,0,0,.3)'); px(x, y, w, h, '#3a2218'); b.strokeStyle = '#9c7a52'; b.lineWidth = 2; b.strokeRect(x + 3, y + 3, w - 6, h - 6); b.lineWidth = 1; b.strokeStyle = '#6b4d33'; b.strokeRect(x + 7.5, y + 7.5, w - 15, h - 15);
+        for (let i = 0; i < 7; i++) { px(x + 13 + i * 8, y + 23, 3, 3, '#c2a06b'); px(x + 14 + i * 8, y + 24, 1, 1, '#3a2218') }
+        for (let i = x + 2; i < x + w - 2; i += 3) { px(i, y - 2, 1, 2, '#9c7a52'); px(i, y + h, 1, 2, '#9c7a52') }
+        el(97, 114, 14, 5, 'rgba(0,0,0,.28)')
+      }
+      el(97, 118, 12, 3, 'rgba(0,0,0,.4)'); px(88, 107, 18, 10, '#4a3424'); px(88, 107, 3, 10, '#6b4a32'); px(102, 107, 4, 10, '#2a1c12'); el(97, 107, 9, 3.4, '#8a6038'); el(97, 107, 6, 2.2, '#6b4a2e'); el(97, 107, 2.8, 1, '#4a321e');
+      // 3) papan perisai di dinding
+      px(184, 20, 70, 30, 'rgba(0,0,0,.4)'); ob(182, 17, 70, 30, '#3a2616'); px(184, 19, 66, 26, '#4a3424');[23, 29, 35, 41].forEach(y => px(184, y, 66, 1, 'rgba(0,0,0,.22)'));
+      px(182, 17, 70, 3, '#6b4d33'); px(182, 17, 70, 1, '#8a6a48'); px(182, 44, 70, 3, '#2a1c12');[[184, 19], [248, 19], [184, 42], [248, 42]].forEach(([x, y]) => px(x, y, 2, 2, '#c2a06b'));
+      const shield = (cx, cy, c) => { el(cx, cy + 1, 9, 9, 'rgba(0,0,0,.35)'); el(cx, cy, 9, 9, OL); el(cx, cy, 8, 8, '#c2a06b'); el(cx, cy, 6.6, 6.6, c); px(cx - 1, cy - 6, 2, 12, '#e8dcc0'); px(cx - 6, cy - 1, 12, 2, '#e8dcc0'); el(cx, cy, 2.6, 2.6, OL); el(cx, cy, 2, 2, '#d6dde8'); px(cx - 5, cy - 5, 2, 1, 'rgba(255,255,255,.35)') };
+      shield(196, 32, '#a33b4c'); shield(217, 32, '#2a4a7a'); shield(238, 32, '#2f6a4a');
+      ob(205, 48, 34, 3, '#4a3424'); px(205, 48, 34, 1, '#c2a06b');
+      // 4) meja kerja
+      px(188, 74, 64, 6, 'rgba(0,0,0,.35)'); ob(188, 66, 5, 12, '#3a2616'); ob(245, 66, 5, 12, '#3a2616');
+      ob(185, 58, 68, 9, '#5d4430'); px(185, 58, 68, 2, '#7d5c3d'); px(187, 63, 64, 1, 'rgba(0,0,0,.25)'); ob(193, 67, 52, 5, '#4a3424'); px(215, 69, 8, 1, '#c2a06b');
+      ob(190, 52, 9, 6, '#6a6f7c'); px(190, 52, 9, 2, '#c4cedb'); ob(193, 49, 8, 2, '#6b4d33');
+      ob(204, 54, 16, 4, '#d8c898'); px(204, 56, 16, 2, '#b8a878'); px(203, 54, 2, 4, '#8a6a3a'); px(219, 54, 2, 4, '#8a6a3a');[206, 210, 214].forEach(x => px(x, 55, 3, 1, '#8a6a3a'));
+      ob(224, 52, 7, 5, '#6a6f7c'); px(224, 52, 7, 1, '#c4cedb'); ob(230, 54, 12, 3, '#7a5230');
+      ob(244, 49, 7, 9, '#2a2630'); px(245, 51, 5, 5, '#ffb050'); px(246, 52, 3, 3, '#ffe28a'); px(245, 47, 5, 2, '#6a6f7c');
+      ob(214, 70, 8, 8, '#4a3424'); px(215, 70, 6, 2, '#2a2630'); px(216, 70, 2, 1, '#6a6f7c');
+      // 5) tumpukan peti & tong
+      el(242, 113, 24, 3, 'rgba(0,0,0,.35)');
+      ob(224, 92, 20, 18, '#6b4d33'); px(224, 92, 20, 2, '#8a6a48'); px(224, 96, 20, 1, '#3a2616'); px(224, 104, 20, 1, '#3a2616'); px(233, 92, 2, 18, '#4a3424');
+      ob(228, 80, 14, 12, '#5d4430'); px(228, 80, 14, 1, '#8a6a48'); px(228, 85, 14, 1, '#3a2616'); px(234, 80, 2, 12, '#4a3424');
+      ob(246, 96, 12, 16, '#6b4a2e'); px(246, 100, 12, 2, '#6a6f7c'); px(246, 108, 12, 2, '#6a6f7c'); px(246, 96, 3, 16, '#8a6038'); el(252, 96, 6, 2.4, '#3a2412'); el(252, 96, 4.6, 1.6, '#1d4a6a');
+      // 6) manekin zirah setengah jadi
+      b.save(); b.translate(0, 6);
+      el(236, 157, 13, 3, 'rgba(0,0,0,.35)'); ob(228, 152, 16, 4, '#3a2a1c'); ob(235, 142, 3, 10, '#6b4d33');
+      ob(224, 126, 6, 7, '#aeb4c2'); ob(242, 126, 6, 7, '#aeb4c2'); ob(228, 126, 16, 18, '#8a909e'); px(240, 127, 3, 16, 'rgba(0,0,0,.2)'); px(229, 127, 2, 14, 'rgba(255,255,255,.3)'); px(235, 127, 2, 17, '#c4cedb'); px(228, 141, 16, 2, '#c2a06b');[[231, 130], [239, 130], [231, 136], [239, 136]].forEach(([x, y]) => px(x, y, 1, 1, '#e8edf5'));
+      ob(230, 112, 12, 13, '#9aa0ae'); px(232, 118, 8, 2, OL); px(231, 113, 3, 1, '#e8edf5'); ob(235, 106, 3, 7, '#a33b4c'); b.restore();
+      // 7) karung arang
+      const sack = (x, y, c) => { el(x + 7, y + 12, 8, 2.5, 'rgba(0,0,0,.35)'); el(x + 7, y + 8, 8, 6, OL); el(x + 7, y + 8, 7, 5, c); ob(x + 5, y, 4, 4, c); px(x + 4, y + 3, 6, 1, '#8a6a3a'); px(x + 3, y + 5, 2, 3, 'rgba(255,255,255,.15)') };
+      sack(69, 140, '#6a5a44'); sack(62, 146, '#5a4a38'); sack(76, 148, '#6a5a44');[[66, 156], [84, 156], [74, 160]].forEach(([x, y]) => px(x, y, 2, 2, '#2a2630'));
+      WL.push([186, 58, 66, 18, 'k'], [224, 80, 36, 32, 'k'], [228, 156, 16, 8, 'k'], [62, 142, 30, 18, 'k'], [139, 78, 34, 8, 'k']);
+
+      /* ---------- TAMAN SERAPHINE ---------- */
+      b.save(); b.beginPath(); b.rect(494, 16, 132, 150); b.rect(526, 32, 78, 50); b.clip('evenodd');
+      px(494, 16, 132, 150, 'rgba(40,100,56,.12)');
+      el(566, 108, 66, 42, 'rgba(40,92,52,.55)'); el(566, 108, 54, 33, 'rgba(68,130,76,.42)'); el(512, 92, 14, 30, 'rgba(40,92,52,.45)'); el(610, 70, 14, 28, 'rgba(40,92,52,.4)');
+      for (let i = 0; i < 520; i++) { const a = R2() * 6.283, d = Math.sqrt(R2()), x = Math.round(566 + Math.cos(a) * 66 * d), y = Math.round(108 + Math.sin(a) * 42 * d); if (x > 588 && x < 614 && y > 126 && y < 148) continue; const h = ri(2, 4); px(x, y - h, 1, h, G[ri(0, 4)]); if (R2() < .5) px(x + 1, y - h + 1, 1, h - 1, G[ri(0, 4)]) }
+      for (let i = 0; i < 24; i++) { const a = R2() * 6.283, d = Math.sqrt(R2()), x = Math.round(566 + Math.cos(a) * 60 * d), y = Math.round(108 + Math.sin(a) * 38 * d); if (x > 586 && x < 616 && y > 124 && y < 150) continue; const c = FC[ri(0, 4)]; px(x, y, 2, 2, c); px(x, y, 1, 1, '#ffe28a') }
+      b.restore();
+      // jalan batu pijakan
+      [[560, 83], [567, 91], [572, 101], [573, 112], [569, 123], [572, 134]].forEach(([x, y]) => { el(x, y + 1, 6, 3, 'rgba(0,0,0,.35)'); el(x, y, 6, 3.2, OL); el(x, y, 5, 2.5, '#7a7690'); el(x - 1, y - 1, 3, 1.2, '#9a96b0'); px(x + 2, y, 2, 1, '#4a9a52') });
+      // petak bunga
+      const bed = (x, y, w, h) => {
+        px(x + 2, y + 3, w, h, 'rgba(0,0,0,.35)'); ob(x, y, w, h, '#6a6678'); px(x, y, w, 2, '#8a869a'); px(x + 2, y + 3, w - 4, h - 5, '#3a2616'); px(x + 2, y + 3, w - 4, 2, '#4a3220');
+        for (let i = 0; i < w - 5; i += 3) { const hh = ri(4, 9), cx = x + 3 + i, c = G[ri(0, 4)]; px(cx, y + 4 - hh, 1, hh, c); px(cx - 1, y + 5 - (hh >> 1), 3, 1, G[ri(1, 3)]); const fc = FC[ri(0, 4)]; px(cx - 1, y + 3 - hh, 3, 3, fc); px(cx, y + 4 - hh, 1, 1, '#ffe28a') }
+        WL.push([x, y, w, h, 'k'])
+      };
+      bed(500, 92, 26, 14); bed(606, 84, 18, 16); bed(500, 124, 28, 13);
+      // pohon penyembuh
+      el(509, 78, 17, 4, 'rgba(0,0,0,.35)'); ob(505, 56, 7, 20, '#4a3020'); px(505, 56, 2, 20, '#6b4a32'); px(510, 56, 2, 20, '#2a1c12'); px(502, 74, 4, 2, '#4a3020'); px(511, 74, 4, 2, '#4a3020');
+      el(509, 42, 19, 15, OL); el(509, 42, 18, 14, '#2f6a3c'); el(506, 40, 14, 11, '#3f8a4c'); el(503, 37, 8, 6, '#5fae5c'); el(514, 46, 9, 6, '#2f6a3c');
+      for (let i = 0; i < 46; i++) { const a = R2() * 6.283, d = Math.sqrt(R2()), x = Math.round(509 + Math.cos(a) * 16 * d), y = Math.round(42 + Math.sin(a) * 12 * d); px(x, y, 2, 2, G[ri(0, 4)]) }
+      for (let i = 0; i < 9; i++) { const a = R2() * 6.283, d = Math.sqrt(R2()), x = Math.round(509 + Math.cos(a) * 15 * d), y = Math.round(42 + Math.sin(a) * 11 * d); px(x, y, 2, 2, '#f6a0c0'); px(x, y, 1, 1, '#fff') }
+      WL.push([504, 66, 10, 10, 'k']);
+      // teratai & lumut di kolam
+      const pad = (x, y, c) => { el(x, y + 1, 5, 2.4, 'rgba(0,0,0,.25)'); el(x, y, 5, 2.4, OL); el(x, y, 4, 1.8, c); px(x, y - 1, 5, 1, '#3aa0d0') };
+      pad(547, 58, '#3f8a4c'); pad(553, 51, '#2f6a3c'); pad(578, 61, '#3f8a4c'); pad(584, 50, '#5fae5c'); pad(570, 63, '#2f6a3c');
+      px(576, 57, 2, 3, '#f6a0c0'); px(579, 57, 2, 3, '#f6a0c0'); px(577, 55, 3, 3, '#ffd0e0'); px(578, 58, 1, 1, '#ffe28a'); px(546, 55, 2, 3, '#ffffff'); px(549, 55, 2, 3, '#ffffff'); px(547, 53, 3, 3, '#d8f0ff'); px(548, 56, 1, 1, '#ffe28a');
+      [[532, 38, 9, 3], [587, 38, 9, 3], [532, 69, 8, 3], [588, 69, 8, 3]].forEach(([x, y, w, h]) => { px(x, y, w, h, '#3f8a4c'); px(x + 1, y, w - 3, 1, '#7fc86a') });
+      for (let x = 536; x < 594; x += 6) { const l = ri(2, 5); px(x, 72, 2, l, '#2f6a3c'); px(x - 1, 72 + l - 1, 2, 2, '#5fae5c') }
+      // sulur menggantung di dinding atas & dinding kanan
+      for (let x = 498; x < 624; x += 3) { if (R2() < .45) continue; let len = ri(6, 28); if (x > 528 && x < 600) len = Math.min(len, 14); px(x, 14, 1, len, '#2f6a3c'); for (let y = 17; y < 14 + len; y += 4)px(x + ((y >> 2) & 1 ? 1 : -1), y, 2, 2, G[ri(1, 3)]); px(x, 14 + len - 1, 2, 2, '#7fc86a'); if (R2() < .2) px(x, 14 + ri(5, len), 2, 2, '#f6a0c0') }
+      for (let y = 16; y < 160; y += 2) { const n = ri(0, 3); for (let k = 0; k < n; k++) { const x = 626 + Math.round((R2() - .5) * R2() * 18); px(x, y, 2, 2, G[ri(0, 4)]) } if (R2() < .12) px(626 + ri(-3, 3), y, 2, 2, FC[ri(0, 4)]); if (R2() < .15) px(627 + ri(-2, 2), y, 1, 8, '#2f6a3c') }
+      // jamur bercahaya
+      [[510, 138], [516, 142], [522, 137]].forEach(([x, y]) => { px(x - 1, y, 2, 4, '#d8f0e8'); el(x, y, 4, 2.4, OL); el(x, y, 3.2, 1.8, '#6fe0c8'); px(x - 2, y - 1, 1, 1, '#c8fff0') });
+
+      /* ---------- efek dinamis ---------- */
+      const cross = (x, y, a, s) => { g.fillStyle = 'rgba(255,255,230,' + a + ')'; g.fillRect(Math.round(x) - s, Math.round(y), s * 2 + 1, 1); g.fillRect(Math.round(x), Math.round(y) - s, 1, s * 2 + 1) };
+      function decoFx() {
+        // lampu tempat kerja Brokk
+        g.save(); g.globalCompositeOperation = 'lighter';
+        { const f = .75 + .2 * Math.sin(t * 9) + .1 * Math.sin(t * 23), q = g.createRadialGradient(247, 54, 0, 247, 54, 36); q.addColorStop(0, 'rgba(255,170,70,' + .4 * f + ')'); q.addColorStop(1, 'rgba(255,140,40,0)'); g.fillStyle = q; g.fillRect(205, 14, 84, 84) }
+        // aura hijau penyembuh & kunang-kunang
+        { const q = g.createRadialGradient(564, 100, 0, 564, 100, 74); q.addColorStop(0, 'rgba(120,255,160,' + (.14 + .05 * Math.sin(t * 2)) + ')'); q.addColorStop(1, 'rgba(120,255,160,0)'); g.fillStyle = q; g.fillRect(488, 26, 152, 152) }
+        { const q = g.createRadialGradient(516, 140, 0, 516, 140, 16); q.addColorStop(0, 'rgba(110,240,210,' + (.3 + .1 * Math.sin(t * 3)) + ')'); q.addColorStop(1, 'rgba(110,240,210,0)'); g.fillStyle = q; g.fillRect(498, 122, 36, 36) }
+        for (let i = 0; i < 10; i++) {
+          const x = 560 + Math.sin(t * .5 + i * 1.9) * 52 + Math.sin(t * 1.3 + i) * 8, y = 100 + Math.cos(t * .4 + i * 2.3) * 38 + Math.sin(t * 1.1 + i * 3) * 6, a = .35 + .65 * Math.max(0, Math.sin(t * 2.2 + i * 1.7)),
+            q = g.createRadialGradient(x, y, 0, x, y, 7); q.addColorStop(0, 'rgba(220,255,140,' + a * .5 + ')'); q.addColorStop(1, 'rgba(220,255,140,0)'); g.fillStyle = q; g.fillRect(x - 7, y - 7, 14, 14);
+          g.fillStyle = 'rgba(255,255,190,' + a + ')'; g.fillRect(Math.round(x), Math.round(y), 2, 2)
+        }
+        for (let i = 0; i < 6; i++) { const k = (t * .3 + i / 6) % 1; cross(520 + (i * 37) % 90 + Math.sin(t + i) * 3, 140 - k * 50, Math.sin(k * Math.PI) * .8, 2) }
+        g.restore();
+        // kupu-kupu
+        [[0, '#f6a0c0'], [2.6, '#fff0a0']].forEach(([ph, c]) => {
+          const x = 556 + Math.sin(t * .35 + ph) * 58, y = 108 + Math.cos(t * .5 + ph) * 24, w = 1 + Math.abs(Math.sin(t * 14 + ph)) * 3;
+          g.fillStyle = OL; g.fillRect(Math.round(x) - 5, Math.round(y) - w - 1, 10, w * 2 + 2); g.fillStyle = c; g.fillRect(Math.round(x) - 4, Math.round(y) - w, 3, w * 2); g.fillRect(Math.round(x) + 1, Math.round(y) - w, 3, w * 2); g.fillStyle = '#3a2418'; g.fillRect(Math.round(x), Math.round(y) - 1, 1, 3)
+        });
+        // daun jatuh dari pohon
+        for (let i = 0; i < 3; i++) { const k = (t * .12 + i / 3) % 1, x = 509 + Math.sin(k * 8 + i * 2) * 14 + k * 12, y = 44 + k * 42; g.save(); g.globalAlpha = 1 - k * k; g.fillStyle = G[i + 1]; g.fillRect(Math.round(x), Math.round(y), 3, 2); g.fillStyle = '#7fc86a'; g.fillRect(Math.round(x), Math.round(y), 1, 1); g.restore() }
+        // kilau di zirah & perisai
+        cross(236, 123, Math.pow(Math.max(0, Math.sin(t * 1.4)), 8), 3); cross(196, 28, Math.pow(Math.max(0, Math.sin(t * 1.1 + 2)), 8), 3);
+        // nyala lentera
+        g.fillStyle = 'rgba(255,240,170,.9)'; g.fillRect(246, 52 - (Math.sin(t * 12) > 0 ? 1 : 0), 3, 3)
+      }
+      const _ld3 = lobbyDraw; lobbyDraw = function () { _ld3(); try { decoFx() } catch (e) { } };
     })();
   </script>
   <script>
