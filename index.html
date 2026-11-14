@@ -1884,12 +1884,12 @@
         else { const s = d < 110 ? -1 : d > 150 ? 1 : 0; mv(e, cs * s, sn * s); if (e.cd <= 0 && d < 260) { SFX.warn(1); e.wind = .7; e.tx = p.x; e.ty = p.y; e.cd = 2.2 } }
       });
       pr = pr.filter(b => {
-        b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt; if (b.own == 'p' && !b.aoe && R() < .5) dp.push({ k: 'p', x: b.x, y: b.y, vx: 0, vy: 0, life: .25, max: .25, s: 1.5, c: b.big ? '#ffe9a8' : '#b6f08a' }); if (b.aoe && R() < .8) dp.push({ k: 'f', x: b.x, y: b.y, vx: (R() - .5) * 20, vy: (R() - .5) * 20 - 10, life: .3, max: .3, s: 2.5 + R() * 2 }); let dead = b.life <= 0 || blk(b.x, b.y, 1);
+        if (b.rock) rockTrail(b); b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt; if (b.own == 'p' && !b.aoe && R() < .5) dp.push({ k: 'p', x: b.x, y: b.y, vx: 0, vy: 0, life: .25, max: .25, s: 1.5, c: b.big ? '#ffe9a8' : '#b6f08a' }); if (b.aoe && R() < .8) dp.push({ k: 'f', x: b.x, y: b.y, vx: (R() - .5) * 20, vy: (R() - .5) * 20 - 10, life: .3, max: .3, s: 2.5 + R() * 2 }); let dead = b.life <= 0 || blk(b.x, b.y, 1);
         if (!dead) {
           if (b.own == 'p') { const e = es.find(e => e.sw <= 0 && Math.hypot(e.x - b.x, e.y - b.y) < e.r + b.r && !(b.hs && b.hs.includes(e))); if (e) { if (b.pierce) (b.hs = b.hs || []).push(e); else dead = true; if (!b.aoe) hit(e, b.d, b.x - b.vx, b.y - b.vy, 60) } }
           else if (Math.hypot(p.x - b.x, p.y - b.y) < p.r + b.r) { hurt(b.d); dead = true }
         }
-        if (dead && b.aoe) boom(b.x, b.y, b.aoe, b.d); return !dead
+        if (dead && b.rock) rockBreak(b); if (dead && b.aoe) boom(b.x, b.y, b.aoe, b.d); return !dead
       });
       fx = fx.filter(f => { f.life -= dt; if (f.k == 't') f.y -= 20 * dt; return f.life > 0 });
       dp = dp.filter(q => { q.life -= dt; if (q.k == 's') { q.x += q.vx * dt; q.y += q.vy * dt; q.s += dt * 9 } else if (q.k == 'p' || q.k == 'f' || q.k == 'sh' || q.k == 'gf') { q.x += q.vx * dt; q.y += q.vy * dt; const d = Math.pow(.05, dt); q.vx *= d; q.vy *= d; if (q.k == 'f' || q.k == 'gf') q.vy -= 70 * dt; if (q.k == 'sh') q.rot += q.vr * dt } return q.life > 0 }); gh = gh.filter(q => (q.life -= dt) > 0);
@@ -2099,7 +2099,7 @@
     }
     // ===== Model musuh: Half-Skeleton (slime), Dark Wizard (mage), Skeleton Archer (skel) =====
     const MC = { dark: "#171720", armor: "#343440", armorLight: "#555361", bone: "#d0c5a8", boneDark: "#827967", red: "#873d49", purple: "#7652a0", magic: "#b99aff", wood: "#765039" };
-    let MT = null;
+    let MT = null, ENM = null;
     const mr = (x, y, w, h, c) => { g.fillStyle = MT || c; g.fillRect(Math.round(x), Math.round(y), w, h) };
     const ms = c => MT || c, msw = q => Math.sin(q * Math.PI);
     function mSkull() {
@@ -2136,18 +2136,8 @@
 
 
 
-      // Legs
-      let walk = Math.sin(tm * 3) * 1.5;
-
-      mr(299, 286 + walk, 17, 39, MC.armor);
-      mr(325, 286 - walk, 17, 39, "#292831");
-
-      mr(296, 319 + walk, 23, 12, "#171720");
-      mr(322, 319 - walk, 25, 12, "#171720");
-
-      // Exposed leg bones
-      mr(303, 290 + walk, 7, 27, MC.bone);
-      mr(331, 290 - walk, 7, 27, MC.bone);
+      // Kaki: sendi lutut bergerak (IK)
+      mLeg(307.5, -1, 17, MC.armor, MC.bone); mLeg(333.5, 1, 17, '#292831', MC.bone);
 
       // Chest bones
       mr(301, 231, 39, 57, MC.bone);
@@ -2196,49 +2186,28 @@
       mr(292, 225, 9, 17, MC.red);
       mr(289, 240, 8, 8, "#5e2835");
 
-      // Left arm armor
-      mr(282, 244, 13, 32, "#45434f");
-      mr(283, 273, 12, 10, MC.bone);
-      mr(281, 246, 14, 7, "#77717c");
-
-      // Right arm armor
-      mr(347, 243, 13, 33, "#45434f");
-      mr(348, 272, 12, 10, MC.bone);
-      mr(346, 246, 14, 7, "#77717c");
-
-      mr(281, 262, 14, 12, MC.wood);
-      mr(346, 261, 14, 12, MC.wood);
+      // Lengan & busur: membidik ke arah target, tarik tali, lepas (IK)
+      const E = ENM || {}, k = E.kick || 0, sm = u => u * u * (3 - 2 * u), cl = (v, a, b) => Math.max(a, Math.min(b, v)), m = E.mz || 0, ws = Math.cos(E.gp || 0) * 4 * m;
+      const ddx = (E.tx - E.x) || 0, ddy = (E.ty - E.y) || 1, dl = Math.hypot(ddx, ddy) || 1, dX = ddx / dl, dY = ddy / dl;
+      const w = at ? sm(cl(p / .22, 0, 1)) : sm(k), hp = at ? sm(cl((p - .18) / .72, 0, 1)) : k, rc = at ? 0 : k, sw = Math.sin(tm * 2) * 1.5 * (1 - w);
+      const iR = [358, 272 + sw + ws], iL = [288, 278 - sw - ws];
+      const bhx = iR[0] + (353 + dX * 22 - dX * rc * 5 - iR[0]) * w, bhy = iR[1] + (246 + dY * 22 - dY * rc * 5 - iR[1]) * w, bcx = bhx, bcy = bhy - 14 * (1 - w);
+      let th = Math.PI / 2 - Math.atan2(dX, dY); th = Math.atan2(Math.sin(th), Math.cos(th)) * w;
+      const ltx = iL[0] + (bcx - dX * hp * 22 - iL[0]) * w, lty = iL[1] + (bcy - dY * hp * 22 - iL[1]) * w;
+      mLimb2(353, 246, bhx, bhy, 20, 20, 1, 13, '#45434f', MC.wood, null, MC.bone);
+      const hl = mLimb2(289, 246, ltx, lty, 20, 20, -1, 13, '#45434f', MC.wood, null, MC.bone);
+      const lx = Math.cos(th) * (hl[0] - bcx) + Math.sin(th) * (hl[1] - bcy), nx = at ? Math.min(0, Math.max(-26, lx * w)) : (k > 0 ? Math.sin(tm * 70) * 3 * k : 0);
 
       // Bow
       g.save();
-      g.translate(354, 253);
-      g.rotate(aiming ? -.3 * swing : Math.sin(tm * 2) * .03);
-
-      g.strokeStyle = ms("#9b6842");
-      g.lineWidth = 5;
-      g.beginPath();
-      g.moveTo(0, -37);
-      g.quadraticCurveTo(30, 0, 0, 37);
-      g.stroke();
-
-      // Bow string
-      g.strokeStyle = ms("#d5c9b9");
-      g.lineWidth = 1;
-      g.beginPath();
-      g.moveTo(0, -37);
-      g.lineTo(0, 37);
-      g.stroke();
-
-      // Arrow
-      mr(-2, -2, 3, 37, "#c7c7c2");
-      mr(-5, 29, 3, 7, MC.wood);
-      mr(1, 29, 3, 7, MC.wood);
-      mr(-2, -6, 3, 7, "#dce1e5");
-
-      if (aiming && p > .45) {
-        mr(15, -2, 4, 4, "#e6c98e");
-      }
-
+      g.translate(bcx, bcy);
+      g.rotate(th);
+      g.strokeStyle = ms("#9b6842"); g.lineWidth = 5;
+      g.beginPath(); g.moveTo(0, -37); g.quadraticCurveTo(30, 0, 0, 37); g.stroke();
+      g.strokeStyle = ms("#d5c9b9"); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(0, -37); g.lineTo(nx, 0); g.lineTo(0, 37); g.stroke();
+      mr(-3, -5, 6, 10, MC.wood);
+      if (at) { mr(nx, -1, 40, 3, "#c7c7c2"); mr(nx + 38, -3, 5, 6, "#dce1e5"); mr(nx, -4, 7, 2, MC.wood); mr(nx, 2, 7, 2, MC.wood) }
       g.restore();
 
       // Quiver
@@ -2304,43 +2273,31 @@
       mr(298, 218, 46, 14, "#56436e");
       mr(311, 218, 20, 5, "#a48bc1");
 
-      // Arms
-      mr(282, 238 - raise * 17, 14, 34, "#393047");
-      mr(346, 238 - raise * 17, 14, 34, "#393047");
-
-      mr(282, 266 - raise * 17, 14, 10, "#b58d80");
-      mr(346, 266 - raise * 17, 14, 10, "#b58d80");
+      // Lengan (IK): kumpulkan sihir -> lempar -> follow-through
+      const E = ENM || {}, k = E.kick || 0, m = E.mz || 0, ws = Math.cos(E.gp || 0) * 4 * m, sw = at ? 0 : Math.sin(tm * 2);
+      const FR = [[0, [357, 274, -.08]], [.6, [374, 216, -.3]], [.78, [374, 212, -.35]], [1, [352, 276, 1.9]]], FL = [[0, [288, 274]], [.6, [262, 226]], [.78, [258, 222]], [1, [262, 262]]];
+      const qr = mAct(at, p, FR), ql = mAct(at, p, FL), gi = at ? Math.min(1, p * 1.4) : k;
+      const hl = mLimb2(290, 246, ql[0], ql[1] - ws, 19, 19, -1, 14, '#393047', '#393047', null, '#b58d80');
+      const hr = mLimb2(353, 246, qr[0], qr[1] + sw + ws, 19, 19, 1, 14, '#393047', '#393047', null, '#b58d80');
+      if (at) { const r = 8 + 14 * p, q = g.createRadialGradient(hl[0], hl[1], 1, hl[0], hl[1], r); q.addColorStop(0, 'rgba(230,200,255,.85)'); q.addColorStop(1, 'rgba(150,90,255,0)'); g.fillStyle = q; g.fillRect(hl[0] - r, hl[1] - r, 2 * r, 2 * r) }
 
       // Staff
       g.save();
-      g.translate(356, 260);
-      g.rotate(casting ? -.45 * raise : -.08);
-
+      g.translate(hr[0] + 1, hr[1] - 6);
+      g.rotate(qr[2]);
       mr(0, -48, 6, 95, MC.wood);
       mr(-5, -57, 16, 12, "#57436f");
       mr(-3, -63, 12, 9, MC.purple);
       mr(0, -61, 5, 5, "#e5d7ff");
-
-      if (casting) {
-        let glow = g.createRadialGradient(2, -58, 2, 2, -58, 35);
-        glow.addColorStop(0, "rgba(195,151,255,.8)");
-        glow.addColorStop(1, "rgba(150,90,255,0)");
-        g.fillStyle = glow;
-        g.fillRect(-35, -95, 75, 75);
-        mr(-2, -61, 9, 9, "#e8d7ff");
+      if (gi > 0) {
+        const q = g.createRadialGradient(2, -58, 2, 2, -58, 35);
+        q.addColorStop(0, "rgba(195,151,255," + (.8 * gi) + ")"); q.addColorStop(1, "rgba(150,90,255,0)");
+        g.fillStyle = q; g.fillRect(-35, -95, 75, 75); mr(-2, -61, 9, 9, "#e8d7ff");
       }
-
       g.restore();
 
       // Magic particles
-      if (casting) {
-        for (let i = 0; i < 7; i++) {
-          let a = tm * 3 + i * .9;
-          let px = 320 + Math.cos(a) * 30;
-          let py = 250 + Math.sin(a) * 25;
-          mr(px, py, 4, 4, MC.magic);
-        }
-      }
+      if (at) for (let i = 0; i < 7; i++) { const a = tm * 3 + i * .9; mr(320 + Math.cos(a) * 30, 250 + Math.sin(a) * 25, 4, 4, MC.magic) }
 
       g.restore();
     }
@@ -2355,15 +2312,8 @@
 
 
 
-      // Legs
-      mr(299, 286, 17, 39, "#292831");
-      mr(325, 286, 17, 39, "#292831");
-      mr(296, 319, 23, 12, "#171720");
-      mr(322, 319, 25, 12, "#171720");
-
-      // Exposed bones
-      mr(303, 290, 7, 27, MC.bone);
-      mr(331, 290, 7, 27, MC.bone);
+      // Kaki: sendi pinggul-lutut-pergelangan bergerak (IK)
+      mLeg(307.5, -1, 17, '#292831', MC.bone); mLeg(333.5, 1, 17, '#292831', MC.bone);
 
       // Torso bones
       mr(300, 235, 40, 55, MC.bone);
@@ -2403,41 +2353,15 @@
       mr(291, 225, 9, 17, MC.red);
       mr(289, 240, 8, 8, "#5e2835");
 
-      // Arms
-      mr(283, 243, 13, 34, "#343440");
-      mr(283, 274, 13, 9, MC.bone);
-      mr(347, 241, 13, 34, "#343440");
-      mr(348, 273, 12, 10, MC.bone);
-
-      // Left arm armor
-      mr(281, 246, 14, 9, "#77717c");
-      mr(281, 262, 14, 12, MC.wood);
-
-      // Sword hand
-      g.save();
-      g.translate(356, 269);
-      g.rotate(at ? -1.6 * swing : .35 + Math.sin(tm * 2) * .04);
-
-      // Handle
-      mr(-2, -2, 6, 12, "#5b3b2b");
-
-      // Guard
-      mr(-7, 8, 16, 4, "#a6aab0");
-
-      // Blade
-      mr(-1, 12, 5, 36, "#9ba8b5");
-      mr(0, 13, 2, 29, "#e0e5e9");
-      mr(-1, 47, 5, 5, "#cbd3dc");
-
-      // Rust
-      mr(-1, 20, 5, 3, "#77565a");
-
-      g.restore();
-
-      // Armor shield
-      mr(273, 253, 17, 27, "#484450");
-      mr(276, 257, 11, 17, "#69616b");
-      mr(279, 262, 5, 5, "#9c4650");
+      // Lengan + pedang + perisai: tebasan berkeyframe (angkat -> tebas -> follow-through)
+      const F = [[0, [357, 277, -.35]], [.26, [372, 240, 1.2]], [.44, [367, 212, 2.5]], [.5, [367, 211, 2.55]], [.6, [334, 290, -.95]], [.78, [328, 292, -1.2]], [1, [357, 277, -.35]]],
+        FL = [[0, [288, 282]], [.4, [281, 262]], [.6, [286, 276]], [1, [288, 282]]], E = ENM || {}, m = E.mz || 0, ws = Math.cos(E.gp || 0) * 5 * m,
+        ox = at ? 0 : Math.sin(tm * 2) * .8, oy = at ? 0 : Math.cos(tm * 2.2) * .8, qr = mAct(at, p, F), ql = mAct(at, p, FL);
+      const hl = mLimb2(290, 244, ql[0], ql[1] - ws, 18, 18, -1, 13, '#343440', '#343440', null, MC.bone);
+      mr(hl[0] - 17, hl[1] - 30, 17, 27, '#484450'); mr(hl[0] - 14, hl[1] - 26, 11, 17, '#69616b'); mr(hl[0] - 11, hl[1] - 21, 5, 5, '#9c4650');
+      const hr = mLimb2(353, 244, qr[0] + ox, qr[1] + oy + ws, 18, 18, 1, 13, '#343440', '#343440', null, MC.bone);
+      if (at && p > .5 && p < .75) for (let j = 1; j <= 3; j++) { const q2 = mKF(p - j * .022, F), r2 = mIK(353, 244, q2[0], q2[1], 18, 18, 1); mSword(r2[2], r2[3], q2[2], .24 - j * .06) }
+      mSword(hr[0], hr[1], qr[2], 1);
 
       g.restore();
     }
@@ -2448,11 +2372,11 @@
       const S = e.k == 'boss' ? .4 : .215, atk = e.wind > 0 || e.an > 0; let pg = 0;
       if (e.wind > 0) pg = 1 - e.wind / (e.k == 'skel' ? .6 : .7); else if (e.an > 0) pg = 1 - e.an / .6;
       const mvd = Math.hypot(e.x - e.lx, e.y - e.ly); e.lx = e.x; e.ly = e.y;
-      e.wk += ((mvd > .15 && !atk && e.stun <= 0 ? 1 : 0) - e.wk) * .2;
-      g.save(); const dx = p.x - e.x, dy = p.y - e.y, dl = Math.hypot(dx, dy) || 1, lg = atk ? (e.k == 'slime' ? msw(pg) * 4 : e.k == 'mage' ? -msw(pg) * 1.5 : 0) : 0; g.translate(Math.round(e.x + dx / dl * lg), Math.round(e.y + 7 + dy / dl * lg)); g.scale(S, S);
-      if (e.stun > 0) g.rotate(Math.sin(t * 25) * .05 + .12);
-      g.translate(0, -Math.abs(Math.sin((t + e.ph) * 10)) * 7 * e.wk); g.translate(-320, -333);
-      MT = e.fl > 0 ? '#fff' : null; EM[e.k](Math.min(1, pg), atk, t + e.ph); MT = null; g.restore()
+      e.wk += ((mvd > .15 && !atk && e.stun <= 0 ? 1 : 0) - e.wk) * .2; if (e.k != 'boss') enemyAnim(e, mvd, atk, pg);
+      g.save(); const dx = p.x - e.x, dy = p.y - e.y, dl = Math.hypot(dx, dy) || 1, lg = atk ? (e.k == 'slime' ? msw(pg) * 4 : e.k == 'mage' ? -msw(pg) * 1.5 : 0) : 0; if (e.k == 'boss') g.translate(Math.round(e.x + dx / dl * lg), Math.round(e.y + 7 + dy / dl * lg)); else g.translate(e.rx + dx / dl * lg, e.ry + 7 + dy / dl * lg); g.scale(S, S);
+      if (e.stun > 0) g.rotate(Math.sin(t * 25) * .05 + .12); if (e.k != 'boss') { g.rotate(e.zr); g.scale(e.zx, e.zy) }
+      g.translate(0, e.k == 'boss' ? -Math.abs(Math.sin((t + e.ph) * 10)) * 7 * e.wk : -e.hh); g.translate(-320, -333);
+      ENM = e; MT = e.fl > 0 ? '#fff' : null; EM[e.k](Math.min(1, pg), atk, t + e.ph); MT = null; g.restore()
     }
     // ===== Efek api ungu =====
     function flame(q, k) {
@@ -2636,7 +2560,7 @@
         const a = Math.atan2(b.vy, b.vx);
         if (b.aoe) orb(b.x, b.y, (4 + Math.sin(t * 20)) * b.aoe / 24 + 2, 1.1);
         else if (b.own == 'p' && b.kn) { g.save(); g.translate(b.x, b.y); g.rotate(t * 30); g.fillStyle = '#dfe6f2'; g.fillRect(-5, -1, 10, 2); g.fillRect(-1, -5, 2, 10); g.restore() } else if (b.own == 'p') { g.save(); g.translate(b.x, b.y); g.rotate(a); g.save(); g.globalCompositeOperation = 'lighter'; const tg = g.createLinearGradient(-30, 0, 0, 0); tg.addColorStop(0, 'rgba(120,230,100,0)'); tg.addColorStop(1, 'rgba(150,255,120,.55)'); g.fillStyle = tg; g.fillRect(-30, -1.8, 30, 3.6); g.restore(); if (b.big) { g.fillStyle = 'rgba(255,230,150,.35)'; g.fillRect(-24, -2, 24, 4); g.scale(1.4, 1.4) } g.strokeStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.moveTo(-16, 0); g.lineTo(-4, 0); g.stroke(); g.fillStyle = '#c2a17a'; g.fillRect(-10, -.8, 14, 1.6); g.fillStyle = '#dce2ec'; g.beginPath(); g.moveTo(4, -2); g.lineTo(8, 0); g.lineTo(4, 2); g.fill(); g.fillStyle = '#a33b4c'; g.fillRect(-11, -2, 4, 1.2); g.fillRect(-11, .8, 4, 1.2); g.restore() }
-        else { g.save(); g.translate(b.x, b.y); g.rotate(a); g.fillStyle = 'rgba(230,201,142,.3)'; g.fillRect(-18, -1, 16, 2); g.fillStyle = '#c2a17a'; g.fillRect(-10, -.8, 14, 1.6); g.fillStyle = '#dce2ec'; g.beginPath(); g.moveTo(4, -2); g.lineTo(9, 0); g.lineTo(4, 2); g.fill(); g.fillStyle = '#a33b4c'; g.fillRect(-11, -2, 4, 1.2); g.fillRect(-11, .8, 4, 1.2); g.restore() }
+        else if (b.rock) drawRock(b); else { g.save(); g.translate(b.x, b.y); g.rotate(a); g.fillStyle = 'rgba(230,201,142,.3)'; g.fillRect(-18, -1, 16, 2); g.fillStyle = '#c2a17a'; g.fillRect(-10, -.8, 14, 1.6); g.fillStyle = '#dce2ec'; g.beginPath(); g.moveTo(4, -2); g.lineTo(9, 0); g.lineTo(4, 2); g.fill(); g.fillStyle = '#a33b4c'; g.fillRect(-11, -2, 4, 1.2); g.fillRect(-11, .8, 4, 1.2); g.restore() }
       });
       fx.forEach(f => {
         const k = f.life / f.max;
@@ -4404,8 +4328,8 @@
         else if (e.atk == 'charge') { cp = ez(u); a = IDLE + .55 * cp }
       }
       else if (e.s2 == 'act') { cp = 1; a = IDLE + .55 }
-      else if (e.s2 == 'rest' && e.atk == 'slam') { const rec = Math.max(0, Math.min(1, e.tm / .7)); a = IDLE + (SLAM - IDLE) * rec }
-      const bb = Math.sin(tm * 2.2) * 1.3, hd = 12 * cp - 5 * ro + bb * .5, step = Math.sin(tm * 9) * 3 * wk;
+      else if (e.s2 == 'rest' && e.atk == 'slam') { const rec = Math.max(0, Math.min(1, e.tm / .7)); const ss = rec * rec * (3 - 2 * rec); a = IDLE + (SLAM - IDLE) * ss + Math.sin((1 - rec) * 14) * .05 * rec }
+      const bb = Math.sin(tm * 2.2) * 1.3, hd = 12 * cp - 5 * ro + bb * .5, step = Math.sin(tm * 9) * 5 * wk;
       const eyeC = ph >= 3 ? '#ffb040' : '#ff3b4d', jw = 2 + Math.round(ro * 10);
 
       g.save();
@@ -4432,9 +4356,9 @@
       mm(276, 279, 14, 16, M.iron); mm(278, 281, 10, 2, M.ironL); mm(280, 287, 4, 4, M.gold);
 
       // Lengan: kiri (rantai putus di pergelangan) & kanan (pegang kapak)
-      const hlx = 252 - 22 * fz - 6 * cp, hly = 292 - 56 * fz - 10 * cp, hrx = 386 - 14 * rz + 4 * cp, hry = 288 - 62 * rz - 4 * cp;
+      const hlx = 252 - 22 * fz - 6 * cp + Math.sin(tm * 9) * 3 * wk, hly = 292 - 56 * fz - 10 * cp + Math.sin(tm * 2) * 1.5 + Math.cos(tm * 9) * 2 * wk, hrx = 386 - 14 * rz + 4 * cp + Math.sin(tm * 9 + PI) * 3 * wk, hry = 288 - 62 * rz - 4 * cp + Math.sin(tm * 2 + 1) * 1.5 + Math.abs(Math.sin(tm * 9)) * 3 * wk;
       mArm(266, 234, hlx, hly, 28, 22, -8, ph >= 3);
-      mArm(374, 234, hrx, hry, 28, 22, 8, ph >= 3);
+      mArm(374, 234, hrx, hry, 28, 22, 8, ph >= 3); if (e.s2 == 'wind' && e.atk == 'fan') bossRockHand(hlx, hly, pp);
       for (let i = 0; i < 4; i++) mq(hlx - 3 + Math.sin(tm * 3 + i) * 2, hly + 12 + i * 5, 5, 4, M.ironH);
       // Pauldron besi bergerigi
       mm(248, 206, 38, 24, M.iron); mm(250, 204, 34, 5, M.ironL); mm(252, 208, 12, 3, M.ironH); mm(248, 226, 38, 4, M.gold);
@@ -4513,9 +4437,14 @@
     }
 
     function bossFan(e) {
-      const n = BOSS.ph == 1 ? 5 : BOSS.ph == 2 ? 7 : 9, b = ang(e, p), sp = 150 + BOSS.ph * 18;
-      SFX.eshot(); fx.push({ k: 'muzz', x: e.x, y: e.y - 10, a: b, col: '#ff6a6a', life: .18, max: .18 });
-      for (let i = 0; i < n; i++) { const q = b + (i - (n - 1) / 2) * .2; pr.push({ x: e.x, y: e.y - 6, vx: Math.cos(q) * sp, vy: Math.sin(q) * sp, d: 13, r: 3, col: '#ff6a6a', own: 'e', life: 3 }) }
+      const n = BOSS.ph == 1 ? 5 : BOSS.ph == 2 ? 7 : 9, sp = 135 + BOSS.ph * 16;
+      let ox = e.x - 26, oy = e.y - 18; if (blk(ox, oy, 1)) { ox = e.x; oy = e.y }
+      const b = Math.atan2(p.y - oy, p.x - ox);
+      SFX.dodge(); SFX.boom(16); e.rc = 1; shake = Math.max(shake, 3);
+      fx.push({ k: 'ring', x: ox, y: oy, r: 14, w: 3, life: .25, max: .25, col: '#ffd0a0' }, { k: 'gl', x: ox, y: oy, r: 40, c: '255,140,90', life: .25, max: .25 });
+      puff(ox, oy, 3, '120,108,120', 1);
+      for (let i = 0; i < 10; i++) { const a = b + (R() - .5) * 1.4, v = 40 + R() * 90; dp.push({ k: 'p', x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: .3 + R() * .3, max: .6, s: 1.5 + R() * 2, c: i % 2 ? '#98949f' : '#6d6a78' }) }
+      for (let i = 0; i < n; i++) { const q = b + (i - (n - 1) / 2) * .2; pr.push({ x: ox, y: oy, vx: Math.cos(q) * sp, vy: Math.sin(q) * sp, d: 13, r: 4, col: '#8c8896', own: 'e', life: 3, rock: 1, rot: R() * 6.283, vr: (R() - .5) * 16, sd: R() * 50 }) }
     }
     function bossPhase(e, ph) {
       msg(ph == 2 ? 'Fase 2 — Morvath memanggil pasukannya!' : 'Fase 3 — AMUK!');
@@ -4570,7 +4499,7 @@
       B.hz = B.hz.filter(h => {
         h.t -= dt; if (h.t > 0) return true;
         if (h.big) SFX.slam(); else SFX.boom(h.r);
-        pfire(h.x, h.y, h.r * .7); fx.push({ k: 'ring', x: h.x, y: h.y, r: h.r, w: 3, life: .3, max: .3, col: '#ff5a5a' }); shake = Math.max(shake, h.big ? 7 : 3);
+        bossImpact(h); fx.push({ k: 'ring', x: h.x, y: h.y, r: h.r, w: 3, life: .3, max: .3, col: '#ff5a5a' }); shake = Math.max(shake, h.big ? 7 : 3);
         if (p.dead <= 0 && Math.hypot(p.x - h.x, p.y - h.y) < h.r + p.r) hurt(h.d);
         return false
       });
@@ -4616,6 +4545,157 @@
       if (B.ban > 0) { const al = Math.max(0, Math.min(1, B.ban / .5, (3.2 - B.ban) / .4)); g.save(); g.globalAlpha = al; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(0, 100, W, 44); g.fillStyle = 'rgba(255,60,90,.9)'; g.fillRect(0, 100, W, 1); g.fillRect(0, 143, W, 1); g.font = '8px monospace'; txt('— B O S S —', W / 2, 113, '#fff', 'center'); g.font = 'bold 18px monospace'; txt('MORVATH', W / 2, 136, '#ff6a8a', 'center'); g.restore() }
     }
     const _drawB = draw; draw = function () { _drawB(); if (BOSS.on && room == 2 && !lobby && p.dead <= 0) { g.font = '9px monospace'; bossHud() } };
+
+    /* ===== BOS: animasi halus + efek serangan + batu ===== */
+    function bossRockHand(x, y, u) {
+      const k = 1 - (1 - u) * (1 - u), z = 8 + 18 * k, j = u > .7 ? (Math.random() - .5) * 2 : 0, cx = x + j, cy = y - z * .7 - 10 + j;
+      mq(cx - z / 2, cy - z / 2, z, z * .9, '#3e3a46'); mq(cx - z / 2 + 2, cy - z / 2 + 2, z - 4, z * .9 - 4, '#6d6a78'); mq(cx - z / 2 + 3, cy - z / 2 + 3, z * .4, z * .3, '#a09cae');
+      mq(cx - z * .1, cy - z * .2, 2, z * .6, '#ff5a4a'); mq(cx - z * .3, cy + z * .1, z * .5, 2, '#ff5a4a');
+    }
+    function drawRock(b) {
+      const r = b.r + 1.5, sd = b.sd || (b.sd = R() * 50), P = [];
+      g.save(); g.translate(b.x, b.y);
+      g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(0, r + 2, r * .9, r * .4, 0, 0, 7); g.fill();
+      g.rotate(t * (b.vr || 4) + (b.rot || 0));
+      for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283, m = .78 + .3 * Math.sin(i * 2.9 + sd); P.push([Math.cos(a) * r * m, Math.sin(a) * r * m]) }
+      const path = k => { g.beginPath(); P.forEach(([x, y], i) => g[i ? 'lineTo' : 'moveTo'](x * k, y * k)); g.closePath() };
+      g.fillStyle = '#3a3642'; path(1.12); g.fill(); g.fillStyle = '#6d6a78'; path(1); g.fill();
+      g.save(); g.translate(-r * .18, -r * .2); g.fillStyle = '#98949f'; path(.55); g.fill(); g.restore();
+      g.strokeStyle = '#ff6a4a'; g.lineWidth = 1; g.beginPath(); g.moveTo(-r * .4, -r * .1); g.lineTo(0, r * .1); g.lineTo(r * .3, -r * .2); g.stroke(); g.lineWidth = 1;
+      g.restore();
+    }
+    function rockTrail(b) { if (R() < .5) dp.push({ k: 's', x: b.x, y: b.y, vx: (R() - .5) * 8, vy: (R() - .5) * 8, life: .3, max: .6, s: 2 + R() * 2, c: '120,110,125' }) }
+    function rockBreak(b) {
+      puff(b.x, b.y, 2, '110,100,115', .7);
+      for (let i = 0; i < 7; i++) { const a = R() * 6.283, v = 40 + R() * 80; dp.push({ k: 'p', x: b.x, y: b.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 10, life: .35 + R() * .3, max: .65, s: 1.5 + R() * 2, c: ['#6d6a78', '#98949f', '#3a3642'][i % 3] }) }
+      fx.push({ k: 'ring', x: b.x, y: b.y, r: 9, w: 2, life: .18, max: .18, col: '#cfc8d8' });
+      if (Math.hypot(p.x - b.x, p.y - b.y) < 14) shake = Math.max(shake, 5); if (R() < .3) SFX.boom(8);
+    }
+    function bossImpact(h) {
+      const big = h.big, x = h.x, y = h.y, r = h.r;
+      puff(x, y, big ? 7 : 4, '96,84,92', big ? 1.8 : 1.2);
+      fx.push({ k: 'ring', x, y, r: r * 1.5, w: big ? 5 : 3, life: .5, max: .5, col: '#ffd0a0' });
+      if (big) {
+        fx.push({ k: 'ring', x, y, r: r * 2.2, w: 3, life: .7, max: .7, col: '#ff7a5a' }, { k: 'gl', x, y, r: r * 2.4, c: '255,110,70', life: .4, max: .4 });
+        for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + R() * .3; dp.push({ k: 'l', x: x + Math.cos(a) * 10, y: y + Math.sin(a) * 6, a: a + Math.PI, len: 34 + R() * 40, w: 3, cc: '#ff5a3a', life: .55, max: .55 }) }
+        shake = Math.max(shake, 10); HST = Math.max(HST, .06);
+      }
+      for (let i = 0; i < (big ? 26 : 12); i++) { const a = R() * 6.283, v = 40 + R() * (big ? 150 : 90); dp.push({ k: 'p', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .7 - 25, life: .45 + R() * .5, max: .95, s: 2 + R() * 3, c: ['#6d6a78', '#98949f', '#4a4650'][i % 3] }) }
+    }
+    {
+      const _em = EM.boss, ez = q => 1 - (1 - q) * (1 - q);
+      EM.boss = (pp, at, tm) => {
+        const e = BOSS_E || {}, PI = Math.PI, d = Math.cos(e.ca || 0) < 0 ? -1 : 1, wk = e.wk || 0;
+        let rot = Math.sin(tm * 1.3) * .012 + Math.sin(tm * 9) * .03 * wk, sy = 1 + Math.sin(tm * 2.2) * .012 - Math.abs(Math.sin(tm * 9)) * .012 * wk, sx = 1, ox = 0;
+        if (e.s2 == 'wind' && at) {
+          if (e.atk == 'slam') { if (pp < .72) { const k = ez(pp / .72); sy *= 1 + .035 * k; sx *= 1 - .02 * k; rot -= .05 * k } else { const q = (pp - .72) / .28, w = q * q; sy *= 1.035 - .1 * w; sx *= .98 + .07 * w; rot += .05 * w } }
+          else if (e.atk == 'rain') sy *= 1 + .04 * ez(pp);
+          else if (e.atk == 'fan') rot += .05 * ez(pp);
+          else if (e.atk == 'charge') { const k = ez(pp); sy *= 1 - .05 * k; sx *= 1 + .04 * k; rot += d * .1 * k }
+        }
+        else if (e.s2 == 'act') { rot += d * .16; sx *= 1.05; sy *= .96 }
+        else if (e.s2 == 'rest' && e.atk == 'slam') { const q = Math.max(0, 1 - (.7 - e.tm) / .35); sy *= 1 - .065 * q * q; sx *= 1 + .05 * q * q }
+        if (e.rc > 0) { rot -= .06 * e.rc; sy *= 1 - .04 * e.rc }
+        if (e.fl > 0) { ox += (Math.random() - .5) * 10; sy *= .97; sx *= 1.03 }
+        e.zr = (e.zr || 0) + (rot - (e.zr || 0)) * .3; e.zx = (e.zx || 1) + (sx - (e.zx || 1)) * .3; e.zy = (e.zy || 1) + (sy - (e.zy || 1)) * .3;
+        g.save(); g.translate(320 + ox, 331); g.rotate(e.zr); g.scale(e.zx, e.zy); g.translate(-320, -331); _em(pp, at, tm); g.restore();
+      };
+    }
+    function bossAnim(e, dt, ps) {
+      if (!BOSS.on || BOSS.dead) return;
+      e.rc = Math.max(0, (e.rc || 0) - dt * 2.6);
+      const s = e.s2, K = e.atk, wx = e.x - 32, wy = e.y - 30;
+      if (s == 'wind') {
+        const f = 1 - e.tm / e.tmx;
+        if (K == 'fan' && R() < .7) { const a = R() * 6.283, d = 14 + R() * 10 * (1 - f); dp.push({ k: 'p', x: wx + Math.cos(a) * d, y: wy - 10 * f + Math.sin(a) * d * .6, vx: -Math.cos(a) * 30, vy: -Math.sin(a) * 20, life: .3, max: .3, s: 1.5 + R() * 1.5, c: R() < .5 ? '#8c8896' : '#ff6a5a' }) }
+        if (K == 'slam' && R() < .8) { const a = R() * 6.283, d = 40 + R() * 20; dp.push({ k: 'p', x: e.x + Math.cos(a) * d, y: e.y + 4 + Math.sin(a) * d * .5, vx: -Math.cos(a) * d * 2.5, vy: -Math.sin(a) * d * 1.2, life: .35, max: .35, s: 2, c: '#ff7a5a' }) }
+        if (K == 'charge' && R() < .5) puff(e.x - Math.cos(e.ca) * 10, e.y + 8, 1, '110,95,100', .8);
+        if (K == 'rain' && R() < .6) dp.push({ k: 'p', x: e.x + (R() - .5) * 40, y: e.y + 6, vx: 0, vy: -50, life: .5, max: .5, s: 2, c: '#ffb07a' });
+      }
+      if (ps == 'wind' && s != 'wind') {
+        if (K == 'charge' && s == 'act') { puff(e.x, e.y + 6, 6, '110,95,100', 1.4); fx.push({ k: 'ring', x: e.x, y: e.y + 6, r: 24, w: 3, life: .3, max: .3, col: '#ffd0a0' }); shake = Math.max(shake, 3); e.rc = .6 }
+        else if (K == 'slam') e.rc = .5;
+      }
+      if (s == 'act') {
+        dp.push({ k: 'l', x: e.x - Math.cos(e.ca) * 10 + (R() - .5) * 14, y: e.y + (R() - .5) * 22, a: e.ca, len: 30 + R() * 40, life: .2, max: .2 });
+        if (e.hit && !e._h) { e._h = 1; fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, w: 4, life: .3, max: .3, col: '#fff' }, { k: 'gl', x: p.x, y: p.y, r: 50, c: '255,90,70', life: .3, max: .3 }); shake = Math.max(shake, 8); HST = Math.max(HST, .06) }
+      } else e._h = 0;
+      const wk = e.wk || 0; e.pw = (e.pw || 0) + dt * 9 * (wk > .4 ? 1 : 0); const st = Math.floor(e.pw / Math.PI);
+      if (st !== e.pl) { e.pl = st; if (wk > .4) { puff(e.x + (st % 2 ? 10 : -10), e.y + 13, 2, '96,84,92', .7); shake = Math.max(shake, 1.2) } }
+      if (BOSS.ph >= 3 && R() < .5) dp.push({ k: 'p', x: e.x + (R() - .5) * 34, y: e.y - R() * 30, vx: (R() - .5) * 14, vy: -30 - R() * 30, life: .6 + R() * .5, max: 1, s: 1.5 + R() * 1.5, c: R() < .5 ? '#ff7a3a' : '#ffd070' });
+    }
+    { const _btk = bossTick; bossTick = function (e, dt) { const ps = e.s2; _btk(e, dt); bossAnim(e, dt, ps) } }
+    { // batu jatuh untuk serangan "rain"
+      const _bg = bossGround;
+      bossGround = function (e) {
+        _bg(e); if (e.sw > 0) return;
+        BOSS.hz.forEach(h => {
+          if (h.big) return; const k = 1 - h.t / h.mx; if (k < .3) return; const f = (k - .3) / .7, ry = h.y - 210 * (1 - f) * (1 - f);
+          g.fillStyle = 'rgba(0,0,0,' + (.1 + .2 * f) + ')'; g.beginPath(); g.ellipse(h.x, h.y + 2, h.r * .5 * f, h.r * .2 * f, 0, 0, 7); g.fill();
+          drawRock({ x: h.x, y: ry, r: h.r * .25, rot: h.x, vr: 6, sd: h.x });
+        });
+      };
+    }
+
+    /* ===== Animasi gerak musuh biasa (slime / skel / mage) — bos tidak ikut ===== */
+    function enemyAnim(e, mvd, atk, pg) {
+      const dt = Math.min(.05, Math.max(.001, t - (e.pt || t - .016))), U = 1 / .215, cl = (v, a, b) => Math.max(a, Math.min(b, v)); e.pt = t;
+      if (e.rx == null) { Object.assign(e, { rx: e.x, ry: e.y, zr: 0, zx: 1, zy: 1, hh: 0, gp: R() * 6, spd: 0, mz: 0, vxs: 0, px: e.x }) }
+      if (Math.hypot(e.x - e.rx, e.y - e.ry) > 40) { e.rx = e.x; e.ry = e.y } else { const k = 1 - Math.pow(1e-6, dt); e.rx += (e.x - e.rx) * k; e.ry += (e.y - e.ry) * k }
+      e.spd += (mvd / dt - e.spd) * Math.min(1, dt * 10); e.vxs += ((e.x - e.px) / dt - e.vxs) * Math.min(1, dt * 8); e.px = e.x;
+      e.mz += ((atk || e.stun > 0 ? 0 : cl(e.spd / 45, 0, 1)) - e.mz) * Math.min(1, dt * 8);
+      if (e.pa && !atk && (e.ppg || 0) > .85) e.kick = 1; e.pa = atk; e.ppg = pg; e.kick = Math.max(0, (e.kick || 0) - dt * 3.5);
+      const m = e.mz, ph = e.ph || 0, old = Math.floor(e.gp / Math.PI);
+      e.gp += dt * 9 * (.4 + m) * (m > .04 ? 1 : 0);
+      const lnd = m > .3 && Math.floor(e.gp / Math.PI) !== old, lean = cl(e.vxs / 80, -1, 1);
+      let h = 0, sx = 1, sy = 1, rot = 0;
+      if (e.k == 'slime') {
+        const hop = Math.sin((e.gp % Math.PI)), idle = Math.sin(t * 3 + ph);
+        const bb = Math.abs(Math.sin(e.gp)); h = bb * 1.3 * U * m; sy = 1 - .025 * (1 - bb) * m + .02 * idle * (1 - m); sx = 1 / Math.pow(sy, .6); rot = Math.sin(e.gp) * .03 * m + lean * .05 * m;
+        if (lnd) puff(e.x, e.y + 6, 1, '90,80,100', .5);
+      } else if (e.k == 'skel') {
+        h = (1.4 + .8 * m) * U * (.5 + .5 * Math.sin(t * 3 + ph)); rot = Math.sin(t * 2 + ph) * .025 + lean * .12 * m; sy = 1 + .02 * Math.sin(t * 3 + ph + 1); sx = 1 - (sy - 1) * .6;
+      } else {
+        const b = Math.abs(Math.sin(e.gp)); h = b * 1.2 * U * m; rot = Math.sin(e.gp) * .035 * m + lean * .06 * m + Math.sin(t * 2 + ph) * .01;
+        sy = 1 - .03 * (1 - b) * m + .015 * Math.sin(t * 2.4 + ph) * (1 - m); sx = 1 / Math.pow(sy, .6);
+        if (lnd) puff(e.x, e.y + 6, 1, '90,80,100', .4);
+      }
+      if (atk) { const q = Math.sin(cl(pg, 0, 1) * Math.PI); sy *= 1 - .06 * q; sx *= 1 + .05 * q }
+      if (e.fl > 0) { sx *= 1.08; sy *= .92; rot += (R() - .5) * .08 }
+      const f = Math.min(1, dt * 14); e.zr += (rot - e.zr) * f; e.zx += (sx - e.zx) * f; e.zy += (sy - e.zy) * f; e.hh += (h - e.hh) * Math.min(1, dt * 18);
+    }
+
+    /* ===== Rig sendi musuh: IK 2 ruas + keyframe ===== */
+    function mSeg(x0, y0, x1, y1, w, c) { const l = Math.hypot(x1 - x0, y1 - y0); g.save(); g.translate(x0, y0); g.rotate(Math.atan2(y1 - y0, x1 - x0) - Math.PI / 2); mr(-w / 2, -w / 2, w, l + w, c); g.restore() }
+    function mIK(sx, sy, tx, ty, l1, l2, side) {
+      let dx = tx - sx, dy = ty - sy, d = Math.hypot(dx, dy) || 1; const mx = l1 + l2 - .5;
+      if (d > mx) { dx *= mx / d; dy *= mx / d; d = mx; tx = sx + dx; ty = sy + dy }
+      const be = Math.atan2(dx, dy), ga = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d)))), c = q => [sx + Math.sin(be + q * ga) * l1, sy + Math.cos(be + q * ga) * l1], a = c(1), b = c(-1), r = (a[0] - 320) * side >= (b[0] - 320) * side ? a : b;
+      return [r[0], r[1], tx, ty];
+    }
+    function mLimb2(sx, sy, tx, ty, l1, l2, side, w, c1, c2, ci, ch) {
+      const [ex, ey, hx, hy] = mIK(sx, sy, tx, ty, l1, l2, side);
+      mSeg(sx, sy, ex, ey, w, c1); mSeg(ex, ey, hx, hy, w * .9, c2);
+      if (ci) { mSeg(sx, sy, ex, ey, w * .4, ci); mSeg(ex, ey, hx, hy, w * .36, ci) }
+      mr(ex - w * .45, ey - w * .45, w * .9, w * .9, c1);
+      if (ch) mr(hx - 6, hy - 5, 12, 10, ch);
+      return [hx, hy];
+    }
+    function mLeg(hx, side, w, c1, ci) {
+      const e = ENM || {}, m = e.mz || 0, ph = (e.gp || 0) + (side > 0 ? Math.PI : 0), lf = Math.max(0, Math.sin(ph)) * m;
+      const r = mLimb2(hx, 286, hx + side * (lf * 3 + .8 * Math.sin(ph) * m), 323 - lf * 10, 19, 18, side, w, c1, c1, ci);
+      mr(r[0] - 12, r[1] - 4, 24, 12, '#171720');
+    }
+    function mKF(pp, F) { for (let i = 1; i < F.length; i++) if (pp <= F[i][0]) { const a = F[i - 1], b = F[i], u = (pp - a[0]) / ((b[0] - a[0]) || 1), w = u * u * (3 - 2 * u); return a[1].map((v, j) => v + (b[1][j] - v) * w) } return F[F.length - 1][1] }
+    function mAct(at, pp, F) {
+      const k = (ENM && ENM.kick) || 0; if (at) return mKF(pp, F);
+      if (k > 0) { const a = F[F.length - 1][1], b = F[0][1], w = k * k * (3 - 2 * k); return a.map((v, j) => b[j] + (v - b[j]) * w) }
+      return F[0][1];
+    }
+    function mSword(hx, hy, ab, al) {
+      g.save(); g.globalAlpha = al; g.translate(hx, hy - 4); g.rotate(-ab);
+      mr(-2, -2, 6, 12, '#5b3b2b'); mr(-7, 8, 16, 4, '#a6aab0'); mr(-1, 12, 5, 36, '#9ba8b5'); mr(0, 13, 2, 29, '#e0e5e9'); mr(-1, 47, 5, 5, '#cbd3dc'); mr(-1, 20, 5, 3, '#77565a'); g.restore();
+    }
   </script>
 </body>
 
