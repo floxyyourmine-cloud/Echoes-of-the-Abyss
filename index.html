@@ -2442,7 +2442,7 @@
     const EM = { slime: mHalf, skel: mWizard, mage: mArcher };
     function drawEnemy(e) {
       if (e.k == 'dummy') { drawDummy(e); return }
-      const S = e.k == 'boss' ? .36 : .215, atk = e.wind > 0 || e.an > 0; let pg = 0;
+      const S = e.k == 'boss' ? .4 : .215, atk = e.wind > 0 || e.an > 0; let pg = 0;
       if (e.wind > 0) pg = 1 - e.wind / (e.k == 'skel' ? .6 : .7); else if (e.an > 0) pg = 1 - e.an / .6;
       const mvd = Math.hypot(e.x - e.lx, e.y - e.ly); e.lx = e.x; e.ly = e.y;
       e.wk += ((mvd > .15 && !atk && e.stun <= 0 ? 1 : 0) - e.wk) * .2;
@@ -4349,15 +4349,127 @@
     const BOSS = { on: 0, hz: [], q: [], ph: 1, intro: 0, dead: 0, vt: 0, ban: 0 };
 
     ET.boss = { hp: BOSS_HP, sp: 42, r: 13, c: '#b0152d', sg: 1e9, xp: 400, ht: 52 };
-    EC.boss = ['#d0c5a8', '#827967', '#ff6a8a'];
+    EC.boss = ['#7a4a2e', '#3b2217', '#ff6a8a'];
     SPC.boss = ['255,120,140', '170,20,50']; SPH.boss = '#ff6a8a';
 
+    /* ===== MODEL BOS: MINOTAUR (Morvath) ===== */
+    let BOSS_E = null;
+    const MNT = { fur: '#5a3522', furD: '#3b2217', furL: '#7a4a2e', skin: '#c89a7c', skinD: '#9a6e56', horn: '#e8dcc0', hornD: '#b3a283', hornR: '#8a7a60', hornT: '#fff4d8', iron: '#2c2a33', ironL: '#4d4a58', ironH: '#7d7a88', gold: '#d9aa3c', goldD: '#9a741f', leather: '#4a2a1a', cloth: '#7a1f30', clothD: '#521320', steel: '#9ba8b5', steelL: '#e0e5e9', steelD: '#5c6672', wood: '#6a4630', hoof: '#1a1218' };
+    const mq = (x, y, w, h, c) => mr(x, y, Math.max(1, Math.round(w)), Math.max(1, Math.round(h)), c);
+    const mm = (x, y, w, h, c) => { mr(x, y, w, h, c); mr(640 - x - w, y, w, h, c) };   // simetris kiri-kanan (sumbu x = 320)
+    const bz = (u, x0, y0, x1, y1, x2, y2) => { const a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, d = u * u; return [a * x0 + b * x1 + d * x2, a * y0 + b * y1 + d * y2] };
+
+    function mHorn(side, hd, cp) {   // side 1 = kiri layar, -1 = kanan layar
+      const X = x => side > 0 ? x : 640 - x, M = MNT, tx = 238 + 16 * cp, ty = 96 + hd + 60 * cp;
+      const P = [X(300), 160 + hd, X(228), 166 + hd, X(tx), ty], n = 24;
+      for (let i = 0; i <= n; i++) { const u = i / n, [x, y] = bz(u, ...P), w = 16 - 12 * u; mq(x - w / 2, y - w / 2, w, w, M.hornD) }
+      for (let i = 0; i <= n; i++) { const u = i / n, [x, y] = bz(u, ...P), w = (16 - 12 * u) * .62; mq(x - w / 2 - side, y - w / 2 - 1, w, w, u > .86 ? M.hornT : M.horn) }
+      [.18, .4, .62].forEach(u => { const [x, y] = bz(u, ...P), w = 16 - 12 * u; mq(x - w / 2, y - 1, w, 2, M.hornR) });
+    }
+    function mArm(sx, sy, hx, hy, w0, w1, ex, vein) {
+      const M = MNT, mx = (sx + hx) / 2 + ex, my = (sy + hy) / 2 + 4, n = 10, pts = [];
+      for (let i = 0; i <= n; i++) { const u = i / n, [x, y] = bz(u, sx, sy, mx, my, hx, hy); pts.push([x, y, w0 + (w1 - w0) * u + Math.sin(u * Math.PI) * 6]) }
+      pts.forEach(([x, y, w]) => mq(x - w / 2, y - w / 2, w, w, M.fur));
+      pts.forEach(([x, y, w]) => mq(x - w / 2 + 1, y - w / 2 + 1, w * .26, w - 2, M.furL));
+      pts.forEach(([x, y, w]) => mq(x + w / 2 - 4, y - w / 2 + 1, 3, w - 2, M.furD));
+      if (vein) pts.forEach(([x, y, w], i) => { if (i % 2 && i < 8) mq(x - 1, y - 3, 2, 6, '#ff4a3a') });
+      const [bx, by, bw] = pts[8];   // gelang besi di lengan bawah
+      mq(bx - bw / 2 - 2, by - 5, bw + 4, 10, M.iron); mq(bx - bw / 2 - 2, by - 5, bw + 4, 2, M.ironH); mq(bx - 2, by - 2, 4, 4, M.gold);
+      mq(hx - 12, hy - 8, 24, 20, M.fur); mq(hx - 12, hy + 6, 24, 5, M.furD); mq(hx - 12, hy - 8, 4, 18, M.furL);
+      [-5, 1, 7].forEach(o => mq(hx + o, hy - 8, 2, 15, M.furD));
+    }
+    function mLeg(x, up) {
+      const M = MNT;
+      mq(x, 288, 28, 22, M.fur); mq(x + 2, 290, 6, 18, M.furL); mq(x + 22, 290, 5, 20, M.furD);
+      mq(x + 2, 302, 24, 7, M.iron); mq(x + 4, 303, 20, 2, M.ironL); mq(x + 12, 304, 4, 4, M.gold);
+      mq(x + 3, 309 - up, 22, 12, M.furD); mq(x + 5, 310 - up, 4, 10, M.fur);
+      mq(x - 1, 319 - up, 30, 12, M.hoof); mq(x + 1, 320 - up, 26, 2, '#3a3040'); mq(x + 13, 321 - up, 2, 10, '#000');
+    }
+
     EM.boss = (pp, at, tm) => {
-      mHalf(pp, at, tm);
-      mr(293, 150, 9, 30, MC.bone); mr(298, 138, 6, 16, "#e0d5bd");
-      mr(340, 150, 9, 30, MC.bone); mr(339, 138, 6, 16, "#e0d5bd");
-      mr(302, 162, 38, 6, "#8a1f30"); mr(318, 156, 6, 8, "#ffd34d");
-      mr(309, 194, 6, 4, "#ff3b4d"); mr(330, 194, 6, 4, "#ff3b4d");
+      const M = MNT, e = BOSS_E || {}, ph = BOSS.ph, PI = Math.PI, wk = e.wk || 0, ez = q => 1 - (1 - q) * (1 - q);
+      const IDLE = PI + .35, SLAM = 2 * PI - .35;
+      let a = IDLE + Math.sin(tm * 2) * .035, rz = 0, fz = 0, cp = 0, ro = 0;
+      if (e.s2 == 'wind' && at) {
+        const u = pp;
+        if (e.atk == 'slam') {
+          if (u < .72) { rz = ez(u / .72); a = IDLE - .25 * rz; ro = rz * .6 }
+          else { const s = (u - .72) / .28, w = s * s, b = PI + .1; a = b + w * (SLAM - b); rz = 1 - w; ro = .6 }
+        }
+        else if (e.atk == 'rain') { rz = ez(u); fz = rz; a = IDLE - .3 * rz; ro = rz }
+        else if (e.atk == 'fan') { fz = ez(u); rz = .3 * fz; a = IDLE + .4 * fz; ro = u }
+        else if (e.atk == 'charge') { cp = ez(u); a = IDLE + .55 * cp }
+      }
+      else if (e.s2 == 'act') { cp = 1; a = IDLE + .55 }
+      else if (e.s2 == 'rest' && e.atk == 'slam') { const rec = Math.max(0, Math.min(1, e.tm / .7)); a = IDLE + (SLAM - IDLE) * rec }
+      const bb = Math.sin(tm * 2.2) * 1.3, hd = 12 * cp - 5 * ro + bb * .5, step = Math.sin(tm * 9) * 3 * wk;
+      const eyeC = ph >= 3 ? '#ffb040' : '#ff3b4d', jw = 2 + Math.round(ro * 10);
+
+      g.save();
+      if (!MT) { g.fillStyle = 'rgba(0,0,0,.38)'; g.beginPath(); g.ellipse(320, 331, 66, 9, 0, 0, 7); g.fill() }
+
+      // Kaki berkuku
+      mLeg(286, Math.max(0, step)); mLeg(326, Math.max(0, -step));
+
+      g.save(); g.translate(0, bb + 8 * cp);
+      // Torso berbulu
+      mq(278, 210, 84, 68, M.fur); mq(280, 212, 6, 62, M.furL); mq(354, 212, 6, 62, M.furD);
+      mm(284, 216, 34, 24, M.furL); mq(318, 216, 4, 52, M.furD);
+      mm(298, 246, 20, 5, M.furL); mm(298, 255, 20, 5, M.furL); mm(300, 264, 18, 5, M.furL);
+      mm(284, 236, 36, 3, M.furD);
+      if (ph >= 2) { mm(292, 224, 3, 14, '#c8283e'); mm(298, 226, 3, 14, '#c8283e') }   // cat perang
+      if (ph >= 3) { mm(288, 242, 2, 12, '#ff4a3a'); mm(300, 270, 8, 2, '#ff4a3a'); mm(296, 240, 2, 8, '#ff4a3a') }   // urat membara
+      // Harness kulit menyilang + medali emas
+      for (let i = 0; i < 12; i++) { const x = 284 + i * 6, y = 214 + i * 4.7; mq(x, y, 8, 7, M.leather); mq(640 - x - 8, y, 8, 7, M.leather); mq(x, y, 8, 2, '#6a3e28'); mq(640 - x - 8, y, 8, 2, '#6a3e28') }
+      mq(312, 234, 16, 16, M.goldD); mq(313, 235, 14, 14, M.gold); mq(317, 239, 6, 6, '#c8283e'); mq(313, 235, 14, 2, '#f2d27a');
+      // Sabuk + cawat
+      mq(280, 268, 80, 11, M.leather); mq(280, 268, 80, 2, '#6a3e28'); mq(310, 266, 20, 15, M.gold); mq(314, 270, 12, 7, M.goldD); mm(286, 271, 4, 4, M.ironH); mm(296, 271, 4, 4, M.ironH);
+      mq(290, 279, 60, 15, M.cloth); mq(290, 279, 60, 3, M.clothD); mq(318, 282, 4, 12, M.clothD);
+      for (let i = 0; i < 5; i++) mq(290 + i * 12, 294, 8, 5 + (i * 7) % 4, M.cloth);
+      mm(276, 279, 14, 16, M.iron); mm(278, 281, 10, 2, M.ironL); mm(280, 287, 4, 4, M.gold);
+
+      // Lengan: kiri (rantai putus di pergelangan) & kanan (pegang kapak)
+      const hlx = 252 - 22 * fz - 6 * cp, hly = 292 - 56 * fz - 10 * cp, hrx = 386 - 14 * rz + 4 * cp, hry = 288 - 62 * rz - 4 * cp;
+      mArm(266, 234, hlx, hly, 28, 22, -8, ph >= 3);
+      mArm(374, 234, hrx, hry, 28, 22, 8, ph >= 3);
+      for (let i = 0; i < 4; i++) mq(hlx - 3 + Math.sin(tm * 3 + i) * 2, hly + 12 + i * 5, 5, 4, M.ironH);
+      // Pauldron besi bergerigi
+      mm(248, 206, 38, 24, M.iron); mm(250, 204, 34, 5, M.ironL); mm(252, 208, 12, 3, M.ironH); mm(248, 226, 38, 4, M.gold);
+      mm(256, 196, 7, 11, M.ironL); mm(270, 192, 7, 15, M.ironL); mm(258, 194, 3, 3, M.ironH); mm(272, 190, 3, 3, M.ironH);
+      mm(254, 230, 30, 8, M.furD);
+      // Leher + surai
+      mq(296, 196, 48, 22, M.furD); mq(300, 200, 8, 16, M.fur); mq(332, 200, 8, 16, M.fur);
+
+      // Kepala banteng
+      mHorn(1, hd, cp); mHorn(-1, hd, cp);
+      mm(276, 163 + hd, 18, 10, M.furD); mm(279, 165 + hd, 11, 5, '#b86a6a');                // telinga
+      mq(294, 150 + hd, 52, 44, M.fur); mq(298, 146 + hd, 44, 8, M.furD); mq(306, 141 + hd, 28, 7, M.furD); mq(314, 137 + hd, 12, 6, M.furD);
+      mm(296, 168 + hd, 6, 22, M.furL); mq(300, 152 + hd, 40, 10, M.furL); mq(317, 152 + hd, 6, 30, M.furD);
+      for (let i = 0; i < 4; i++) { mq(298 + i * 6, 163 + hd + i * 2, 6, 8, M.furD); mq(640 - (298 + i * 6) - 6, 163 + hd + i * 2, 6, 8, M.furD) }   // alis marah
+      mm(303, 175 + hd, 14, 8, '#150a08'); mm(307, 176 + hd, 8, 5, eyeC); mm(308, 176 + hd, 3, 2, '#ffe6d0');
+      if (!MT && ph >= 2) { g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,70,50,' + (.2 + .1 * Math.sin(tm * 8)) + ')'; g.fillRect(298, 170 + hd, 24, 18); g.fillRect(318, 170 + hd, 24, 18); g.restore() }
+      mq(300, 184 + hd, 40, 26, M.skinD); mq(304, 186 + hd, 32, 21, M.skin); mq(313, 180 + hd, 14, 8, M.skin); mm(311, 193 + hd, 5, 6, '#2a110d');
+      mq(317, 199 + hd, 6, 2, M.gold); mq(316, 201 + hd, 2, 9, M.gold); mq(322, 201 + hd, 2, 9, M.gold); mq(317, 209 + hd, 6, 2, M.goldD);   // anting hidung
+      mq(306, 208 + hd, 28, jw, '#2a0c10'); if (jw > 6) mq(314, 211 + hd, 12, jw - 3, '#b04050');
+      mm(309, 208 + hd, 4, 4, '#efe4c8'); mq(308, 208 + hd + jw, 24, 6, M.skinD); mm(310, 205 + hd + jw, 3, 3, '#efe4c8');
+      if (!MT) for (let i = 0; i < 4; i++) {   // uap dari hidung
+        const u = (tm * 1.3 + i * .27) % 1, side = i % 2, al = (1 - u) * (ph >= 3 ? .75 : .5);
+        g.fillStyle = ph >= 3 ? 'rgba(255,150,70,' + al + ')' : 'rgba(235,235,245,' + al + ')'; const s = 3 + u * 5; g.fillRect((side ? 332 : 308) - s / 2 + (side ? 1 : -1) * u * 6, 202 + hd - u * 16, s, s)
+      }
+      g.restore();
+
+      // Kapak perang raksasa
+      g.save(); g.translate(hrx, hry); g.rotate(a);
+      mq(-3, -22, 7, 134, M.wood); mq(-3, -22, 2, 134, '#8a5c40'); mq(-4, -6, 9, 3, M.leather); mq(-4, 2, 9, 3, M.leather); mq(-5, -25, 10, 5, M.iron);
+      [1, -1].forEach(s => {
+        const rr = (x, y, w, h, c) => mr(s > 0 ? x : -x - w, y, w, h, c);
+        rr(5, 76, 10, 32, M.steelD); rr(13, 71, 9, 42, M.steel); rr(21, 65, 8, 54, M.steel); rr(28, 62, 3, 60, M.steelL); rr(9, 80, 4, 24, M.steelL); rr(23, 102, 5, 13, '#7a1a24')
+      });
+      mq(-7, 72, 15, 38, M.iron); mq(-7, 72, 15, 3, M.gold); mq(-7, 107, 15, 3, M.gold); mq(-2, 78, 5, 26, M.ironL); mq(-3, 58, 7, 15, M.steelL); mq(-2, 110, 5, 11, M.steelL);
+      g.restore();
+      // Kepalan kanan menggenggam gagang
+      mq(hrx - 12, hry - 8, 24, 20, M.fur); mq(hrx - 12, hry + 6, 24, 5, M.furD); mq(hrx - 12, hry - 8, 4, 18, M.furL);[-5, 1, 7].forEach(o => mq(hrx + o, hry - 8, 2, 15, M.furD));
+      g.restore();
     };
 
     const W2 = [...WB(), [200, 120, 28, 28, 'p'], [200, 332, 28, 28, 'p'], [572, 120, 28, 28, 'p'], [572, 332, 28, 28, 'p']];
@@ -4488,7 +4600,7 @@
       if (e.s2 == 'wind' && e.atk == 'charge') { const k = 1 - e.tm / e.tmx; g.save(); g.translate(e.x, e.y); g.rotate(e.ca); g.fillStyle = 'rgba(255,60,60,' + (.12 + .28 * k) + ')'; g.fillRect(0, -14, 190, 28); g.strokeStyle = 'rgba(255,120,120,.7)'; g.strokeRect(.5, -13.5, 190, 27); g.restore() }
       B.hz.forEach(h => { const k = 1 - h.t / h.mx; g.fillStyle = 'rgba(255,50,60,' + (.1 + .18 * k) + ')'; g.beginPath(); g.arc(h.x, h.y, h.r, 0, 7); g.fill(); g.strokeStyle = 'rgba(255,90,90,' + (.5 + .4 * k) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(h.x, h.y, h.r, 0, 7); g.stroke(); g.lineWidth = 1; g.fillStyle = 'rgba(255,70,70,.35)'; g.beginPath(); g.arc(h.x, h.y, h.r * k, 0, 7); g.fill() });
     }
-    const _deB = drawEnemy; drawEnemy = function (e) { if (e.k == 'boss') bossGround(e); _deB(e) };
+    const _deB = drawEnemy; drawEnemy = function (e) { if (e.k == 'boss') { bossGround(e); BOSS_E = e } _deB(e) };
     function bossHud() {
       const B = BOSS, e = es.find(x => x.k == 'boss');
       g.fillStyle = 'rgba(12,11,20,.92)'; g.fillRect(W - 172, 6, 168, 44); g.font = 'bold 9px monospace'; txt('BOSS CHAMBER', W - 10, 18, '#ff8aa0', 'right'); txt('Morvath', W - 10, 44, '#778', 'right');
@@ -4496,7 +4608,7 @@
         const bw = Math.min(W * .5, 360), x = W / 2 - bw / 2, y = 76; g.fillStyle = '#000b'; g.fillRect(x - 2, y - 2, bw + 4, 10);
         g.fillStyle = B.ph >= 3 ? '#ff3b4d' : '#c8283e'; g.fillRect(x, y, bw * Math.max(0, e.hp) / e.mhp, 6);
         g.fillStyle = '#fff6';[.6, .3].forEach(k => g.fillRect(x + bw * k, y - 2, 1, 10));
-        g.font = 'bold 9px monospace'; txt('MORVATH, SANG KSATRIA TULANG', W / 2, y - 5, '#ffd0da', 'center')
+        g.font = 'bold 9px monospace'; txt('MORVATH, SANG MINOTAUR', W / 2, y - 5, '#ffd0da', 'center')
       }
       if (B.ban > 0) { const al = Math.max(0, Math.min(1, B.ban / .5, (3.2 - B.ban) / .4)); g.save(); g.globalAlpha = al; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(0, 100, W, 44); g.fillStyle = 'rgba(255,60,90,.9)'; g.fillRect(0, 100, W, 1); g.fillRect(0, 143, W, 1); g.font = '8px monospace'; txt('— B O S S —', W / 2, 113, '#fff', 'center'); g.font = 'bold 18px monospace'; txt('MORVATH', W / 2, 136, '#ff6a8a', 'center'); g.restore() }
     }
