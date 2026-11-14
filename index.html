@@ -4697,6 +4697,395 @@
       mr(-2, -2, 6, 12, '#5b3b2b'); mr(-7, 8, 16, 4, '#a6aab0'); mr(-1, 12, 5, 36, '#9ba8b5'); mr(0, 13, 2, 29, '#e0e5e9'); mr(-1, 47, 5, 5, '#cbd3dc'); mr(-1, 20, 5, 3, '#77565a'); g.restore();
     }
   </script>
+  <!-- ===== TUTORIAL SER ALDRIC (panel + skip) ===== -->
+  <style>
+    #tutPanel {
+      position: fixed;
+      left: 50%;
+      top: 70px;
+      transform: translateX(-50%);
+      z-index: 45;
+      width: min(440px, 62vw);
+      padding: 9px 14px 10px;
+      background: linear-gradient(145deg, rgba(12, 12, 17, .9), rgba(24, 19, 19, .86));
+      border: 1px solid rgba(190, 153, 93, .65);
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, .35), 0 6px 28px rgba(0, 0, 0, .6);
+      color: #e8e4f0;
+      font: 13px/1.45 Georgia, "Times New Roman", serif;
+      pointer-events: none;
+      text-align: left;
+    }
+
+    #tutPanel .tp-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #b29b75;
+      text-transform: uppercase;
+    }
+
+    #tutSkip {
+      pointer-events: auto;
+      touch-action: manipulation;
+      padding: 3px 10px;
+      border: 1px solid rgba(216, 184, 120, .7);
+      background: rgba(8, 7, 16, .85);
+      color: #f8dfaa;
+      font: bold 10px Georgia, serif;
+      letter-spacing: 2px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    #tutSkip:hover {
+      background: rgba(216, 184, 120, .22);
+    }
+
+    #tutTitle {
+      margin-top: 3px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #f8dfaa;
+      text-shadow: 0 1px 2px #000;
+    }
+
+    #tutTitle.ok {
+      color: #8fe8a0;
+    }
+
+    #tutText {
+      margin-top: 2px;
+      color: #e8e4f0;
+    }
+
+    #tutKeys {
+      margin-top: 6px;
+      line-height: 2;
+    }
+
+    #tutKeys:empty,
+    #tutNote:empty,
+    #tutProg:empty,
+    #tutText:empty {
+      display: none;
+    }
+
+    #tutKeys .kk {
+      display: inline-block;
+      margin-right: 12px;
+      color: #cfc8dc;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    #tutKeys kbd {
+      display: inline-block;
+      min-width: 22px;
+      padding: 0 6px;
+      margin-right: 3px;
+      border: 1px solid #d8b878;
+      border-bottom-width: 3px;
+      border-radius: 4px;
+      background: #1a1727;
+      color: #f8dfaa;
+      font: bold 12px monospace;
+      text-align: center;
+    }
+
+    #tutNote {
+      margin-top: 3px;
+      font-size: 11px;
+      color: #9a97b8;
+      font-style: italic;
+    }
+
+    #tutProg {
+      margin-top: 6px;
+      display: flex;
+      gap: 6px;
+    }
+
+    #tutProg .pip {
+      width: 26px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, .14);
+    }
+
+    #tutProg .pip.on {
+      background: linear-gradient(90deg, #d8b878, #f8dfaa);
+      box-shadow: 0 0 8px rgba(248, 223, 170, .6);
+    }
+
+    @media (pointer: coarse) {
+      #tutPanel {
+        width: min(380px, 44vw);
+        padding: 6px 10px 7px;
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      #tutTitle {
+        font-size: 13px;
+      }
+
+      #tutKeys .kk {
+        font-size: 10px;
+      }
+
+      #tutKeys kbd {
+        font-size: 10px;
+        min-width: 18px;
+        padding: 0 4px;
+      }
+
+      #tutNote {
+        display: none;
+      }
+    }
+  </style>
+  <div id="tutPanel" class="hidden">
+    <div class="tp-head"><span id="tutStep">TUTORIAL</span><button id="tutSkip" type="button">LEWATI</button></div>
+    <div id="tutTitle"></div>
+    <div id="tutText"></div>
+    <div id="tutKeys"></div>
+    <div id="tutNote"></div>
+    <div id="tutProg"></div>
+  </div>
+  <script>
+    /* ===== TUTORIAL SER ALDRIC =====
+       Alur: Ser Aldric menghampiri pemain -> mengantar ke Camp Pelatihan -> mengajarkan kontrol
+       satu per satu (pemain harus mencobanya) -> selesai. Bisa dilewati kapan saja (tombol LEWATI / Tab).
+       Setelah selesai/dilewati, tidak muncul lagi otomatis. Desktop: tekan T di lobby untuk mengulang. */
+    (function () {
+      const KEY = 'eoa_tutorial_v1';
+      const ALD = NP.find(n => n.n.indexOf('Ser Aldric') === 0);
+      if (!ALD) return;
+      const L0 = ALD.lines, A0 = ALD.act, HOME = { x: ALD.x, y: ALD.y };
+      let done = false; try { done = localStorage.getItem(KEY) === '1' } catch (e) { }
+      const el = id => document.getElementById(id), pan = el('tutPanel');
+      const T = { on: false, started: false, st: '', i: -1, v: 0, m: 0, ax: ALD.x, ay: ALD.y, path: [], follow: false, chase: false, walk: false, delay: 0, say: null, okT: 0, last: '', topLast: '' };
+      const mob = () => !!isMobile;
+      const kb = (k, l) => '<span class="kk"><kbd>' + k + '</kbd>' + (l ? ' ' + l : '') + '</span>';
+      const WN = ['Pedang', 'Tombak', 'Busur', 'Tongkat', 'Belati'], SKK = ['Z', 'X', 'C'];
+      const dA = () => dist({ x: T.ax, y: T.ay }, p);
+
+      /* ---------- Daftar latihan ---------- */
+      const STEPS = [
+        {
+          t: 'Serangan Dasar', s: 'Ayunkan senjatamu! Tiga serangan beruntun membentuk combo, dan hit ketiga paling kuat.', max: 3,
+          k: () => mob() ? kb('ATK', 'tombol serang') : kb('Klik kiri', 'mouse'),
+          n: () => mob() ? 'Tahan & geser tombol ATK untuk membidik, lepas untuk menyerang.' : 'Arahkan serangan dengan kursor mouse.',
+          u: k => { if (k.mu && k.hold <= .6 && k.cdA <= .06 && p.cdA > 0) T.v++ }
+        },
+        {
+          t: 'Serangan Charged', s: 'Tahan tombol serang sampai terdengar bunyi tanda siap, lalu lepas. Lebih kuat, tapi memakan 30 stamina.', max: 1,
+          k: () => mob() ? kb('ATK', 'tahan ±1 detik, lalu lepas') : kb('Tahan klik kiri', 'lalu lepas'),
+          n: () => 'Stamina terisi kembali otomatis jika sedang tidak dipakai.',
+          u: k => { if (k.mu && k.hold > .6 && k.st >= 30 && k.ULTT <= 0 && p.stT > .7) T.v = 1 }
+        },
+        {
+          t: 'Ganti Senjata', s: 'Kau punya 5 senjata dan bisa menggantinya kapan saja, bahkan di tengah pertarungan. Coba ganti dua kali!', max: 2,
+          k: () => mob() ? 'Ketuk tombol <b>1 – 5</b> di kanan atas layar' : WN.map((w, i) => kb(i + 1, w)).join(''),
+          n: () => 'Tiap senjata punya gaya serang, skill, dan ultimate yang berbeda.',
+          u: k => { if (wi !== k.wi) T.v++ }
+        },
+        {
+          t: 'Skill Senjata', s: 'Setiap senjata punya 3 skill dengan cooldown masing-masing. Pakai ketiganya!', max: 3,
+          k: () => mob() ? 'Tombol <b>Z · X · C</b> di kanan bawah: ' + [0, 1, 2].map(i => SK[wi][i].n).join(', ') : [0, 1, 2].map(i => kb(SKK[i], SK[wi][i].n)).join(''),
+          n: () => mob() ? 'Ganti senjata (tombol 1 – 5) untuk mencoba skill lainnya.' : 'Ganti senjata (1 – 5) untuk mencoba skill senjata lain.',
+          u: k => { ['KeyZ', 'KeyX', 'KeyC'].forEach((c, i) => { if (k.P[c] && k.sc[i] <= .06 && p.sc[i] > 0) T.m |= 1 << i }); T.v = (T.m & 1) + ((T.m >> 1) & 1) + ((T.m >> 2) & 1) }
+        },
+        {
+          t: 'Dodge', s: 'Berguling menghindari serangan musuh. Kau kebal sesaat saat berguling, tapi memakan 25 stamina.', max: 2,
+          k: () => mob() ? kb('DODGE', 'tombol ⚡ + arah joystick') : kb('Space', '+ arah gerak (WASD)'),
+          n: () => 'Tanpa arah gerak, kau berguling ke arah kursor.',
+          u: k => { if (k.P.Space && k.st >= 25 && k.dod <= 0 && k.ULTT <= 0 && p.dod > 0) T.v++ }
+        },
+        {
+          t: 'Battle Focus', s: 'Fokus tempur menaikkan damage seranganmu 50% selama 5 detik. Cooldown 12 detik.', max: 1,
+          k: () => mob() ? kb('FOCUS', 'tombol bulat') : kb('E', 'Battle Focus'),
+          n: () => 'Aktifkan sebelum menyerang musuh yang kuat.',
+          u: k => { if (k.P.KeyE && k.ec <= .06 && p.ec > 0) T.v = 1 }
+        },
+        {
+          id: 'ult', w: 1, t: 'Ultimate', s: 'Setiap damage yang kau beri mengisi bar ULT di kiri atas. Bar-mu sudah kuisi penuh. Selama ultimate aktif, kau kebal serangan!', max: 1,
+          k: () => mob() ? kb('ULT', 'tombol bulat') : kb('Q', 'Ultimate'),
+          n: () => 'Setiap senjata punya ultimate yang berbeda.',
+          setup: () => { try { ultAdd(ULT_MAX) } catch (e) { } },
+          u: k => { if (k.ULTT <= 0 && ULTT > 0) T.v = 1 }
+        }
+      ];
+
+      /* ---------- Dialog Ser Aldric ---------- */
+      const INTRO = () => [
+        'Ah, akhirnya kau sadar, pahlawan. Aku Ser Aldric, penjaga lobby ini. Sebelum turun ke Dungeon, biar kuajarkan dulu cara bertarung.',
+        'Ikuti aku ke Camp Pelatihan di sebelah timur lobby. ' + (mob() ? 'Gerakkan joystick kiri untuk berjalan.' : 'Berjalanlah dengan WASD, tahan Shift untuk berlari.'),
+        'Kalau kau sudah hafal semua kontrolnya, tekan LEWATI di atas layar kapan saja. Ayo, ikuti aku!'
+      ];
+      const REPLAY = () => [
+        'Mau mengulang latihan? Baik, ikuti aku ke Camp Pelatihan lagi. Tekan LEWATI jika sudah cukup.'
+      ];
+      const ARRIVE = () => [
+        'Inilah Camp Pelatihan. Rhea, Bram, dan yang lain berlatih di sini setiap hari. Tidak ada musuh yang menyerang, jadi jangan takut mencoba.',
+        'Aku akan menyebutkan kontrolnya satu per satu. Coba lakukan sesuai arahanku. Kita mulai dari serangan dasar.'
+      ];
+      const OUTRO = () => [
+        'Bagus sekali, kau cepat belajar! Tiga hal lagi: ' + (mob() ? 'tombol 🧪 untuk minum potion (+60 HP), BICARA untuk menyapa orang di sekitarmu, dan LOBBY untuk pulang saat di dungeon.' : 'tekan R untuk minum potion (+60 HP), G untuk bicara dengan orang di sekitarmu, dan B untuk kembali ke lobby saat di dungeon.'),
+        'Poin atribut dari level up dibagi lewat ' + (mob() ? 'tombol STAT' : 'tombol 6 – 0 (VIT, STR, DEF, AGI, INT)') + '.' + (mob() ? '' : ' Tekan L kapan saja untuk membuka panduan kontrol.'),
+        'Manekin latihan ada di arena sebelah timur. Gerbang utara lobby menuju Dungeon.' + (mob() ? '' : ' Lupa kontrolnya? Tekan T di lobby untuk mengulang latihan.') + ' Berhati-hatilah, pahlawan!'
+      ];
+
+      function say(lines, cb) {
+        T.say = { lines, cb };
+        ALD.lines = lines;
+        ALD.act = function () { ALD.lines = L0; ALD.act = A0; T.say = null; if (cb) cb() };
+        if (!dlg) { dlg = { n: ALD, i: 0 }; try { SFX.pickup() } catch (e) { } }
+      }
+
+      /* ---------- Gerak Ser Aldric ---------- */
+      const leadPath = () => [[440, 236], [600, 200], [650, 200], [770, 200]].filter(q => q[0] > T.ax + 4);
+      const homePath = () => { const a = [[650, 200], [600, 200]].filter(q => q[0] < T.ax - 4); a.push([HOME.x, HOME.y]); return a };
+      function moveAld(dt) {
+        let tx, ty, stop = 0;
+        if (T.chase) { tx = p.x; ty = p.y; stop = 40 }
+        else if (T.path.length) { tx = T.path[0][0]; ty = T.path[0][1] }
+        else { T.walk = false; return }
+        if (T.follow && !T.chase && dA() > 115) { T.walk = false; return } // menunggu pemain menyusul
+        const dx = tx - T.ax, dy = ty - T.ay, d = Math.hypot(dx, dy);
+        if (d <= stop + 1 || d < 1.5) { if (!T.chase) T.path.shift(); T.walk = false; return }
+        const s = Math.min(d - stop, 64 * dt); T.ax += dx / d * s; T.ay += dy / d * s; T.walk = true;
+      }
+      const place = () => { ALD.x = T.ax; ALD.y = T.ay + (T.walk ? Math.sin(t * 18) * .8 : 0) };
+
+      /* ---------- Alur ---------- */
+      function begin(replay) {
+        T.started = true; T.on = true; T.i = -1; T.v = 0; T.m = 0; T.path = []; T.follow = false; T.chase = false; T.say = null; T.last = '';
+        if (replay) {
+          T.ax = p.x + (p.x < 1100 ? 28 : -28); T.ay = p.y; place();
+          fx.push({ k: 'ring', x: T.ax, y: T.ay, r: 14, life: .4, max: .4, col: '#ffd34d' });
+          T.st = 'intro'; say(REPLAY(), () => { T.st = 'lead'; T.follow = true; T.path = leadPath() });
+        } else { T.st = 'come'; T.chase = true }
+      }
+      function nextStep() {
+        T.i++; T.v = 0; T.m = 0;
+        if (T.i >= STEPS.length) { T.st = 'outro'; say(OUTRO(), () => finish(false)); return }
+        T.st = 'step'; const S = STEPS[T.i]; if (S.setup) S.setup();
+      }
+      function finish(skipped, quiet) {
+        const hadSay = !!T.say;
+        T.on = false; T.st = ''; T.chase = false; T.say = null;
+        if (hadSay) { ALD.lines = L0; ALD.act = A0; if (dlg && dlg.n === ALD) dlg = null }
+        done = true; try { localStorage.setItem(KEY, '1') } catch (e) { }
+        T.follow = false; T.path = homePath(); pan.classList.add('hidden');
+        if (!quiet) msg(skipped ? 'Tutorial dilewati.' + (mob() ? '' : ' Tekan T di lobby untuk mengulang.') : 'Latihan selesai! Semoga beruntung di Dungeon.');
+      }
+      const skip = () => { if (T.on) finish(true) };
+      el('tutSkip').addEventListener('click', skip);
+      addEventListener('keydown', e => { if (e.code === 'Tab' && T.on) { e.preventDefault(); skip() } });
+
+      function complete() {
+        T.st = 'ok'; T.okT = 1.3;
+        try { SFX.point() } catch (e) { } try { dn(p.x, p.y - 14, 'Bagus!', 0, '#8fe8a0') } catch (e) { }
+      }
+
+      /* ---------- Per-frame ---------- */
+      function tick(dt) {
+        if (!T.on) {
+          if (lobby) {
+            if (!T.started && !done) { T.delay += dt; if (T.delay > 1.8) begin(false) }
+            else if (P.KeyT && !dlg) { delete P.KeyT; begin(true) }
+          }
+          moveAld(dt); place(); return;
+        }
+        if (!lobby) { finish(true, true); moveAld(dt); place(); return }
+        if (T.say && !dlg && dA() < 44 && !P.KeyG) { dlg = { n: ALD, i: 0 }; try { SFX.pickup() } catch (e) { } }
+        switch (T.st) {
+          case 'come':
+            moveAld(dt);
+            if (dA() <= 46) { T.chase = false; T.st = 'intro'; say(INTRO(), () => { T.st = 'lead'; T.follow = true; T.path = leadPath() }) }
+            break;
+          case 'lead':
+            moveAld(dt);
+            if (!T.path.length && dA() < 80) { T.st = 'arrive'; say(ARRIVE(), nextStep) }
+            break;
+          case 'ok': T.okT -= dt; if (T.okT <= 0) nextStep(); break;
+        }
+        place(); panel();
+      }
+      const snap = () => ({ P: Object.assign({}, P), mu: M.u, hold: p.hold, st: p.st, cdA: p.cdA, dod: p.dod, ec: p.ec, wi: wi, sc: p.sc.slice(), ULTT: ULTT });
+      function post(k) {
+        const S = STEPS[T.i]; if (!S) return;
+        S.u(k);
+        if (T.v >= S.max && !(S.w && ULTT > 0)) complete();
+      }
+      const _upd = upd;
+      upd = function (dt) {
+        if (!playing || !p) { _upd(dt); return }
+        const live = p.dead <= 0;
+        if (live) tick(dt);
+        const k = (live && T.on && T.st === 'step') ? snap() : null;
+        _upd(dt);
+        if (k) post(k);
+      };
+
+      /* ---------- Panel (HTML) ---------- */
+      function panel() {
+        const far = dA() > 90; let head = 'TUTORIAL', title = '', text = '', keys = '', note = '', prog = '', ok = false;
+        switch (T.st) {
+          case 'come': title = 'Ser Aldric menghampirimu...'; text = 'Tunggu sebentar.'; break;
+          case 'lead':
+            head = 'Menuju Camp Pelatihan'; title = 'Ikuti Ser Aldric';
+            text = far ? 'Dekati Ser Aldric agar ia melanjutkan perjalanan.' : 'Ikuti Ser Aldric ke Camp Pelatihan di sebelah timur lobby.';
+            keys = mob() ? 'Gerak: <b>joystick kiri</b>' : kb('W') + kb('A') + kb('S') + kb('D', 'gerak') + kb('Shift', 'lari'); break;
+          case 'intro': case 'arrive': case 'outro':
+            head = 'Ser Aldric'; title = 'Ser Aldric berbicara';
+            text = (T.say && !dlg) ? 'Dekati Ser Aldric untuk melanjutkan.' : 'Lanjutkan dialog di bawah.';
+            keys = mob() ? kb('LANJUT ▶', 'ketuk tombol dialog') : kb('G', 'lanjut'); break;
+          case 'step': case 'ok': {
+            const S = STEPS[T.i]; head = 'Latihan ' + (T.i + 1) + ' / ' + STEPS.length;
+            if (T.st === 'ok') { title = '✔ Bagus!'; ok = true; text = S.t + ' selesai.'; }
+            else { title = S.t; text = S.s; keys = S.k(); note = S.n ? S.n() : '' }
+            for (let i = 0; i < S.max; i++) prog += '<span class="pip' + (T.st === 'ok' || i < T.v ? ' on' : '') + '"></span>';
+            break;
+          }
+        }
+        const sig = head + '|' + title + '|' + text + '|' + keys + '|' + note + '|' + prog + '|' + ok;
+        if (sig !== T.last) {
+          T.last = sig;
+          el('tutStep').textContent = head; el('tutTitle').textContent = title; el('tutTitle').className = ok ? 'ok' : '';
+          el('tutText').textContent = text; el('tutKeys').innerHTML = keys; el('tutNote').textContent = note; el('tutProg').innerHTML = prog;
+          el('tutSkip').textContent = mob() ? 'LEWATI ▸▸' : 'LEWATI [Tab]';
+        }
+        const top = Math.round(cv.getBoundingClientRect().top + 68 * cv.clientHeight / H) + 'px';
+        if (top !== T.topLast) { T.topLast = top; pan.style.top = top }
+        pan.classList.remove('hidden');
+      }
+      setInterval(() => { if (!playing || !lobby || !T.on) pan.classList.add('hidden') }, 250);
+
+      /* ---------- Penanda di atas Ser Aldric (kanvas) ---------- */
+      const _draw = draw;
+      draw = function () {
+        _draw();
+        if (!T.on || !lobby || !playing || p.dead > 0) return;
+        if (!(T.st === 'lead' || (T.say && !dlg))) return;
+        const z = CAM_Z, m = 18; let x = (T.ax - camX) * z, y = (T.ay - camY - 46) * z;
+        const off = x < m || x > W - m || y < m || y > H - m;
+        g.save(); g.fillStyle = '#ffd34d'; g.strokeStyle = '#120e18'; g.lineWidth = 2; g.lineJoin = 'round';
+        if (off) {
+          const a = Math.atan2(y - H / 2, x - W / 2), cx = Math.max(m, Math.min(W - m, x)), cy = Math.max(m + 20, Math.min(H - m - 70, y));
+          g.translate(cx, cy); g.rotate(a); g.beginPath(); g.moveTo(10, 0); g.lineTo(-6, -8); g.lineTo(-6, 8); g.closePath(); g.stroke(); g.fill();
+        } else {
+          g.translate(x, y + Math.sin(t * 5) * 3); g.beginPath(); g.moveTo(0, 7); g.lineTo(-7, -4); g.lineTo(7, -4); g.closePath(); g.stroke(); g.fill();
+        }
+        g.restore();
+      };
+    })();
+  </script>
 </body>
 
 </html>
