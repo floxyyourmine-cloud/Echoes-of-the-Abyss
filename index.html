@@ -1,15 +1,18 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="screen-orientation" content="landscape">
 <title>Echoes of the Abyss — Prototype Combat</title>
 <style>
 :root{--bg:#e8e6f0;--fg:#1c1b2a;--mut:#5a5873;--card:#fff;--line:#c9c5dc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c0b14;--fg:#e6e3f4;--mut:#9a97b8;--card:#16152a;--line:#2c2a48}}
 :root[data-theme="dark"]{--bg:#0c0b14;--fg:#e6e3f4;--mut:#9a97b8;--card:#16152a;--line:#2c2a48}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;width:100%;overflow:hidden;position:fixed;inset:0;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 body{margin:0;background:#000;color:var(--fg);font:15px/1.5 Georgia,"Times New Roman",serif;display:flex;align-items:center;justify-content:center}
-#c{width:min(100vw,160vh);height:auto;aspect-ratio:8/5;image-rendering:pixelated;background:#000;cursor:crosshair;touch-action:none;outline:none;display:block}
+#c{width:min(100vw,160vh);height:auto;aspect-ratio:8/5;max-width:100vw;max-height:100vh;image-rendering:pixelated;background:#000;cursor:crosshair;touch-action:none;outline:none;display:block}
 .k{max-width:960px;width:100%;margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px 18px;font-size:13px;color:var(--mut)}
 .k b{color:var(--fg);font-weight:700}
 
@@ -410,6 +413,531 @@ button {
   from { opacity: 0; transform: translateY(20px) scale(.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* RESPONSIVE LANDSCAPE MENU SCALING */
+@media (max-height: 520px) {
+  .menu-frame {
+    padding: 16px 24px 14px;
+    width: min(560px, 94vw);
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+  .eyebrow {
+    font-size: 9px;
+    letter-spacing: 4px;
+    margin-bottom: 6px;
+  }
+  .game-title {
+    font-size: clamp(26px, 5vw, 36px);
+    line-height: 1.05;
+    letter-spacing: 3px;
+  }
+  .title-divider {
+    margin: 8px auto 6px;
+  }
+  .tagline {
+    font-size: 9px;
+    margin-bottom: 12px;
+  }
+  .menu-buttons {
+    gap: 8px;
+  }
+  .menu-button {
+    padding: 8px 16px;
+    font-size: 13px;
+    letter-spacing: 3px;
+  }
+  .menu-footer {
+    font-size: 9px;
+    margin-top: 6px;
+  }
+  .settings-box {
+    padding: 16px 24px;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .settings-box h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  .setting-row {
+    margin: 10px 0;
+    font-size: 11px;
+  }
+}
+
+/* ROTATE PROMPT OVERLAY */
+#rotateOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #08080c;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  color: #e6e3f4;
+}
+@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+  #rotateOverlay { display: flex; }
+}
+@media (orientation: portrait) and (max-width: 600px) {
+  #rotateOverlay { display: flex; }
+}
+.rotate-card {
+  max-width: 320px;
+  padding: 28px 20px;
+  background: #14131b;
+  border: 1px solid rgba(216,184,120,.4);
+  border-radius: 8px;
+  box-shadow: 0 0 40px rgba(0,0,0,.8);
+}
+.rotate-icon {
+  margin-bottom: 16px;
+  animation: rotateAnim 2.2s ease-in-out infinite alternate;
+}
+@keyframes rotateAnim {
+  0%, 20% { transform: rotate(0deg); }
+  80%, 100% { transform: rotate(90deg); }
+}
+.rotate-card h2 {
+  color: #f8dfaa;
+  font-size: 18px;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+}
+.rotate-card p {
+  color: #9e927e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* MOBILE TOUCH CONTROLS OVERLAY */
+#mobileControls {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* TOP BAR */
+#mobileTopBar {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+  right: max(10px, env(safe-area-inset-right));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 35;
+}
+.top-left-actions, .top-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+.mob-btn {
+  pointer-events: auto;
+  border-radius: 50%;
+  border: 1px solid rgba(216,184,120,.45);
+  background: rgba(14,13,22,.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #f8dfaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 600;
+  touch-action: none;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 3px 8px rgba(0,0,0,.5);
+  transition: transform .06s ease, background .15s ease, border-color .15s ease;
+}
+.mob-btn:active {
+  transform: scale(.92);
+  background: rgba(216,184,120,.35);
+  border-color: #ffd34d;
+}
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 15px;
+}
+.text-btn {
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  height: 32px;
+}
+.badge {
+  background: #c93b3b;
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 5px;
+  font-size: 10px;
+  margin-left: 4px;
+  font-weight: bold;
+}
+#mobWeaponStrip {
+  display: flex;
+  gap: 4px;
+  background: rgba(10,9,16,.6);
+  padding: 2px 4px;
+  border-radius: 16px;
+  border: 1px solid rgba(216,184,120,.25);
+}
+.mob-wpn-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #9e927e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+.mob-wpn-btn.active {
+  background: rgba(216,184,120,.35);
+  color: #ffd34d;
+  border-color: #d8b878;
+}
+
+/* JOYSTICK */
+#joyZone {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 48vw;
+  height: 75vh;
+  pointer-events: auto;
+  touch-action: none;
+}
+#joyBase {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: max(32px, env(safe-area-inset-left));
+  bottom: max(32px, env(safe-area-inset-bottom));
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216,184,120,.08) 0%, rgba(12,11,18,.55) 70%);
+  border: 2px solid rgba(216,184,120,.3);
+  box-shadow: 0 0 15px rgba(0,0,0,.6), inset 0 0 15px rgba(216,184,120,.05);
+  pointer-events: none;
+  transform: translate(0, 0);
+  transition: opacity .2s;
+}
+#joyStick {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f8dfaa, #9b7943);
+  border: 2px solid rgba(255,255,255,.4);
+  box-shadow: 0 4px 10px rgba(0,0,0,.6);
+  pointer-events: none;
+  transform: translate(0, 0);
+}
+
+/* ACTION CLUSTER */
+#actionCluster {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: 250px;
+  height: 250px;
+  pointer-events: none;
+}
+
+/* MAIN ATTACK BUTTON */
+.main-atk-btn {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 2px solid #d8b878;
+  background: radial-gradient(circle at 35% 35%, rgba(65,55,40,.9), rgba(15,14,20,.95));
+  box-shadow: 0 4px 18px rgba(0,0,0,.7), 0 0 15px rgba(216,184,120,.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+.main-atk-btn .icon {
+  font-size: 24px;
+  line-height: 1;
+}
+.main-atk-btn .lbl {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #f8dfaa;
+  margin-top: 2px;
+}
+.charge-svg {
+  position: absolute;
+  inset: -4px;
+  width: 84px;
+  height: 84px;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.charge-bg {
+  fill: none;
+  stroke: rgba(216,184,120,.15);
+  stroke-width: 3;
+}
+.charge-fill {
+  fill: none;
+  stroke: #ffda73;
+  stroke-width: 3.5;
+  stroke-dasharray: 233;
+  stroke-dashoffset: 233;
+  transition: stroke-dashoffset .05s linear;
+}
+
+/* DODGE BUTTON */
+#mobBtnDodge {
+  position: absolute;
+  right: 104px;
+  bottom: 8px;
+  width: 52px;
+  height: 52px;
+  background: radial-gradient(circle at 35% 35%, rgba(50,70,85,.85), rgba(12,18,25,.95));
+  border: 1.5px solid #78b8d8;
+  flex-direction: column;
+}
+#mobBtnDodge .icon {
+  font-size: 16px;
+}
+#mobBtnDodge .lbl {
+  font-size: 8px;
+  color: #afe2f8;
+  letter-spacing: 0.5px;
+}
+
+/* SKILLS ARC */
+.skill-btn {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid #8e7bb8;
+  background: radial-gradient(circle at 35% 35%, rgba(60,45,75,.85), rgba(15,12,22,.95));
+  overflow: hidden;
+}
+.skill-btn .lbl {
+  font-size: 10px;
+  color: #dfd2f5;
+  font-weight: bold;
+  z-index: 2;
+  text-align: center;
+  max-width: 44px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sk-cd {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  height: 0%;
+  bottom: 0;
+  transition: height .08s linear;
+  pointer-events: none;
+}
+#mobBtnSkill1 { right: 108px; bottom: 70px; }
+#mobBtnSkill2 { right: 78px; bottom: 122px; }
+#mobBtnSkill3 { right: 18px; bottom: 120px; }
+
+/* ULT, FOCUS, POTION */
+#mobBtnUlt {
+  position: absolute;
+  right: 130px;
+  bottom: 132px;
+  width: 46px;
+  height: 46px;
+  border: 1.5px solid #a855f7;
+  background: radial-gradient(circle at 35% 35%, rgba(70,30,100,.85), rgba(18,10,28,.95));
+}
+#mobBtnUlt .lbl {
+  font-size: 10px;
+  font-weight: bold;
+  color: #d8b4fe;
+}
+#mobBtnUlt.ready {
+  border-color: #ffd34d;
+  animation: ultGlow 1s ease-in-out infinite alternate;
+}
+#mobBtnUlt.ready .lbl {
+  color: #ffe08a;
+}
+@keyframes ultGlow {
+  0% { box-shadow: 0 0 6px #ffd34d; }
+  100% { box-shadow: 0 0 20px #ffd34d, 0 0 35px #ff7b2b; }
+}
+
+#mobBtnFocus {
+  position: absolute;
+  right: 172px;
+  bottom: 82px;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid #eab308;
+  background: rgba(45,35,15,.8);
+}
+#mobBtnFocus .lbl {
+  font-size: 8px;
+  color: #fef08a;
+}
+
+#mobBtnPotion {
+  position: absolute;
+  right: 172px;
+  bottom: 22px;
+  width: 42px;
+  height: 42px;
+  border: 1.5px solid #ec4899;
+  background: rgba(45,15,30,.8);
+  flex-direction: column;
+}
+#mobBtnPotion .icon {
+  font-size: 14px;
+}
+#mobBtnPotion .badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  margin: 0;
+}
+
+/* INTERACT BUTTON */
+#mobBtnInteract {
+  position: absolute;
+  bottom: max(26px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(216,184,120,.9), rgba(150,115,55,.95));
+  color: #121018;
+  border: 1.5px solid #ffe8b5;
+  border-radius: 24px;
+  padding: 8px 20px;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,.6), 0 0 20px rgba(216,184,120,.4);
+  pointer-events: auto;
+  z-index: 50;
+  animation: bounceBtn 1.5s ease-in-out infinite;
+}
+@keyframes bounceBtn {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* STAT MODAL */
+#statModal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stat-card {
+  width: min(380px, 92vw);
+  background: #14131a;
+  border: 1px solid #d8b878;
+  box-shadow: 0 0 35px #000;
+  padding: 18px 20px;
+  color: #e6e3f4;
+  border-radius: 6px;
+}
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(216,184,120,.3);
+  padding-bottom: 8px;
+}
+.stat-header h3 {
+  color: #f8dfaa;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #9e927e;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+.stat-points {
+  margin: 10px 0 14px;
+  color: #ffd34d;
+  font-size: 13px;
+}
+.stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(25,23,35,.8);
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(216,184,120,.15);
+  font-size: 12px;
+}
+.stat-val {
+  font-weight: bold;
+  color: #f8dfaa;
+  margin-left: auto;
+  margin-right: 12px;
+}
+.stat-add-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  background: #4a4780;
+  color: #fff;
+  border: 1px solid #8e7bb8;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.stat-add-btn:active {
+  background: #6a67a0;
+}
 </style></head><body>
 <canvas id="scene"></canvas>
 
@@ -475,9 +1003,142 @@ button {
 <div id="blackFade"></div>
 
 <canvas id="c" width="640" height="400" tabindex="0" style="visibility:hidden"></canvas>
+
+<!-- ROTATE PROMPT OVERLAY FOR MOBILE PORTRAIT -->
+<div id="rotateOverlay">
+  <div class="rotate-card">
+    <div class="rotate-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d8b878" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+        <path d="M12 18h.01"></path>
+        <path d="M18 10l3-3-3-3"></path>
+        <path d="M21 7h-5a4 4 0 0 0-4 4v1"></path>
+      </svg>
+    </div>
+    <h2>PUTAR PERANGKAT</h2>
+    <p>Silakan putar ponsel ke mode <b>Landscape (Mendatar)</b> untuk bermain.</p>
+  </div>
+</div>
+
+<!-- MOBILE CONTROLS OVERLAY -->
+<div id="mobileControls" class="hidden">
+  <div id="mobileTopBar">
+    <div class="top-left-actions">
+      <button class="mob-btn icon-btn" id="mobBtnPause" title="Jeda / Menu">⏸</button>
+      <button class="mob-btn icon-btn" id="mobBtnAudio" title="Suara">♪</button>
+      <button class="mob-btn icon-btn" id="mobBtnFullscreen" title="Layar Penuh">⛶</button>
+      <button class="mob-btn text-btn hidden" id="mobBtnLobby" title="Kembali ke Lobby">LOBBY</button>
+    </div>
+    <div class="top-right-actions">
+      <button class="mob-btn text-btn hidden" id="mobBtnStat" title="Alokasi Poin Status">
+        <span>STAT</span><span id="mobStatBadge" class="badge">0</span>
+      </button>
+      <div id="mobWeaponStrip">
+        <button class="mob-wpn-btn active" data-wpn="0">1</button>
+        <button class="mob-wpn-btn" data-wpn="1">2</button>
+        <button class="mob-wpn-btn" data-wpn="2">3</button>
+        <button class="mob-wpn-btn" data-wpn="3">4</button>
+        <button class="mob-wpn-btn" data-wpn="4">5</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="joyZone">
+    <div id="joyBase">
+      <div id="joyStick"></div>
+    </div>
+  </div>
+
+  <div id="actionCluster">
+    <button class="mob-btn round-btn" id="mobBtnPotion" title="Potion (R)">
+      <span class="icon">🧪</span>
+      <span id="mobPotCount" class="badge">0</span>
+    </button>
+    <button class="mob-btn round-btn" id="mobBtnFocus" title="Focus (E)">
+      <span class="lbl">FOCUS</span>
+    </button>
+    <button class="mob-btn round-btn" id="mobBtnUlt" title="Ultimate (Q)">
+      <span class="lbl">ULT</span>
+    </button>
+
+    <button class="mob-btn skill-btn" id="mobBtnSkill1" data-sk="0">
+      <span class="lbl" id="mobSk1Lbl">Z</span>
+      <div class="sk-cd" id="mobSk1Cd"></div>
+    </button>
+    <button class="mob-btn skill-btn" id="mobBtnSkill2" data-sk="1">
+      <span class="lbl" id="mobSk2Lbl">X</span>
+      <div class="sk-cd" id="mobSk2Cd"></div>
+    </button>
+    <button class="mob-btn skill-btn" id="mobBtnSkill3" data-sk="2">
+      <span class="lbl" id="mobSk3Lbl">C</span>
+      <div class="sk-cd" id="mobSk3Cd"></div>
+    </button>
+
+    <button class="mob-btn round-btn" id="mobBtnDodge" title="Dodge (Space)">
+      <span class="icon">⚡</span>
+      <span class="lbl">DODGE</span>
+    </button>
+
+    <button class="mob-btn main-atk-btn" id="mobBtnAttack" title="Attack / Aim">
+      <span class="icon">⚔</span>
+      <span class="lbl">ATK</span>
+      <svg class="charge-svg" viewBox="0 0 84 84">
+        <circle class="charge-bg" cx="42" cy="42" r="37"></circle>
+        <circle class="charge-fill" id="mobChargeCircle" cx="42" cy="42" r="37"></circle>
+      </svg>
+    </button>
+  </div>
+
+  <button id="mobBtnInteract" class="hidden">
+    <span class="icon">💬</span>
+    <span id="mobInteractText">BICARA [G]</span>
+  </button>
+</div>
+
+<!-- STAT ALLOCATION MODAL -->
+<div id="statModal" class="hidden">
+  <div class="stat-card">
+    <div class="stat-header">
+      <h3>ALOKASI STATUS</h3>
+      <button class="close-btn" id="mobStatClose">✕</button>
+    </div>
+    <div class="stat-points">Poin Tersedia: <b id="mobStatPts">0</b></div>
+    <div class="stat-list">
+      <div class="stat-item">
+        <span>VIT (Vitality / HP)</span>
+        <span class="stat-val" id="valVIT">5</span>
+        <button class="stat-add-btn" data-stat="VIT">+</button>
+      </div>
+      <div class="stat-item">
+        <span>STR (Physical Damage)</span>
+        <span class="stat-val" id="valSTR">5</span>
+        <button class="stat-add-btn" data-stat="STR">+</button>
+      </div>
+      <div class="stat-item">
+        <span>DEF (Defense)</span>
+        <span class="stat-val" id="valDEF">5</span>
+        <button class="stat-add-btn" data-stat="DEF">+</button>
+      </div>
+      <div class="stat-item">
+        <span>AGI (Speed & Dodge)</span>
+        <span class="stat-val" id="valAGI">5</span>
+        <button class="stat-add-btn" data-stat="AGI">+</button>
+      </div>
+      <div class="stat-item">
+        <span>INT (Skill & Magic)</span>
+        <span class="stat-val" id="valINT">5</span>
+        <button class="stat-add-btn" data-stat="INT">+</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 const W=640,H=400,cv=document.getElementById('c'),g=cv.getContext('2d');g.imageSmoothingEnabled=false;
 const K={},P={},M={x:320,y:200,sx:320,sy:200,d:0,u:0};
+let isMobile=('ontouchstart' in window||navigator.maxTouchPoints>0||window.matchMedia('(pointer: coarse)').matches||window.innerWidth<=1024);
+const touchJoy={active:false,x:0,y:0,sprint:false,pointerId:null,startX:0,startY:0};
+let touchAiming=false;
+const touchAttack={active:false,pointerId:null};
 // ===== Kamera: zoom dekat & mengikuti player (ubah CAM_Z untuk atur jarak; 1 = tanpa zoom) =====
 const CAM_Z=1.4,CAM_SM=7;let camX=0,camY=0,camInit=false;
 // ===== Ukuran ruangan dungeon (diperluas dari 640x400) & jumlah musuh tambahan =====
@@ -839,11 +1500,15 @@ function upd(dt){if(p)camUpd(dt);
  if(p.stT<=0)p.st=Math.min(100,p.st+35*dt);
  for(let i=0;i<5;i++)if(P['Digit'+(i+1)]){if(wi!=i)SFX.sw();wi=i;p.combo=0}
  [['Digit6','VIT'],['Digit7','STR'],['Digit8','DEF'],['Digit9','AGI'],['Digit0','INT']].forEach(([k,s])=>{if(P[k]&&pts>0){SFX.point();A[s]++;pts--;if(s=='VIT')p.hp+=8}});
- p.face=Math.atan2(M.y-p.y,M.x-p.x);if(p.spn>0){p.spn-=dt;p.fa+=p.spv*dt;p.face=p.fa}{const c=Math.cos(p.face);if(c>.2)HSt=1;else if(c<-.2)HSt=-1;HSd+=(HSt-HSd)*Math.min(1,dt*18)}
- let ix=(K.KeyD?1:0)-(K.KeyA?1:0),iy=(K.KeyS?1:0)-(K.KeyW?1:0);const l=Math.hypot(ix,iy);if(l){ix/=l;iy/=l}
+ if(!touchAiming&&touchJoy.active&&(Math.abs(touchJoy.x)>0.1||Math.abs(touchJoy.y)>0.1)){p.face=Math.atan2(touchJoy.y,touchJoy.x)}
+ else{p.face=Math.atan2(M.y-p.y,M.x-p.x)}
+ if(p.spn>0){p.spn-=dt;p.fa+=p.spv*dt;p.face=p.fa}{const c=Math.cos(p.face);if(c>.2)HSt=1;else if(c<-.2)HSt=-1;HSd+=(HSt-HSd)*Math.min(1,dt*18)}
+ let ix=(K.KeyD?1:0)-(K.KeyA?1:0),iy=(K.KeyS?1:0)-(K.KeyW?1:0);
+ if(touchJoy.active){ix=touchJoy.x;iy=touchJoy.y}
+ const l=Math.hypot(ix,iy);if(l&&!touchJoy.active){ix/=l;iy/=l}
  if(P.Space&&p.st>=25&&p.dod<=0&&ULTT<=0){p.st-=25;p.stT=.8;p.dod=.2;p.dsp=0;p.inv=.22;p.dx=l?ix:Math.cos(p.face);p.dy=l?iy:Math.sin(p.face);fx.push({k:'ring',x:p.x,y:p.y,r:8,life:.25,max:.25,col:'#9ef'});p.dfx=1;dodgeBurst();SFX.dodge()}
  if(p.dod>0){p.dod-=dt;mv(p,p.dx*(p.dsp||300)*dt,p.dy*(p.dsp||300)*dt)}
- else{const sp=(K.ShiftLeft||K.ShiftRight?125:85)*(1+(A.AGI-5)*.015)*(M.d&&p.hold>.3?.45:(p.cdA>0?.7:1));
+ else{const sp=(K.ShiftLeft||K.ShiftRight||touchJoy.sprint?125:85)*(1+(A.AGI-5)*.015)*(M.d&&p.hold>.3?.45:(p.cdA>0?.7:1));
   p.vx+=(ix*sp-p.vx)*Math.min(1,dt*10);p.vy+=(iy*sp-p.vy)*Math.min(1,dt*10);mv(p,p.vx*dt,p.vy*dt)}
  {const spd=Math.hypot(p.vx,p.vy),mvg=(ix||iy)&&p.dod<=0,tb=mvg?Math.min(1,spd/85):0;if(spd>70&&p.dod<=0&&R()<.1)puff(p.x,p.y+7,1,'110,100,90',.5);
   p.wb+=(tb-p.wb)*Math.min(1,dt*12);
@@ -879,6 +1544,7 @@ function upd(dt){if(p)camUpd(dt);
  lobbyTick(dt);if(!lobby&&P.KeyB)backTick();
  if(room==0&&doorOn&&p.x>DW-30&&Math.abs(p.y-DY)<32)toRoom(1);
  if(clr>0){clr-=dt;if(clr<=0){clr=0;wave++;spawn();SFX.wave()}}
+ if(window.updateMobileUI)window.updateMobileUI();
  for(const k in P)delete P[k]}
 const SC=['#e8f2ff','#ffb0b0','','','#ffb48a'];
 function slashFx(f,pg){g.save();g.translate(f.x,f.y);g.globalAlpha=1-pg*pg;g.globalCompositeOperation='lighter';const w=f.w;
@@ -1518,8 +2184,8 @@ function draw(){
  txt('Lv '+lvl+'  EXP '+exp+'/'+lvl*40,10,48);
  if(lobby){txt(trn?'RUANG PELATIHAN':'LOBBY — ZONA AMAN',W-10,18,'#8fe8a0','right');txt(trn?'Training Hall':'Sanctum Hall',W-10,44,'#778','right')}else{txt('Gelombang '+wave+(room?'':'/5')+'  Musuh: '+es.length,W-10,18,'#fff','right');txt(room?'Torch Dungeon':'Ancient Hall',W-10,44,'#778','right')}
  if(p.combo>1)txt('Combo x'+p.combo,W-10,32,'#ffd34d','right');
- txt('[L] Kontrol   [F] Layar penuh   [M] Suara '+(SFX.isOn()?'ON':'OFF'),W/2,12,'#667','center');
- if(pts>0)txt('Poin atribut: '+pts+'  [6]VIT [7]STR [8]DEF [9]AGI [0]INT',10,60,'#ffd34d');
+ if(!isMobile)txt('[L] Kontrol   [F] Layar penuh   [M] Suara '+(SFX.isOn()?'ON':'OFF'),W/2,12,'#667','center');
+ if(pts>0)txt('Poin atribut: '+pts+(isMobile?' (Lihat tombol STAT)':'  [6]VIT [7]STR [8]DEF [9]AGI [0]INT'),10,60,'#ffd34d');
  txt('VIT '+A.VIT+' STR '+A.STR+' DEF '+A.DEF+' AGI '+A.AGI+' INT '+A.INT,10,H-34,'#aab');
  WP.forEach((w,i)=>txt((i+1)+' '+w.n,10+i*72,H-18,i==wi?'#ffd34d':'#889'));
  txt('Potion: '+p.pot+'/5 [R]',10,H-6,'#e08aa0');
@@ -2525,6 +3191,10 @@ function startGame() {
     playing = true; inGame = true; menuOn = false;
     SFX.mode("game");
     startBtn.innerHTML = "✦ &nbsp; CONTINUE &nbsp; ✦";
+    if (isMobile) {
+      const mob = document.getElementById("mobileControls");
+      if (mob) mob.classList.remove("hidden");
+    }
     black.style.transition = "opacity 1.2s ease";
     black.style.opacity = 0;
   }, 900);
@@ -2535,6 +3205,10 @@ function pauseGame() {
   playing = false;
   try { Object.keys(K).forEach(k => K[k] = 0); M.d = 0; for (const k in P) delete P[k]; } catch (e) {}
   cv.style.visibility = "hidden";
+  const mob = document.getElementById("mobileControls");
+  if (mob) mob.classList.add("hidden");
+  const sm = document.getElementById("statModal");
+  if (sm) sm.classList.add("hidden");
   document.getElementById("menu").classList.remove("hidden");
   showMenuScene();
   SFX.mode("menu");
@@ -2548,6 +3222,10 @@ function resumeGame() {
   cv.style.visibility = "visible"; cv.focus();
   playing = true;
   SFX.mode("game");
+  if (isMobile) {
+    const mob = document.getElementById("mobileControls");
+    if (mob) mob.classList.remove("hidden");
+  }
 }
 
 window.addEventListener("keydown", e => {
@@ -2558,7 +3236,316 @@ document.addEventListener("pointerdown", unlock);
 document.addEventListener("keydown", unlock);
 document.getElementById("musicVol").addEventListener("input", e => SFX.vol(e.target.value / 100 * 1.4));
 
-Object.assign(window, { startCinematic, openSettings, closeSettings, exitGame, skipCinematic, startGame });
+/* ===== MOBILE CONTROLS & RESPONSIVENESS SYSTEM ===== */
+function initMobileControls() {
+  const joyZone = document.getElementById('joyZone');
+  const joyBase = document.getElementById('joyBase');
+  const joyStick = document.getElementById('joyStick');
+  const mobBtnAttack = document.getElementById('mobBtnAttack');
+  const mobBtnDodge = document.getElementById('mobBtnDodge');
+  const mobBtnSkill1 = document.getElementById('mobBtnSkill1');
+  const mobBtnSkill2 = document.getElementById('mobBtnSkill2');
+  const mobBtnSkill3 = document.getElementById('mobBtnSkill3');
+  const mobBtnUlt = document.getElementById('mobBtnUlt');
+  const mobBtnFocus = document.getElementById('mobBtnFocus');
+  const mobBtnPotion = document.getElementById('mobBtnPotion');
+  const mobBtnInteract = document.getElementById('mobBtnInteract');
+  const mobBtnPause = document.getElementById('mobBtnPause');
+  const mobBtnAudio = document.getElementById('mobBtnAudio');
+  const mobBtnFullscreen = document.getElementById('mobBtnFullscreen');
+  const mobBtnLobby = document.getElementById('mobBtnLobby');
+  const mobBtnStat = document.getElementById('mobBtnStat');
+  const mobStatClose = document.getElementById('mobStatClose');
+  const statModal = document.getElementById('statModal');
+  const rotateOverlay = document.getElementById('rotateOverlay');
+
+  function checkOrientation() {
+    isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 1024);
+    if (!rotateOverlay) return;
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if (isPortrait && isMobile) {
+      rotateOverlay.style.display = 'flex';
+    } else {
+      rotateOverlay.style.display = 'none';
+    }
+  }
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', checkOrientation);
+  checkOrientation();
+
+  if (rotateOverlay) {
+    rotateOverlay.addEventListener('pointerdown', () => {
+      try {
+        if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {});
+      } catch (e) {}
+    });
+  }
+
+  // Virtual Joystick
+  if (joyZone && joyBase && joyStick) {
+    joyZone.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      touchJoy.pointerId = e.pointerId;
+      touchJoy.active = true;
+      const rect = joyZone.getBoundingClientRect();
+      const touchX = e.clientX - rect.left;
+      const touchY = e.clientY - rect.top;
+      joyBase.style.left = (touchX - 60) + 'px';
+      joyBase.style.bottom = (rect.height - touchY - 60) + 'px';
+      touchJoy.startX = e.clientX;
+      touchJoy.startY = e.clientY;
+      joyStick.style.transform = 'translate(0px, 0px)';
+    });
+
+    window.addEventListener('pointermove', e => {
+      if (!touchJoy.active || e.pointerId !== touchJoy.pointerId) return;
+      const dx = e.clientX - touchJoy.startX;
+      const dy = e.clientY - touchJoy.startY;
+      const dist = Math.hypot(dx, dy);
+      const maxR = 48;
+      const angle = Math.atan2(dy, dx);
+      const stickDist = Math.min(dist, maxR);
+      joyStick.style.transform = `translate(${Math.cos(angle) * stickDist}px, ${Math.sin(angle) * stickDist}px)`;
+      const mag = Math.min(1, dist / maxR);
+      if (mag > 0.12) {
+        touchJoy.x = (dx / (dist || 1)) * mag;
+        touchJoy.y = (dy / (dist || 1)) * mag;
+        touchJoy.sprint = mag > 0.72;
+      } else {
+        touchJoy.x = 0;
+        touchJoy.y = 0;
+        touchJoy.sprint = false;
+      }
+    });
+
+    const resetJoy = e => {
+      if (e.pointerId !== touchJoy.pointerId) return;
+      touchJoy.active = false;
+      touchJoy.pointerId = null;
+      touchJoy.x = 0;
+      touchJoy.y = 0;
+      touchJoy.sprint = false;
+      joyStick.style.transform = 'translate(0px, 0px)';
+      joyBase.style.left = 'max(32px, env(safe-area-inset-left))';
+      joyBase.style.bottom = 'max(32px, env(safe-area-inset-bottom))';
+    };
+    window.addEventListener('pointerup', resetJoy);
+    window.addEventListener('pointercancel', resetJoy);
+  }
+
+  // Attack & Aim Button
+  if (mobBtnAttack) {
+    mobBtnAttack.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      SFX.init();
+      touchAttack.active = true;
+      touchAttack.pointerId = e.pointerId;
+      M.d = 1;
+      cv.focus();
+    });
+
+    window.addEventListener('pointermove', e => {
+      if (!touchAttack.active || e.pointerId !== touchAttack.pointerId) return;
+      const rect = mobBtnAttack.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      if (Math.hypot(dx, dy) > 16) {
+        touchAiming = true;
+        const a = Math.atan2(dy, dx);
+        if (typeof p !== 'undefined' && p) {
+          p.face = a;
+          M.x = p.x + Math.cos(a) * 120;
+          M.y = p.y + Math.sin(a) * 120;
+        }
+      }
+    });
+
+    const releaseAtk = e => {
+      if (!touchAttack.active || e.pointerId !== touchAttack.pointerId) return;
+      touchAttack.active = false;
+      touchAttack.pointerId = null;
+      if (M.d) { M.d = 0; M.u = 1; }
+      setTimeout(() => { touchAiming = false; }, 120);
+    };
+    window.addEventListener('pointerup', releaseAtk);
+    window.addEventListener('pointercancel', releaseAtk);
+  }
+
+  // Dodge
+  if (mobBtnDodge) {
+    mobBtnDodge.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      SFX.init();
+      P.Space = 1;
+    });
+  }
+
+  // Skills
+  if (mobBtnSkill1) mobBtnSkill1.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); P.KeyZ = 1; });
+  if (mobBtnSkill2) mobBtnSkill2.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); P.KeyX = 1; });
+  if (mobBtnSkill3) mobBtnSkill3.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); P.KeyC = 1; });
+
+  // Ult, Focus, Potion
+  if (mobBtnUlt) mobBtnUlt.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); P.KeyQ = 1; });
+  if (mobBtnFocus) mobBtnFocus.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); P.KeyE = 1; });
+  if (mobBtnPotion) mobBtnPotion.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); P.KeyR = 1; });
+
+  // Interact
+  if (mobBtnInteract) mobBtnInteract.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); P.KeyG = 1; });
+
+  // Top Bar Actions
+  if (mobBtnPause) mobBtnPause.addEventListener('pointerdown', e => { e.preventDefault(); pauseGame(); });
+  if (mobBtnAudio) {
+    mobBtnAudio.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      SFX.toggle();
+      mobBtnAudio.textContent = SFX.isOn() ? '♪' : '✕';
+    });
+  }
+  if (mobBtnFullscreen) {
+    mobBtnFullscreen.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const d = document.documentElement;
+      try {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else if (d.requestFullscreen) {
+          d.requestFullscreen();
+        }
+      } catch (err) {}
+    });
+  }
+  if (mobBtnLobby) mobBtnLobby.addEventListener('pointerdown', e => { e.preventDefault(); P.KeyB = 1; });
+
+  // Weapon Switcher
+  document.querySelectorAll('.mob-wpn-btn').forEach(btn => {
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const idx = parseInt(btn.dataset.wpn);
+      if (typeof wi !== 'undefined' && wi !== idx) {
+        P['Digit' + (idx + 1)] = 1;
+      }
+    });
+  });
+
+  // Stat Modal
+  function toggleStatModal(show) {
+    if (!statModal) return;
+    const shouldShow = show !== undefined ? show : statModal.classList.contains('hidden');
+    if (shouldShow) {
+      statModal.classList.remove('hidden');
+    } else {
+      statModal.classList.add('hidden');
+    }
+  }
+  window.toggleStatModal = toggleStatModal;
+  if (mobBtnStat) mobBtnStat.addEventListener('pointerdown', e => { e.preventDefault(); toggleStatModal(true); });
+  if (mobStatClose) mobStatClose.addEventListener('pointerdown', e => { e.preventDefault(); toggleStatModal(false); });
+
+  document.querySelectorAll('.stat-add-btn').forEach(btn => {
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const stat = btn.dataset.stat;
+      const keyMap = { VIT: 'Digit6', STR: 'Digit7', DEF: 'Digit8', AGI: 'Digit9', INT: 'Digit0' };
+      if (keyMap[stat] && pts > 0) {
+        P[keyMap[stat]] = 1;
+      }
+    });
+  });
+}
+
+// Mobile UI Frame Update (called during upd(dt))
+window.updateMobileUI = function() {
+  if (!isMobile) return;
+  const pObj = typeof p !== 'undefined' ? p : null;
+  if (!pObj) return;
+
+  // Skills cooldown & labels
+  if (typeof SK !== 'undefined' && typeof wi !== 'undefined' && SK[wi]) {
+    for (let i = 0; i < 3; i++) {
+      const q = SK[wi][i];
+      const cdEl = document.getElementById('mobSk' + (i + 1) + 'Cd');
+      const lblEl = document.getElementById('mobSk' + (i + 1) + 'Lbl');
+      if (lblEl && q) lblEl.textContent = q.n.slice(0, 4);
+      if (cdEl && q) cdEl.style.height = (pObj.sc[i] > 0 ? (pObj.sc[i] / q.cd) * 100 : 0) + '%';
+    }
+  }
+
+  // Attack charge circle
+  const chargeCircle = document.getElementById('mobChargeCircle');
+  if (chargeCircle) {
+    const ch = (M.d && pObj.hold > 0.05);
+    const pct = ch ? Math.min(1, pObj.hold / 0.6) : 0;
+    chargeCircle.style.strokeDashoffset = 233 * (1 - pct);
+  }
+
+  // Ult ready
+  const ultBtn = document.getElementById('mobBtnUlt');
+  if (ultBtn && typeof ULT !== 'undefined') {
+    if (ULT >= ULT_MAX) ultBtn.classList.add('ready');
+    else ultBtn.classList.remove('ready');
+  }
+
+  // Potion count
+  const potBadge = document.getElementById('mobPotCount');
+  if (potBadge) potBadge.textContent = pObj.pot;
+
+  // Weapon active
+  if (typeof wi !== 'undefined') {
+    document.querySelectorAll('.mob-wpn-btn').forEach((btn, idx) => {
+      if (idx === wi) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+  }
+
+  // Stat point badge & values
+  const statBtn = document.getElementById('mobBtnStat');
+  const statBadge = document.getElementById('mobStatBadge');
+  const statPts = document.getElementById('mobStatPts');
+  if (typeof pts !== 'undefined') {
+    if (pts > 0) {
+      if (statBtn) statBtn.classList.remove('hidden');
+      if (statBadge) statBadge.textContent = pts;
+    } else {
+      if (statBtn) statBtn.classList.add('hidden');
+    }
+    if (statPts) statPts.textContent = pts;
+  }
+  if (typeof A !== 'undefined') {
+    ['VIT', 'STR', 'DEF', 'AGI', 'INT'].forEach(s => {
+      const el = document.getElementById('val' + s);
+      if (el) el.textContent = A[s];
+    });
+  }
+
+  // Lobby button in top bar
+  const lobbyBtn = document.getElementById('mobBtnLobby');
+  if (lobbyBtn && typeof lobby !== 'undefined') {
+    if (!lobby) lobbyBtn.classList.remove('hidden');
+    else lobbyBtn.classList.add('hidden');
+  }
+
+  // Contextual Interact Button
+  const interactBtn = document.getElementById('mobBtnInteract');
+  const interactText = document.getElementById('mobInteractText');
+  if (interactBtn) {
+    const nearNpc = (typeof lobby !== 'undefined' && lobby && typeof NP !== 'undefined' && typeof TN !== 'undefined')
+      ? NP.concat(TN).find(n => dist(n, pObj) < 38)
+      : null;
+    const isDlg = (typeof dlg !== 'undefined' && dlg !== null);
+    if (isDlg || nearNpc) {
+      interactBtn.classList.remove('hidden');
+      if (interactText) interactText.textContent = isDlg ? 'LANJUT ▶' : 'BICARA [G]';
+    } else {
+      interactBtn.classList.add('hidden');
+    }
+  }
+};
+
+Object.assign(window, { startCinematic, openSettings, closeSettings, exitGame, skipCinematic, startGame, pauseGame, resumeGame });
 showMenuScene();
+initMobileControls();
 })();
 </script></body></html>
