@@ -1580,8 +1580,10 @@
       for (let i = 0; i < 8; i++) { const q = a + sd * (-arc / 2 + arc * i / 7); dp.push({ k: 'p', x: p.x + Math.cos(q) * r * .9, y: p.y + Math.sin(q) * r * .9, vx: -Math.sin(q) * sd * 40 + Math.cos(q) * 20, vy: Math.cos(q) * sd * 40 + Math.sin(q) * 20, life: .2 + R() * .15, max: .35, s: 1 + R() * 1.5, c: wi == 4 ? '#ffb48a' : wi == 1 ? '#ff9a9a' : '#e8f2ff' }) }
       if (sh.hn == 2 && (wi == 0 || wi == 4)) { fx.push({ k: 'ring', x: p.x + Math.cos(a) * r * .6 * (wi == 0), y: p.y + Math.sin(a) * r * .6 * (wi == 0), r: (wi == 0 ? 20 : 26) * MELEE_R, life: .3, max: .3, col: wi == 0 ? '#e8f2ff' : '#ffb48a' }); shake = Math.max(shake, 2) }
       for (let i = 0; i < 10; i++) { const q = a + (R() - .5) * Math.min(arc, 3.5), d2 = r * (.6 + R() * .5); dp.push({ k: 'p', x: p.x + Math.cos(q) * d2, y: p.y + Math.sin(q) * d2, vx: Math.cos(q) * 70, vy: Math.sin(q) * 70, life: .3 + R() * .25, max: .55, s: 1.5 + R() * 2, c: WCOL[wi] }) } shake = Math.max(shake, 2.5); p.swing = .14; p.sd = sd; p.sa = arc; p.hn = sh.hn; p.vx += Math.cos(a) * sh.lg; p.vy += Math.sin(a) * sh.lg;
-      es.slice().forEach(e => { const dd = dist(p, e), da = Math.abs(((ang(p, e) - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI); if (dd < r + e.r && (da < arc / 2 || dd < 8)) hit(e, d, p.x, p.y, kb) })
+      if (!sh.nh) es.slice().forEach(e => { const dd = dist(p, e), da = Math.abs(((ang(p, e) - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI); if (dd < r + e.r && (da < arc / 2 || dd < 8)) hit(e, d, p.x, p.y, kb) })
     }
+    // Sapuan area 360° untuk ultimate: semua musuh dalam radius pasti kena (tidak bergantung arah/arc)
+    function ultSweep(r, d, kb) { es.slice().forEach(e => { if (e.sw <= 0 && dist(p, e) < r + e.r) hit(e, d, p.x, p.y, kb) }) }
     function shoot(a, d, s, col, aoe = 0) { SFX.shot(aoe); if (aoe) fx.push({ k: 'rune', x: p.x, y: p.y + 4, life: .4, max: .4 }); p.recoil = .18; fx.push({ k: 'muzz', x: p.x + Math.cos(a) * 14, y: p.y + Math.sin(a) * 14, a, col, life: .18, max: .18, aoe }); pr.push({ x: p.x + Math.cos(a) * 8, y: p.y + Math.sin(a) * 8, vx: Math.cos(a) * s, vy: Math.sin(a) * s, d, r: wi == 2 && !aoe ? 5 : 3, col, own: 'p', life: 1.2, aoe }) }
     function boom(x, y, r, d) { SFX.boom(r); arcBlast(x, y, r); es.slice().forEach(e => { if (Math.hypot(e.x - x, e.y - y) < r + e.r) hit(e, d, x, y, 90) }) }
     function atk(h) {
@@ -1684,9 +1686,9 @@
       {
         n: 'Excalibur Judgement', dur: 3.2, f: (a, m) => {
           skSpin(5, 2.2);
-          for (let i = 0; i < 7; i++)skLater(.15 + i * .3, () => { melee(100, 6.28, 30 * m, 200, { hn: 2, sd: 1, lg: 0 }); fx.push({ k: 'ring', x: p.x, y: p.y, r: 90 + i * 8, w: 4, life: .4, max: .4, col: '#9fd0ff' }, { k: 'gl', x: p.x, y: p.y, r: 130, c: '140,200,255', life: .3, max: .3 }); if (i % 2) fx.push({ k: 'pil', x: p.x + (R() - .5) * 160, y: p.y + (R() - .5) * 110, w: 22, h: 130, c: '150,210,255', life: .45, max: .45 }) });
+          for (let i = 0; i < 7; i++)skLater(.15 + i * .3, () => { melee(100, 6.28, 0, 0, { hn: 2, sd: 1, lg: 0, nh: 1 }); ultSweep(150 + i * 6, 30 * m, 35); fx.push({ k: 'ring', x: p.x, y: p.y, r: 105 + i * 8, w: 4, life: .4, max: .4, col: '#9fd0ff' }, { k: 'gl', x: p.x, y: p.y, r: 130, c: '140,200,255', life: .3, max: .3 }); if (i % 2) fx.push({ k: 'pil', x: p.x + (R() - .5) * 160, y: p.y + (R() - .5) * 110, w: 22, h: 130, c: '150,210,255', life: .45, max: .45 }) });
           skLater(2.6, () => {
-            melee(150, 6.28, 95 * m, 320, { hn: 2, sd: 1, lg: 0 });
+            melee(150, 6.28, 0, 0, { hn: 2, sd: 1, lg: 0, nh: 1 }); ultSweep(240, 95 * m, 320);
             for (let i = 0; i < 4; i++)fx.push({ k: 'ring', x: p.x, y: p.y, r: 50 + i * 35, w: 5 - i, life: .5 + i * .1, max: .5 + i * .1, col: i % 2 ? '#cfe6ff' : '#fff' });
             for (let i = 0; i < 9; i++) { const q = i / 9 * 6.283, d = 70 + R() * 60; fx.push({ k: 'pil', x: p.x + Math.cos(q) * d, y: p.y + Math.sin(q) * d * .7, w: 26, h: 150, c: '150,210,255', life: .55, max: .55 }) }
             fx.push({ k: 'pil', x: p.x, y: p.y, w: 90, h: 240, c: '200,235,255', life: .7, max: .7 }); shake = Math.max(shake, 12); SFX.slam()
