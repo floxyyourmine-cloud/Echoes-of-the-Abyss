@@ -1552,6 +1552,7 @@
       const L2 = [['slime', 340, 170], ['slime', 340, 310], ['skel', 500, 190], ['mage', 660, 130], ['mage', 660, 350], ['skel', 580, 290], ['slime', 480, 80], ['mage', 280, 240],
       ['slime', 180, 410], ['skel', 420, 410], ['mage', 720, 420], ['skel', 700, 70]];
       const ex = []; for (let j = 0, n = 0; j < HALF_EXTRA && n < 300; n++) { const x = 220 + R() * 520, y = 50 + R() * 380; if (!blk(x, y, 9)) { ex.push(['slime', x, y]); j++ } }
+      if (room) for (let j = 0, n = 0; j < 2 * Math.max(0, wave - 7) && n < 400; n++) { const x = 200 + R() * 560, y = 50 + R() * 380; if (!blk(x, y, 9)) { ex.push([['skel', 'mage', 'slime'][j % 3], x, y]); j++ } }   // gelombang 8-10: musuh tambahan
       es = (room ? L2 : L).slice(0, Math.min(8 + EXTRA_ENEMIES, 3 + wave + EXTRA_ENEMIES)).concat(ex).map(([k, x, y], i) => { const e = mk(k, x, y); e.hp = e.mhp = e.hp * (1 + Math.max(0, wave - 5) * .12); e.sd = i * .14; e.st = 1.1 + e.sd; e.sw = e.st; e.sx = 0; return e }); SFX.summon()
     }
     function reset() { const pot = p ? p.pot : 3; p = { x: lobby ? 320 : 60, y: lobby ? 320 : DY, vx: 0, vy: 0, r: 5, hp: mhp(), st: 100, stT: 0, face: 0, cdA: 0, combo: 0, comboT: 0, dod: 0, dx: 0, dy: 0, inv: 0, hold: 0, sc: [0, 0, 0], skb: 0, spn: 0, fa: 0, spv: 0, dsp: 0, ec: 0, focus: 0, pot, potC: 0, hurt: 0, swing: 0, dead: 0, recoil: 0, sd: 1, sa: 1, al: 0, rmax: .18, hn: 0, wb: 0, wph: 0, idt: 0, dfx: 0 }; gh = []; dp = []; SQ = []; spawn() }
@@ -2651,7 +2652,7 @@
         txt(rd ? 'ULT SIAP [Q]' : 'ULT ' + Math.floor(ULT) + '%', 135, 36, rd ? '#ffe08a' : '#c9a8ff')
       }
       txt('Lv ' + lvl + '  EXP ' + exp + '/' + lvl * 40, 10, 48);
-      if (lobby) { txt(trn ? 'RUANG PELATIHAN' : 'LOBBY — ZONA AMAN', W - 10, 18, '#8fe8a0', 'right'); txt(trn ? 'Training Hall' : 'Sanctum Hall', W - 10, 44, '#778', 'right') } else { txt('Gelombang ' + wave + (room ? '' : '/5') + '  Musuh: ' + es.length, W - 10, 18, '#fff', 'right'); txt(room ? 'Torch Dungeon' : 'Ancient Hall', W - 10, 44, '#778', 'right') }
+      if (lobby) { txt(trn ? 'RUANG PELATIHAN' : 'LOBBY — ZONA AMAN', W - 10, 18, '#8fe8a0', 'right'); txt(trn ? 'Training Hall' : 'Sanctum Hall', W - 10, 44, '#778', 'right') } else { txt('Gelombang ' + wave + (room ? '/' + ROOM2_LAST_WAVE : '/5') + '  Musuh: ' + es.length, W - 10, 18, '#fff', 'right'); txt(room ? 'Torch Dungeon' : 'Ancient Hall', W - 10, 44, '#778', 'right') }
       if (p.combo > 1) txt('Combo x' + p.combo, W - 10, 32, '#ffd34d', 'right');
       if (!isMobile) txt('[L] Kontrol   [F] Layar penuh   [M] Suara ' + (SFX.isOn() ? 'ON' : 'OFF'), W / 2, 12, '#667', 'center');
       if (pts > 0) txt('Poin atribut: ' + pts + (isMobile ? ' (Lihat tombol STAT)' : '  [6]VIT [7]STR [8]DEF [9]AGI [0]INT'), 10, 60, '#ffd34d');
@@ -4344,7 +4345,7 @@
   </script>
   <script>
     /* ===== RUANGAN 3: BOSS FIGHT ===== */
-    const ROOM2_LAST_WAVE = 7;   // wave (global) yang harus selesai di ruangan 2 agar pintu bos terbuka
+    const ROOM2_LAST_WAVE = 10;   // wave (global) yang harus selesai di ruangan 2 agar pintu bos terbuka
     const BOSS_HP = 1600;        // atur kesulitan di sini
     const BOSS = { on: 0, hz: [], q: [], ph: 1, intro: 0, dead: 0, vt: 0, ban: 0 };
 
