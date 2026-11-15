@@ -1805,9 +1805,9 @@
     <div id="charSel" aria-label="Pilih karakter">
       <div class="cs-title">PILIH KARAKTER</div>
       <div class="cs-row">
-        <button type="button" class="cs-card" data-hero="m"><canvas width="56" height="60"></canvas><span>♂
+        <button type="button" class="cs-card" data-hero="m"><canvas width="112" height="120"></canvas><span>♂
             COWOK</span></button>
-        <button type="button" class="cs-card" data-hero="f"><canvas width="56" height="60"></canvas><span>♀
+        <button type="button" class="cs-card" data-hero="f"><canvas width="112" height="120"></canvas><span>♀
             CEWEK</span></button>
       </div>
     </div>
@@ -2807,114 +2807,154 @@
         hsx = Math.max(-1, Math.min(1, Math.round(fl * 1.6 + Math.sin(tt * 2.1) * (.5 + .4 * bl)))), hlen = 2 + Math.round(dfw(1.2) * bl), // ayun rambut
         cl1 = v => Math.max(-1, Math.min(1, v)), mvx = ghost ? 0 : cl1(p.vx / 85), mvy = ghost ? 0 : cl1(p.vy / 85), rn = ghost ? 0 : Math.max(0, Math.min(1, (Math.hypot(p.vx, p.vy) - 85) / 40));
       if (!ghost) { g.fillStyle = 'rgba(0,0,0,.34)'; g.fillRect(ox - 7, Math.round(y) + 6, 14, 1); g.fillRect(ox - 9, Math.round(y) + 7, 18, 2); g.fillRect(ox - 7, Math.round(y) + 9, 14, 1) }
-      const cape = Q => {
-        const fe = Math.max(-1, Math.min(1, fl + .3)), jag = [16, 18, 17, 18, 18, 17, 18, 16];
-        for (let c = 0; c < 8; c++) { const xc = -12 + c * 3, bot = jag[c], sh = Math.round(fe * 4 * bot / 14 + cs * (c > 3 ? .9 : -.9) * .6); Q(xc + sh, -2, 3, bot + 2, c % 2 ? '#9a2038' : '#7a182e'); const hw = Math.round(Math.sin(tt * 2.6 + f * 1.3 - c * .9) * (.55 + 1.1 * bl)); Q(xc + sh + hw, bot - 1 + (hw > 0 ? 1 : 0), 3, 1, '#4a0e1b'); if (c % 2) Q(xc + sh + 1, 1, 1, bot - 5, '#b8304d') }
-        const sg = fe >= 0 ? 1 : -1, tl = [16, 18, 17]; for (let j = 0; j < 3; j++) { const x0 = sg > 0 ? 10 + j * 3 + Math.round(fe * 3) : -13 - j * 3 + Math.round(fe * 3), top = 3 + j * 2, bot = Math.min(19, tl[j] + Math.round(Math.abs(fe) * 1.5)); Q(x0, top, 3, bot - top, j == 1 ? '#9a2038' : '#6e1528'); Q(x0, bot - 1, 3, 1, '#4a0e1b') }
+      // ===== MODEL BARU: chibi ksatria pixel-art (grid setengah-unit) mengikuti gambar referensi cowok & cewek =====
+      const PL = {
+        ol: '#0b0a10', bk: '#17151b', s1: '#f1f3f8', s2: '#c9ccd6', s3: '#9a9dac', s4: '#666878', s5: '#3b3b48',
+        b1: '#6b3a34', b2: '#43231f', hk: '#1b1a21', hm: '#2c2a33', hh: '#4d4a58', sk: '#f6e6dd', ss: '#dcc3ba', ch: '#f2a6a8',
+        ey: '#27b4c6', ed: '#0d6574', el: '#a8f2f7', rd: '#8a1a2c', rl: '#bd2c45', rk: '#4a0d1a', rm: '#9d2036'
       };
+      const mk = Q => ({
+        Z: (a, b, w, h, c) => Q(a / 2, b / 2, w / 2, h / 2, c),
+        ZH: (a, b, w, h, c) => Q(a / 2, b / 2 + hdy, w / 2, h / 2, c),
+        ZP: (a, b, w, h, c) => Q(a / 2, b / 2 + pdy, w / 2, h / 2, c)
+      });
+      // jubah/syal merah compang-camping: default di sisi kanan layar (seperti gambar), berbalik saat bergerak ke kanan
+      const capeZ = Z => {
+        const fe = Math.max(-1, Math.min(1, fl + .45)), sg = fe >= 0 ? 1 : -1, ma = Math.abs(fe),
+          X = [10, 15, 20, 24, 28], W = [7, 7, 7, 6, 6], T = [-2, 2, 7, 12, 17], Ln = [36, 33, 28, 21, 14];
+        for (let k = 0; k < 5; k++) {
+          const sh = Math.round(ma * 3 * (k + 1) / 5 + Math.sin(tt * 2.5 + f * 1.1 - k * .9) * (.6 + .9 * bl) * (k + 1) / 3 + cs * .4), w = W[k], x0 = X[k] + sh, xd = sg > 0 ? x0 : -x0 - w;
+          for (let c = 0; c < w; c += 2) {
+            const cw = Math.min(2, w - c), ln = Ln[k] - ((c / 2 + k) % 3) * 2 - (k % 2), xx = xd + c, sd = sg > 0 ? c == 0 : c + cw >= w, hl = sg > 0 ? c + cw >= w : c == 0;
+            Z(xx, T[k], cw, ln, k % 2 ? PL.rd : PL.rm);
+            if (sd) Z(xx, T[k], 1, ln - 1, PL.rk); if (hl) Z(xx + cw - 1, T[k] + 1, 1, ln - 3, PL.rl);
+            if (k > 2 && ln > 6 && c == 2) Z(xx, T[k] + ln - 3, 1, 1, '#eadadd')
+          }
+        }
+      };
+      // kaki: bagian atas (paha) & bawah (lutut, tulang kering, sepatu bot) dipisah supaya urutan gambar bisa diatur
+      const legZ = (Z, i, xc, wd, fem, part) => {
+        const ph = f + i * Math.PI, sw = Math.sin(ph) * bl, cw = Math.cos(ph) * bl, lift = Math.round(Math.pow(Math.max(0, sw), .7) * (1.6 + 1.6 * rn)),
+          fx = Math.round(cw * mvx * 2.4 + (iw > .5 ? Math.sin(tt * .6 + i * 3.1416) * .7 : 0)), fy = Math.round(cw * mvy * 1.6),
+          tk = Math.round(fx * .4) * 2, sk = Math.round(fx * .75) * 2, ft = Math.max(13, 16 - lift + fy) * 2, X = xc - (wd >> 1), xf = X + fx * 2;
+        if (part == 0) {
+          if (fem) return;
+          Z(X + tk, 17, wd, 11, PL.s2); Z(X + tk, 17, wd, 1, PL.s1); Z(X + tk, 18, 1, 9, PL.s1); Z(X + tk + wd - 1, 18, 1, 9, PL.s4); Z(X + tk + 1, 22, wd - 2, 1, PL.s3)
+        } else {
+          Z(X + tk, 25, wd, 4, PL.s2); Z(X + tk, 25, wd, 1, PL.s1); Z(X + tk + 1, 26, 2, 1, '#ffffff'); Z(X + tk, 28, wd, 1, PL.s4); Z(X + tk + wd - 1, 26, 1, 2, PL.s4);
+          const sh = Math.max(1, ft - 29); Z(X + sk, 29, wd - 1, sh, PL.s3); Z(X + sk, 29, 1, sh, PL.s2); Z(X + sk + wd - 2, 29, 1, sh, PL.s4);
+          const bw = wd + 2; Z(xf - 1, ft, bw, 8, PL.s2); Z(xf - 1, ft, bw, 1, PL.s1); Z(xf - 1, ft + 2, 3, 2, PL.s1); Z(xf + 1, ft + 1, wd - 1, 1, PL.s3);
+          Z(xf - 1, ft + 4, bw, 1, PL.s4); Z(xf + bw - 2, ft + 1, 1, 4, PL.s4); Z(xf - 1, ft + 6, bw, 2, '#23232e'); if (fem) Z(xf - 1, ft + 5, bw, 1, '#c2a06b')
+        }
+      };
+      // wajah: kulit pucat, mata teal besar (berkedip), pipi merona
+      const faceZ = ZH => {
+        ZH(-10, -17, 20, 9, PL.sk); ZH(7, -17, 3, 9, PL.ss); ZH(-10, -17, 20, 1, '#c9b2ae'); ZH(-8, -9, 2, 1, PL.ch); ZH(6, -9, 2, 1, PL.ch);
+        for (const s of [-1, 1]) {
+          const x0 = s < 0 ? -8 : 2, E1 = s < 0 ? PL.ey : '#e3a92a', E2 = s < 0 ? PL.ed : '#7a520a', E3 = s < 0 ? PL.el : '#fff0a8', E4 = s < 0 ? '#06242a' : '#2a1800';
+          if (blk) { ZH(x0, -15, 6, 1, PL.ol); ZH(x0, -14, 6, 3, PL.sk); ZH(x0 + 1, -11, 4, 1, '#5a2a34') }
+          else {
+            ZH(x0, -15, 6, 1, PL.ol); ZH(s < 0 ? x0 - 1 : x0 + 6, -14, 1, 1, PL.ol);
+            ZH(x0, -14, 6, 4, '#ffffff'); ZH(x0 + 1, -14, 4, 4, E1); ZH(x0 + 1, -14, 4, 1, E2); ZH(x0 + 2, -13, 2, 2, E4);
+            ZH(x0 + 1, -11, 4, 1, E3); ZH(x0 + 1, -14, 1, 1, '#ffffff'); if (s > 0 && glt) ZH(x0 + 3, -12, 1, 1, '#ffffff')
+          }
+        }
+      };
+      const scarfZ = (Z, wd) => {
+        Z(-wd + 1, -8, 2 * wd - 2, 4, PL.rd); Z(-wd, -4, 2 * wd, 5, PL.rd); Z(-wd + 1, -8, 2 * wd - 2, 1, PL.rl); Z(-wd, -4, 9, 1, PL.rl); Z(2, -3, wd - 3, 1, PL.rm);
+        Z(-wd, 1, 2 * wd, 1, PL.rk); Z(-6, -6, 1, 5, PL.rk); Z(4, -5, 1, 5, PL.rk); Z(-3, -7, 3, 1, PL.rm); Z(7, -3, 1, 4, PL.rk)
+      };
+      const hairM = ZH => {
+        const H = PL.hk, M = PL.hm, L = PL.hh, L2 = '#6c6a7c';
+        // jambul tipis & runcing
+        [[-8, -30, 3, 2], [-3, -33, 4, 5], [2, -31, 3, 3], [7, -29, 3, 2]].forEach(([x, y, w, h], i) => { ZH(x, y, w, h, i % 2 ? M : H); ZH(x + 1, y - 1, Math.max(1, w - 2), 1, H) });
+        ZH(-10, -29, 20, 2, H); ZH(-12, -27, 24, 3, H); ZH(-13, -24, 26, 5, H);
+        // beberapa helai samping saja
+        [[-16, -24, 3, 2], [-17, -21, 4, 2], [-15, -19, 3, 2]].forEach(([x, y, w, h], i) => ZH(x, y, w, h, i % 2 ? M : H));
+        [[13, -25, 3, 2], [14, -22, 4, 2], [13, -19, 3, 2]].forEach(([x, y, w, h], i) => ZH(x, y, w, h, i % 2 ? H : M));
+        ZH(-13, -19, 3, 7, H); ZH(10, -19, 3, 7, H); ZH(-12, -12, 2, 3, M); ZH(10, -12, 2, 3, M);
+        ZH(-12, -19, 24, 3, H); ZH(-11, -16, 22, 1, H);
+        // poni jarang, ujung runcing
+        [[-11, 3, 4], [-8, 3, 3], [-5, 3, 4], [-2, 4, 6], [2, 3, 4], [5, 3, 3], [8, 3, 4]].forEach(([x, w, l], i) => {
+          ZH(x, -20, w, l, i % 2 ? M : H); ZH(x, -20, 1, l, H); ZH(x + 1, -20 + l, w - 1, 1, H); if (l > 4) { ZH(x + 1, -19 + l, w - 1, 1, H); ZH(x + 2, -18 + l, 1, 1, H) }
+        });
+        ZH(-3, -32, 1, 3, L); ZH(-7, -28, 4, 1, L); ZH(1, -27, 5, 1, L); ZH(-11, -24, 3, 1, L2); ZH(8, -24, 3, 1, L2); ZH(-6, -22, 3, 1, L); ZH(3, -21, 4, 1, L);
+        ZH(-12 + hsx, -9, 2, 2 + hlen, M); ZH(10 + hsx, -9, 2, 2 + hlen, M)
+      };
+      // ===== COWOK: ksatria rambut hitam acak-acakan, syal merah, zirah silver tebal, tabard hitam berlambang salib =====
       const run = Q => {
-        const H1 = (a, b, w, h, c) => Q(a, b + 1 + hdy, w, h, c), P0 = (a, b, w, h, c) => Q(a, b + pdy, w, h, c);
-        // jubah merah compang-camping, berkibar ke arah berlawanan gerak
-        cape(Q);
-        // kaki berzirah silver (lebih panjang, pinggul di y=9)
-        const L = (x, i) => {   // kaki: angkat tumit, lutut menekuk, melangkah searah gerak
-          const ph = f + i * Math.PI, sw = Math.sin(ph) * bl, cw = Math.cos(ph) * bl, lift = Math.round(Math.pow(Math.max(0, sw), .7) * (1.6 + 1.6 * rn)),
-            fx = Math.round(cw * mvx * 2.4 + (iw > .5 ? Math.sin(tt * .6 + i * 3.1416) * .7 : 0)), fy = Math.round(cw * mvy * 1.6), tk = Math.round(fx * .4), sk = Math.round(fx * .75),
-            ft = Math.max(13, 16 - lift + fy), shn = Math.max(1, ft - 14), X = x + fx;
-          Q(x + tk, 9, 4, 5, '#a9adbc'); Q(x + tk, 9, 4, 1, '#e4e7ee'); Q(x + tk + 3, 10, 1, 4, '#7b7f90'); Q(x + tk, 12, 4, 2, '#cdd0db'); Q(x + tk, 12, 4, 1, '#f4f5fa');
-          Q(x + sk, 14, 4, shn, '#a9adbc'); Q(x + sk + 3, 14, 1, shn, '#7b7f90');
-          Q(X - 1, ft, 5, 4, '#d2d5df'); Q(X - 1, ft, 5, 1, '#f4f5fa'); Q(X - 1, ft + 2, 5, 1, '#9a9eae'); Q(X - 1, ft + 3, 5, 1, '#23232e')
-        };
-        L(-5, 0); L(1, 1);
-        // tabard hitam dengan salib
-        Q(-2, 8, 4, 7, '#1d1c27'); Q(-2, 8, 1, 7, '#7f8394'); Q(1, 8, 1, 7, '#7f8394'); Q(-2, 14, 4, 1, '#7f8394'); Q(0, 9, 1, 4, '#565667'); Q(-1, 10, 3, 1, '#565667');
-        Q(-7, 8, 3, 5, '#a4a8b7'); Q(-7, 8, 3, 1, '#d9dce5'); Q(-7, 12, 3, 1, '#6b6f82'); Q(4, 8, 3, 5, '#a4a8b7'); Q(4, 8, 3, 1, '#d9dce5'); Q(4, 12, 3, 1, '#6b6f82');
-        // dada (lebih tinggi) + pelindung bahu
-        Q(-7, 0, 14, 9, '#1d1c27'); Q(-6, 1, 12, 5, '#a4a8b7'); Q(-5, 2, 4, 3, '#cdd0db'); Q(1, 2, 4, 3, '#bcc0cd'); Q(-5, 2, 4, 1, '#f0f2f7'); Q(1, 2, 4, 1, '#e0e3ec'); Q(0, 2, 1, 3, '#4a4d5c'); Q(-2, 1, 4, 1, '#23232e'); Q(-6, 5, 12, 1, '#6b6f82');
-        Q(-6, 6, 12, 2, '#252630'); Q(-1, 6, 2, 2, '#e4e7ee'); Q(-1, 6, 2, 1, '#fff');
-        P0(-10, 0, 4, 5, '#a4a8b7'); P0(-10, 0, 4, 1, '#e4e7ee'); P0(-10, 4, 4, 1, '#6b6f82'); P0(-9, 1, 1, 3, '#cdd0db');
-        P0(6, 0, 4, 5, '#a4a8b7'); P0(6, 0, 4, 1, '#e4e7ee'); P0(6, 4, 4, 1, '#6b6f82'); P0(9, 1, 1, 3, '#8b8fa0');
-        // wajah
-        H1(-6, -10, 12, 7, '#e8cdbd'); H1(4, -10, 2, 7, '#d2ae9d');
-        H1(-5, -8, 3, 3, '#c8283e'); H1(-5, -8, 3, 1, '#3a0b14'); H1(-4, -7, 1, 2, '#12040a'); H1(-5, -7, 1, 1, '#ff8aa0');
-        H1(2, -8, 3, 3, '#e0a82c'); H1(2, -8, 3, 1, '#3a2a08'); H1(3, -7, 1, 2, '#140c02'); H1(4, -7, 1, 1, '#fff2b0');
-        if (blk) { H1(-5, -8, 3, 2, '#e8cdbd'); H1(-5, -6, 3, 1, '#3a1a22'); H1(2, -8, 2, 2, '#e8cdbd'); H1(4, -8, 1, 2, '#d2ae9d'); H1(2, -6, 3, 1, '#3a2a18') } else if (glt) H1(2, -7, 1, 1, '#fff2b0');
-        // syal merah
-        Q(-7, -3, 14, 4, '#9a1f35'); Q(-7, -3, 14, 1, '#cf3d56'); Q(-7, 0, 14, 1, '#5c1020'); Q(-5, -2, 3, 1, '#b82f49'); Q(2, -1, 4, 1, '#7d1428');
-        const tx = 4 + Math.round(cs * 1.2); Q(tx, 2, 3, 7, '#8c1b31'); Q(tx, 2, 1, 6, '#b82f49'); Q(tx, 8, 3, 1, '#4a0e1b');
-        const ts = Math.max(-2, Math.min(2, Math.round(fl * 2 + Math.sin(tt * 2.6 + 1.3) * .8 + Math.sin(f * 2.2 + 1.3) * 1.2 * bl))); Q(tx + ts, 9, 3, 1, '#8c1b31'); Q(tx + ts, 9, 1, 1, '#b82f49'); Q(tx + ts, 10, 3, 1, '#4a0e1b');
-        // rambut hitam acak-acakan (lebih ringkas agar kepala tidak kebesaran)
-        H1(-8, -13, 16, 4, '#15151c'); H1(-7, -14, 4, 2, '#15151c'); H1(-4, -15, 3, 2, '#0c0c12'); H1(-2, -16, 4, 3, '#15151c'); H1(2, -15, 3, 2, '#0c0c12'); H1(4, -14, 3, 2, '#15151c'); H1(-9, -14, 2, 2, '#0c0c12');
-        H1(-9, -12, 2, 8, '#15151c'); H1(7, -12, 2, 8, '#15151c'); H1(-10, -11, 1, 4, '#0c0c12'); H1(9, -11, 1, 4, '#0c0c12'); H1(-9, -5, 2, 2, '#0c0c12'); H1(7, -5, 2, 2, '#0c0c12');
-        H1(-6, -10, 3, 2, '#15151c'); H1(-3, -10, 2, 3, '#0c0c12'); H1(-1, -10, 2, 4, '#15151c'); H1(1, -10, 2, 2, '#0c0c12'); H1(3, -10, 4, 2, '#15151c'); H1(-8, -10, 2, 2, '#0c0c12');
-        H1(-6, -13, 4, 1, '#3a3a48'); H1(1, -14, 3, 1, '#3a3a48'); H1(-8, -11, 1, 3, '#2e2e3a'); H1(7, -11, 1, 3, '#2e2e3a'); H1(-1, -16, 1, 1, '#3a3a48'); H1(5, -13, 2, 1, '#2e2e3a');
-        H1(-9 + hsx, -3, 2, hlen, '#0c0c12'); H1(7 + hsx, -3, 2, hlen, '#0c0c12'); H1(-9 + hsx, -3, 1, hlen - 1, '#2e2e3a', 0); H1(-1 + (hsx > 0 ? 1 : 0), -6, 1, 1, '#15151c')
+        const { Z, ZH, ZP } = mk(Q);
+        capeZ(Z);
+        legZ(Z, 0, -6, 8, 0, 0); legZ(Z, 1, 6, 8, 0, 0);
+        // badan: pakaian dalam gelap, dada silver, tali coklat bersilang, sabuk
+        Z(-11, 2, 22, 17, PL.bk); Z(-9, 17, 18, 3, PL.bk);
+        Z(-9, -2, 18, 13, PL.s2); Z(-9, -2, 18, 2, PL.s1); Z(-8, 0, 7, 4, PL.s1); Z(-8, 4, 5, 3, '#dfe1e9'); Z(1, 0, 7, 4, PL.s2); Z(2, 4, 6, 3, PL.s3); Z(-1, 0, 2, 9, PL.s5); Z(-9, 9, 18, 1, PL.s4); Z(-9, 10, 18, 1, PL.s5);
+        for (let t = 0; t < 8; t++) { Z(-10 + t, 0 + t, 3, 2, PL.b1); Z(7 - t, 0 + t, 3, 2, PL.b1); Z(-10 + t, 2 + t, 3, 1, PL.b2); Z(7 - t, 2 + t, 3, 1, PL.b2) }
+        Z(-10, 11, 20, 4, PL.b2); Z(-10, 11, 20, 1, PL.b1); Z(-2, 10, 4, 6, PL.s3); Z(-1, 11, 2, 4, PL.s1); Z(-1, 13, 2, 1, PL.s5); Z(-8, 12, 1, 1, PL.s3); Z(7, 12, 1, 1, PL.s3);
+        // tabard hitam dengan salib & ujung runcing
+        Z(-5, 14, 10, 14, PL.bk); Z(-6, 14, 1, 14, PL.s3); Z(5, 14, 1, 14, PL.s3); Z(-5, 28, 10, 1, PL.s3); Z(-3, 29, 6, 1, PL.bk); Z(-3, 29, 1, 1, PL.s3); Z(2, 29, 1, 1, PL.s3); Z(-1, 30, 2, 1, PL.s3);
+        Z(-1, 17, 2, 8, PL.s2); Z(-3, 19, 6, 1, PL.s2); Z(-1, 17, 2, 1, PL.s1);
+        legZ(Z, 0, -6, 8, 0, 1); legZ(Z, 1, 6, 8, 0, 1);
+        // pelindung bahu besar bersusun (naik-turun telat dari badan)
+        for (const s of [-1, 1]) {
+          const M = (a, w) => s < 0 ? a : -a - w, hi = s < 0 ? PL.s1 : PL.s2, md = s < 0 ? PL.s2 : PL.s3, sh = s < 0 ? PL.s3 : PL.s4,
+            pl = (x, w, y, h) => { ZP(M(x + 1, w - 2), y, w - 2, 1, hi); ZP(M(x, w), y + 1, w, h - 2, md); ZP(M(x + 1, w - 2), y + h - 1, w - 2, 1, PL.s4); ZP(M(x + 1, w - 2), y + 1, 3, 2, hi); ZP(s < 0 ? M(x, w) + w - 1 : M(x, w), y + 2, 1, h - 3, sh) };
+          pl(-21, 11, -5, 6); pl(-23, 13, 0, 6); pl(-21, 11, 5, 6);
+          ZP(M(-14, 2), 2, 2, 2, PL.s5); ZP(M(-14, 2), 8, 2, 1, PL.s5); ZP(M(-19, 1), 3, 1, 1, PL.s5); ZP(M(-12, 1), -2, 1, 1, PL.s5); ZP(s < 0 ? -10 : 9, -5, 1, 16, PL.s5)
+        }
+        scarfZ(Z, 12);
+        faceZ(ZH); hairM(ZH)
       };
-      // ===== MODEL KARAKTER CEWEK: ksatria berambut perak panjang, circlet emas, rok merah, zirah ramping =====
+      // ===== CEWEK: ksatria rambut hitam panjang bergelombang, pita merah, mantel hitam bersalib =====
+      const hairBack = Z => {
+        const hs = y => Math.round(fl * 6 * (y + 24) / 60 + Math.sin(tt * 2.2 - y * .14) * (1 + 1.6 * bl) * (y > 4 ? 1 : .3));
+        for (let y = -24; y <= 38; y++) {
+          const s = hs(y), u = Math.max(0, y - 2), wv = Math.round(Math.sin(y * .38 + 1) * (1 + Math.min(2.4, u * .09))), w0 = (y < 4 ? 16 : 17 + Math.min(3, u * .12)) | 0, tip = y > 33 ? (y - 33) * 2 : 0,
+            c = (y + 24) % 7 < 2 ? PL.hm : (y + 24) % 11 == 5 ? PL.hh : PL.hk;
+          Z(-w0 + s + wv + tip, y, 2 * w0 - 2 * tip, 1, PL.hk); Z(-w0 + s + wv + tip, y, 7, 1, c); Z(w0 - 7 + s + wv - tip, y, 7, 1, c)
+        }
+      };
       const runF = Q => {
-        const H1 = (a, b, w, h, c) => Q(a, b + 1 + hdy, w, h, c), P0 = (a, b, w, h, c) => Q(a, b + pdy, w, h, c),
-          SK = '#f2d8c8', SS = '#dcb9a8', HR = '#d9dcf2', HM = '#aab0d6', HD = '#7f86b4', HL = '#ffffff', LC = '#2a1218',
-          hsw = y => Math.round(fl * 3 * y / 14 + Math.sin(tt * 2.2 - y * .25) * (.5 + .6 * bl));
-        cape(Q);
-        // rambut panjang di belakang bahu, mengalir mengikuti gerak
-        for (let y = 2; y <= 15; y++) { const sx = hsw(y), c = y % 3 == 0 ? HM : HR, w = y > 13 ? 2 : 4; Q(-10 + sx, y, w, 1, c); Q(10 + sx - w, y, w, 1, c); Q(-10 + sx, y, 1, 1, HD); Q(9 + sx, y, 1, 1, HD) }
-        // kuncir samping panjang
-        for (let r = 0; r < 27; r++) {
-          const ox2 = 8 + Math.round(Math.sin(Math.min(r, 10) / 10 * 1.5708) * 3) + Math.round(fl * 4 * r / 26 + Math.sin(tt * 2 - r * .3) * (.6 + 1.1 * bl) * Math.min(1, r / 8)),
-            w = r < 3 ? 3 : r < 19 ? 4 : r < 23 ? 3 : 2, c = r % 4 == 3 ? HM : HR;
-          H1(ox2, -14 + r, w, 1, c); H1(ox2 + w - 1, -14 + r, 1, 1, HD); if (r % 4 == 1) H1(ox2 + 1, -14 + r, 1, 1, HL)
+        const { Z, ZH, ZP } = mk(Q);
+        capeZ(Z); hairBack(Z);
+        // mantel panjang: panel tengah + dua sisi melebar, hem berayun
+        const k0 = Math.round(fl * 2 + Math.sin(f) * bl * 1.2), k1 = Math.round(k0 * .5);
+        Z(-9, 2, 18, 15, PL.bk); Z(-9, 15, 18, 3, PL.bk);
+        Z(-17 + k1, 16, 12, 8, PL.bk); Z(5 + k1, 16, 12, 8, PL.bk); Z(-19 + k0, 24, 14, 11, PL.bk); Z(5 + k0, 24, 14, 11, PL.bk); Z(-5, 15, 10, 20, PL.bk);
+        Z(-17 + k1, 16, 1, 8, PL.s3); Z(16 + k1, 16, 1, 8, PL.s3); Z(-19 + k0, 24, 1, 11, PL.s3); Z(18 + k0, 24, 1, 11, PL.s3); Z(-19 + k0, 34, 14, 1, PL.s3); Z(5 + k0, 34, 14, 1, PL.s3);
+        Z(-5, 15, 1, 20, PL.s3); Z(4, 15, 1, 20, PL.s3); Z(-5, 35, 10, 1, PL.s3); Z(-1, 19, 2, 10, PL.s1); Z(-3, 22, 6, 2, PL.s1);
+        Z(13 + k0, 26, 1, 6, PL.s1); Z(11 + k0, 28, 5, 1, PL.s1); Z(-13 + k0, 28, 1, 5, PL.s1); Z(-15 + k0, 30, 5, 1, PL.s1); Z(-12 + k0, 27, 1, 1, PL.s4); Z(15 + k0, 27, 1, 1, PL.s4); Z(-16 + k1, 19, 2, 2, PL.s4); Z(14 + k1, 19, 2, 2, PL.s4);
+        legZ(Z, 0, -5, 6, 1, 1); legZ(Z, 1, 5, 6, 1, 1);
+        // zirah dada ramping dengan lambang salib, sabuk coklat bercincin
+        Z(-8, -1, 16, 12, PL.s2); Z(-8, -1, 16, 2, PL.s1); Z(-7, 1, 6, 4, PL.s1); Z(1, 1, 6, 4, PL.s2); Z(-8, 9, 16, 1, PL.s4); Z(-8, 10, 16, 1, PL.s5);
+        Z(-1, 1, 2, 8, PL.s5); Z(-4, 3, 8, 2, PL.s5); Z(-1, 1, 2, 1, PL.s4);
+        Z(-9, 11, 18, 4, PL.b2); Z(-9, 11, 18, 1, PL.b1);
+        for (const x of [-6, 0, 6]) { Z(x - 2, 10, 4, 6, PL.s3); Z(x - 1, 11, 2, 4, PL.b2); Z(x - 2, 10, 4, 1, PL.s1) }
+        Z(-10, 15, 2, 7, PL.b2); Z(8, 15, 2, 7, PL.b2); Z(-10, 21, 2, 1, PL.s3); Z(8, 21, 2, 1, PL.s3);
+        // bahu mungil
+        for (const s of [-1, 1]) {
+          const M = (a, w) => s < 0 ? a : -a - w, hi = s < 0 ? PL.s1 : PL.s2, md = s < 0 ? PL.s2 : PL.s3;
+          ZP(M(-18, 10), -4, 10, 5, md); ZP(M(-18, 10), -4, 10, 1, hi); ZP(M(-17, 4), -3, 4, 2, hi); ZP(M(-18, 10), 0, 10, 1, PL.s4);
+          ZP(M(-19, 11), 1, 11, 5, md); ZP(M(-19, 11), 1, 11, 1, hi); ZP(M(-18, 4), 2, 4, 2, hi); ZP(M(-19, 11), 5, 11, 1, PL.s5); ZP(M(-14, 2), 2, 2, 2, PL.s5)
         }
-        // kaki: stoking gelap, pelindung lutut, sepatu bot perak berhias emas
-        const L = (x, i) => {
-          const ph = f + i * Math.PI, sw = Math.sin(ph) * bl, cw = Math.cos(ph) * bl, lift = Math.round(Math.pow(Math.max(0, sw), .7) * (1.6 + 1.6 * rn)),
-            fx = Math.round(cw * mvx * 2.4 + (iw > .5 ? Math.sin(tt * .6 + i * 3.1416) * .7 : 0)), fy = Math.round(cw * mvy * 1.6), tk = Math.round(fx * .4), sk = Math.round(fx * .75),
-            ft = Math.max(14, 16 - lift + fy), shn = Math.max(1, ft - 15), X = x + fx;
-          Q(x + tk, 9, 3, 6, '#2e2638'); Q(x + tk, 9, 1, 6, '#4a3f5c');
-          Q(x + tk, 13, 3, 2, '#cdd0db'); Q(x + tk, 13, 3, 1, '#f4f5fa');
-          Q(x + sk, 15, 3, shn, '#a9adbc'); Q(x + sk + 2, 15, 1, shn, '#7b7f90');
-          Q(X - 1, ft, 4, 4, '#d2d5df'); Q(X - 1, ft, 4, 1, '#f4f5fa'); Q(X - 1, ft + 2, 4, 1, '#c2a06b'); Q(X - 1, ft + 3, 4, 1, '#23232e')
-        };
-        L(-4, 0); L(1, 1);
-        // rok zirah merah, ujungnya berayun
-        const k0 = Math.round(fl * 1.6 + Math.sin(f) * bl * .8), k1 = Math.round(k0 * .5);
-        Q(-5, 9, 10, 1, '#9a2038'); Q(-6 + k1, 10, 12, 1, '#8c1b31'); Q(-7 + k0, 11, 14, 1, '#c2a06b');
-        for (let x = -5; x <= 4; x += 3) Q(x + k1, 10, 1, 1, '#b8304d'); for (let x = -6; x <= 5; x += 3) Q(x + k0, 11, 1, 1, '#9a741f');
-        Q(-1, 9, 2, 3, '#1d1c27'); Q(-1 + k0, 11, 2, 1, '#a4a8b7');
-        // badan ramping: korset hitam, pelindung dada perak, permata merah
-        Q(-4, 6, 8, 3, '#1d1c27'); Q(-6, 0, 12, 6, '#1d1c27');
-        Q(-5, 1, 10, 4, '#a4a8b7'); Q(-5, 2, 4, 3, '#cdd0db'); Q(1, 2, 4, 3, '#bcc0cd'); Q(-5, 1, 4, 1, '#f0f2f7'); Q(1, 1, 4, 1, '#e0e3ec');
-        Q(-1, 2, 2, 3, '#c8283e'); Q(-1, 2, 2, 1, '#ff6a80'); Q(0, 3, 1, 1, '#ffd0d8'); Q(-5, 5, 10, 1, '#6b6f82');
-        Q(-4, 6, 8, 1, '#252630'); Q(-1, 6, 2, 2, '#c2a06b'); Q(-4, 8, 8, 1, '#c2a06b'); Q(-1, 8, 2, 1, '#f8dfaa');
-        // pelindung bahu mungil
-        P0(-9, 0, 3, 4, '#a4a8b7'); P0(-9, 0, 3, 1, '#e4e7ee'); P0(-9, 3, 3, 1, '#6b6f82'); P0(-8, 1, 1, 2, '#cdd0db');
-        P0(6, 0, 3, 4, '#a4a8b7'); P0(6, 0, 3, 1, '#e4e7ee'); P0(6, 3, 3, 1, '#6b6f82'); P0(7, 1, 1, 2, '#8b8fa0');
-        // wajah lembut: dagu lancip, alis tipis, mata besar berbulu mata, pipi merona, bibir
-        H1(-5, -10, 10, 5, SK); H1(-4, -5, 8, 1, SK); H1(-3, -4, 6, 1, SK); H1(4, -9, 1, 4, SS);
-        H1(-5, -10, 3, 1, HD); H1(2, -10, 3, 1, HD);
-        if (blk) { H1(-5, -9, 3, 4, SK); H1(-5, -7, 3, 1, LC); H1(2, -9, 3, 4, SK); H1(2, -7, 3, 1, LC) }
-        else {
-          H1(-5, -9, 3, 1, LC); H1(2, -9, 3, 1, LC);
-          H1(-5, -8, 3, 3, '#c8283e'); H1(-5, -8, 3, 1, '#3a0b14'); H1(-4, -7, 1, 2, '#12040a'); H1(-5, -7, 1, 1, '#ff8aa0');
-          H1(2, -8, 3, 3, '#e0a82c'); H1(2, -8, 3, 1, '#3a2a08'); H1(3, -7, 1, 2, '#140c02'); H1(4, -7, 1, 1, glt ? '#ffffff' : '#fff2b0')
+        scarfZ(Z, 11); Z(-2, -2, 4, 4, PL.s3); Z(-1, -2, 2, 2, PL.s1); Z(-1, 0, 2, 1, PL.s5);
+        faceZ(ZH);
+        // rambut: kubah, poni tirai, helai samping jatuh di dada, pita merah
+        const H = PL.hk, M = PL.hm, L = PL.hh;
+        ZH(-6, -33, 12, 2, H); ZH(-10, -32, 20, 2, H); ZH(-13, -30, 26, 3, H); ZH(-15, -27, 30, 4, H); ZH(-16, -23, 32, 6, H);
+        const B = [[-14, 4, 4], [-11, 4, 5], [-8, 3, 4], [-5, 3, 5], [-2, 4, 6], [1, 3, 4], [4, 3, 5], [6, 3, 4], [9, 4, 5], [12, 3, 3]];
+        B.forEach(([x, w, l], i) => { ZH(x, -19, w, l, i % 2 ? M : H); ZH(x, -19, 1, l, H) });
+        ZH(-9, -31, 5, 1, L); ZH(1, -30, 6, 1, L); ZH(-13, -26, 4, 1, L); ZH(9, -26, 4, 1, L); ZH(-4, -25, 5, 1, M); ZH(3, -24, 5, 1, M); ZH(-8, -22, 4, 1, L); ZH(6, -22, 4, 1, L);
+        for (let y = -18; y <= 17; y++) {
+          const wv = Math.round(Math.sin(y * .5) * 1.2), sw = y > 4 ? hsx : 0, c = y % 6 < 2 ? M : H;
+          ZH(-17 + wv + sw, y, 7, 1, c); ZH(10 - wv + sw, y, 7, 1, c); if (y % 7 == 3) { ZH(-16 + wv + sw, y, 1, 1, L); ZH(11 - wv + sw, y, 1, 1, L) }
         }
-        H1(-4, -5, 2, 1, '#f2a6a8'); H1(2, -5, 2, 1, '#f2a6a8'); H1(0, -6, 1, 1, '#e2bba8'); H1(-1, -4, 2, 1, '#d8506a');
-        // syal merah
-        Q(-6, -3, 12, 4, '#9a1f35'); Q(-6, -3, 12, 1, '#cf3d56'); Q(-6, 0, 12, 1, '#5c1020'); Q(-4, -2, 3, 1, '#b82f49'); Q(2, -1, 3, 1, '#7d1428');
-        const tx = 3 + Math.round(cs * 1.2); Q(tx, 2, 3, 7, '#8c1b31'); Q(tx, 2, 1, 6, '#b82f49'); Q(tx, 8, 3, 1, '#4a0e1b');
-        const ts = Math.max(-2, Math.min(2, Math.round(fl * 2 + Math.sin(tt * 2.6 + 1.3) * .8 + Math.sin(f * 2.2 + 1.3) * 1.2 * bl))); Q(tx + ts, 9, 3, 1, '#8c1b31'); Q(tx + ts, 9, 1, 1, '#b82f49'); Q(tx + ts, 10, 3, 1, '#4a0e1b');
-        // rambut perak: kubah kepala, poni tirai, helai samping, circlet emas dengan permata
-        H1(-3, -16, 6, 1, HR); H1(-5, -15, 10, 1, HR); H1(-7, -14, 14, 1, HR); H1(-8, -13, 16, 2, HR); H1(-2, -16, 2, 1, HL); H1(-4, -15, 1, 3, HM); H1(0, -15, 1, 3, HM); H1(3, -15, 1, 3, HM); H1(5, -14, 1, 2, HM); H1(-6, -14, 1, 2, HM);
-        H1(-8, -11, 6, 1, HR); H1(2, -11, 6, 1, HR); H1(-4, -11, 2, 1, HM); H1(2, -11, 2, 1, HM);
-        H1(-8, -10, 3, 7, HR); H1(5, -10, 3, 7, HR); H1(6, -10, 2, 7, HM); H1(-8, -10, 1, 7, HD); H1(7, -10, 1, 7, HD);
-        H1(-5, -14, 3, 1, HL); H1(1, -15, 3, 1, HL); H1(-7, -12, 1, 2, HL); H1(-6, -9, 1, 1, HM);
-        H1(-7, -13, 14, 1, '#d8b878'); H1(-1, -14, 2, 2, '#c8283e'); H1(-1, -14, 1, 1, '#ff9aab'); H1(-8, -14, 1, 1, '#f8dfaa'); H1(7, -14, 1, 1, '#f8dfaa'); H1(-1, -13, 2, 1, '#9a1f35');
-        H1(7, -14, 3, 3, '#c8283e'); H1(7, -14, 3, 1, '#ff6a80'); H1(7, -12, 1, 1, '#7a182e');
-        // helai depan jatuh di bahu, ujungnya bergoyang
-        H1(-8, -3, 2, 4, HR); H1(6, -3, 2, 4, HR); H1(-8 + hsx, 1, 2, hlen + 4, HR); H1(6 + hsx, 1, 2, hlen + 4, HR);
-        H1(-8 + hsx, 1, 1, hlen + 4, HM, 0); H1(7 + hsx, 1, 1, hlen + 4, HM, 0); H1(-8, -3, 1, 4, HM); H1(7, -3, 1, 4, HM);
-        H1(-1 + (hsx > 0 ? 1 : 0), -10, 1, 1, HR)
+        ZH(-16 + hsx, 18, 5, 2 + hlen, H); ZH(11 + hsx, 18, 5, 2 + hlen, H);
+        ZH(5, -34, 6, 5, PL.rd); ZH(5, -34, 6, 1, PL.rl); ZH(7, -32, 2, 2, PL.rk); ZH(13, -36, 6, 6, PL.rm); ZH(13, -36, 6, 1, PL.rl); ZH(15, -34, 2, 2, PL.rk);
+        ZH(10, -32, 3, 3, PL.rd); ZH(10, -32, 3, 1, PL.rl); ZH(10, -29, 3, 8, PL.rm); ZH(10, -29, 1, 8, PL.rl); ZH(13, -28, 3, 6, PL.rd); ZH(13, -23, 3, 1, PL.rk); ZH(11, -22, 1, 1, PL.rk)
       };
-      const Qo = (a, b, w, h) => { g.fillStyle = HT ? '#fff' : '#0b0a10'; g.fillRect(ox + a - 1, oy + b - 1, w + 2, h + 2) }, Qf = (a, b, w, h, c) => { g.fillStyle = HT || c; g.fillRect(ox + a, oy + b, w, h) };
+      const Qo = (a, b, w, h) => { const T = g.getTransform(), sn = T.b || T.c ? null : [v => (Math.round(v * T.a + T.e) - T.e) / T.a, v => (Math.round(v * T.d + T.f) - T.f) / T.d]; let x0 = ox + a - .5, y0 = oy + b - .5, x1 = x0 + w + 1, y1 = y0 + h + 1; if (sn) { x0 = sn[0](x0); x1 = sn[0](x1); y0 = sn[1](y0); y1 = sn[1](y1); if (x1 <= x0) x1 = x0 + 1 / T.a; if (y1 <= y0) y1 = y0 + 1 / T.d } g.fillStyle = HT ? '#fff' : '#0b0a10'; g.fillRect(x0, y0, x1 - x0, y1 - y0) },
+        Qf = (a, b, w, h, c) => { const T = g.getTransform(), sn = T.b || T.c ? null : [v => (Math.round(v * T.a + T.e) - T.e) / T.a, v => (Math.round(v * T.d + T.f) - T.f) / T.d]; let x0 = ox + a, y0 = oy + b, x1 = x0 + w, y1 = y0 + h; if (sn) { x0 = sn[0](x0); x1 = sn[0](x1); y0 = sn[1](y0); y1 = sn[1](y1); if (x1 <= x0) x1 = x0 + 1 / T.a; if (y1 <= y0) y1 = y0 + 1 / T.d } g.fillStyle = HT || c; g.fillRect(x0, y0, x1 - x0, y1 - y0) };
       const rr = FEM ? runF : run; rr(Qo); rr(Qf);
       HSH = { ox, oy, st, f, bl, fl, pdy, run: rn, sw: FEM ? 7 : 8 };
       if (ghost) { for (const s of [-1, 1]) limb(ox + s * 8, oy + 2, ox + s * 9.5, oy + 13 - Math.round(s * st * 2), 1, s) }
@@ -2970,8 +3010,8 @@
           }
         }
         else {
-          const ar0 = wi == 0 ? Math.PI / 2 - hs * .6 + br * .05 * hs + Math.sin(p.wph) * bl * .14 * hs : -Math.PI / 2 + hs * .1 + br * .02, IS = wi == 0 ? swIdle(hs, (1 - p.wb) * (1 - k) * (p.hurt > 0 || p.dod > 0 ? 0 : 1), ar0) : null,
-            rx = Cx + hs * (wi == 1 ? 13 : wi == 0 ? 5.5 : 10.5) + (IS ? IS.dx : 0), ry = Cy + (wi == 1 ? 7 : wi == 0 ? 10 : 11) + (IS ? IS.dy : 0) - (wi == 0 ? side * Math.sin(p.wph - .45) * bl * 2.4 : 0), bx = Cx + hs * 7, by = Cy + 3, ar = ar0 + (IS ? IS.da : 0),
+          const ar0 = wi == 0 ? -Math.PI / 2 + hs * .62 + br * .04 * hs + Math.sin(p.wph) * bl * .12 * hs : -Math.PI / 2 + hs * .1 + br * .02, IS = wi == 0 ? swIdle(hs, (1 - p.wb) * (1 - k) * (p.hurt > 0 || p.dod > 0 ? 0 : 1), ar0) : null,
+            rx = Cx + hs * (wi == 1 ? 13 : wi == 0 ? 9.5 : 10.5) + (IS ? IS.dx : 0), ry = Cy + (wi == 1 ? 7 : wi == 0 ? 6 : 11) + (IS ? IS.dy : 0) - (wi == 0 ? side * Math.sin(p.wph - .45) * bl * 2.4 : 0), bx = Cx + hs * 7, by = Cy + 3, ar = ar0 + (IS ? IS.da : 0),
             fr = R2(a1, ((8.5 + ex) - lun) * k, 0), gx = lp(rx, bx, k) + fr[0], gy = lp(ry, by, k) + fr[1], a = lerpA(ar, a1 + (wi == 0 && !sw ? -hs * .16 : 0), k); o.sp.push([wi, gx, gy, a + Math.PI / 2, sc]); o.gr.push({ x: gx, y: gy, s: side }); if (wi == 0) o.gr.push({ x: gx - Math.cos(a) * 4.5, y: gy - Math.sin(a) * 4.5, s: -side }); if (IS) o.fn = () => IS.fx(gx, gy, a)
         }
       }
@@ -7983,9 +8023,9 @@
         g.save();
         try {
           p = q; t = T; HSd = 1; wi = 0; FEM = fem; HT = null;
-          g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.imageSmoothingEnabled = false; g.clearRect(0, 0, 56, 60);
+          g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.imageSmoothingEnabled = false; g.clearRect(0, 0, 112, 120); g.setTransform(2, 0, 0, 2, 0, 0);
           const wp = wpose(); drawHero(q.x, q.y, 0, null, wp.lx, wp.ly); drawArmed(wp);
-          pctx.clearRect(0, 0, 56, 60); pctx.imageSmoothingEnabled = false; pctx.drawImage(cv, 0, 0, 56, 60, 0, 0, 56, 60);
+          pctx.clearRect(0, 0, 112, 120); pctx.imageSmoothingEnabled = false; pctx.drawImage(cv, 0, 0, 112, 120, 0, 0, 112, 120);
         } finally { g.restore(); p = sv.p; t = sv.t; HSd = sv.HSd; wi = sv.wi; FEM = sv.FEM; HT = sv.HT; HSH = sv.HSH }
       }
       (function loop(n) {
