@@ -4138,6 +4138,7 @@
 
       let W = 0;
       let H = 0;
+      let PS = 2, LW = 0, LH = 0;
       let animationFrame = 0;
       let cinematicStart = 0;
       let cinematicRunning = false;
@@ -4150,6 +4151,8 @@
       function resize() {
         W = canvas.width = window.innerWidth;
         H = canvas.height = window.innerHeight;
+        PS = Math.max(2, Math.round(H / 300)); LW = Math.ceil(W / PS); LH = Math.ceil(H / PS);
+        ctx.imageSmoothingEnabled = false;
       }
       window.addEventListener("resize", resize);
       resize();
@@ -4217,188 +4220,115 @@
       const smoother = t => { t = clamp(t, 0, 1); return t * t * t * (t * (t * 6 - 15) + 10); };   // easing sangat halus (turunan 1 & 2 = 0 di ujung)
       const rrect = (x, px, py, w, h, r) => { x.beginPath(); if (x.roundRect) x.roundRect(px, py, w, h, r); else x.rect(px, py, w, h); };
       let bgCache = null, bgKey = "", frameCache = null, frameKey = "", leafCache = null, leafKey = "";
+      /* ===== PIXEL ART: adegan digambar per "piksel besar" (PS px layar), tanpa gradien halus ===== */
+      const Bx = (x, c, a, b, w, h) => { x.fillStyle = c; x.fillRect(a, b, w, h); };
+      const pr = (c, a, b, w, h) => { ctx.fillStyle = c; ctx.fillRect(Math.round(a) * PS, Math.round(b) * PS, w * PS, h * PS); };
+      const pdisc = (c, cx, cy, r) => { ctx.fillStyle = c; for (let d = -r; d <= r; d++) { const w = Math.floor(Math.sqrt(r * r - d * d + .5)); ctx.fillRect((cx - w) * PS, (cy + d) * PS, (2 * w + 1) * PS, PS); } };
+      const blit = (c, a, b) => ctx.drawImage(c, Math.round(a) * PS, Math.round(b) * PS, c.width * PS, c.height * PS);
 
       function buildBackground() {
-        const c = mkCv(W, H), x = c.getContext("2d"), r = seeded(7), floorY = H * .82;
-        x.fillStyle = "#0e0f14"; x.fillRect(0, 0, W, floorY + 2);
-        // balok batu dengan gradasi, highlight & bintik
-        const bh = Math.max(30, H * .07), bw = Math.max(64, W * .085);
-        for (let row = 0, y = 0; y < floorY; row++, y += bh) {
-          const off = row % 2 ? bw / 2 : 0;
-          for (let bx = -bw + off; bx < W; bx += bw) {
-            const w = bw - 3 + (r() - .5) * 5, hh = bh - 3, tone = .86 + r() * .28, lx = bx + 1.5, ly = y + 1.5, a = Math.round(48 * tone), b = Math.round(34 * tone);
-            const g = x.createLinearGradient(lx, ly, lx + w * .5, ly + hh);
-            g.addColorStop(0, `rgb(${a + 7},${a + 7},${a + 15})`); g.addColorStop(1, `rgb(${b},${b},${b + 8})`);
-            x.fillStyle = g; rrect(x, lx, ly, w, hh, 3); x.fill();
-            x.fillStyle = "rgba(255,255,255,.055)"; x.fillRect(lx + 3, ly + .5, w - 6, 1.5);
-            x.fillStyle = "rgba(0,0,0,.3)"; x.fillRect(lx + 3, ly + hh - 2, w - 6, 2);
-            for (let k = 0; k < 6; k++) { x.fillStyle = r() < .5 ? "rgba(255,255,255,.03)" : "rgba(0,0,0,.12)"; x.fillRect(lx + r() * w, ly + r() * hh, 1 + r() * 2, 1 + r() * 2); }
-            if (r() < .1) { x.strokeStyle = "rgba(0,0,0,.35)"; x.lineWidth = 1; x.beginPath(); let cx = lx + r() * w, cy = ly; x.moveTo(cx, cy); for (let k = 0; k < 4; k++) { cx += (r() - .5) * 8; cy += hh / 4; x.lineTo(cx, cy); } x.stroke(); }
+        const c = mkCv(LW, LH), x = c.getContext("2d"), r = seeded(7), fy = Math.round(LH * .82), bh = Math.max(9, Math.round(LH * .075)), bw = Math.max(20, Math.round(LW * .09));
+        Bx(x, "#0e0f14", 0, 0, LW, fy);
+        for (let row = 0, y = 0; y < fy; row++, y += bh) {
+          const off = row % 2 ? bw >> 1 : 0;
+          for (let bx = -bw + off; bx < LW; bx += bw) {
+            const t = .86 + r() * .28, a = Math.round(46 * t), b = Math.round(36 * t), lo = bh * .6 | 0;
+            Bx(x, `rgb(${a + 6},${a + 6},${a + 14})`, bx + 1, y + 1, bw - 1, bh - 1); Bx(x, `rgb(${b},${b},${b + 8})`, bx + 1, y + lo, bw - 1, bh - lo - 1);
+            Bx(x, "rgba(255,255,255,.08)", bx + 1, y + 1, bw - 1, 1); Bx(x, "rgba(0,0,0,.35)", bx + 1, y + bh - 1, bw - 1, 1); Bx(x, "rgba(0,0,0,.25)", bx + bw - 1, y + 1, 1, bh - 1);
+            for (let k = 0; k < 7; k++) Bx(x, r() < .5 ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.2)", bx + 2 + (r() * (bw - 4) | 0), y + 2 + (r() * (bh - 4) | 0), 1 + (r() * 2 | 0), 1);
+            if (r() < .1) { let cx = bx + 3 + (r() * (bw - 6) | 0), cy = y + 1; for (let k = 0; k < bh - 2; k++) { Bx(x, "rgba(0,0,0,.4)", cx, cy++, 1, 1); if (r() < .4) cx += r() < .5 ? -1 : 1; } }
           }
         }
-        // bayangan langit-langit & sisi
-        let g = x.createLinearGradient(0, 0, 0, floorY); g.addColorStop(0, "rgba(0,0,0,.7)"); g.addColorStop(.38, "rgba(0,0,0,.08)"); g.addColorStop(.82, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.35)");
-        x.fillStyle = g; x.fillRect(0, 0, W, floorY + 2);
-        // lantai batu dengan perspektif
-        g = x.createLinearGradient(0, floorY, 0, H); g.addColorStop(0, "#201b17"); g.addColorStop(1, "#090807");
-        x.fillStyle = g; x.fillRect(0, floorY, W, H - floorY);
-        const vx = W / 2, vy = floorY - H * .38;
-        x.lineCap = "round";
-        for (let i = 1; i <= 7; i++) { const t = i / 7, yy = floorY + (H - floorY) * t * t; x.strokeStyle = "rgba(0,0,0,.5)"; x.lineWidth = 1 + t * 2.4; x.beginPath(); x.moveTo(0, yy); x.lineTo(W, yy); x.stroke(); x.strokeStyle = "rgba(255,230,190,.04)"; x.lineWidth = 1; x.beginPath(); x.moveTo(0, yy + 2 + t * 2); x.lineTo(W, yy + 2 + t * 2); x.stroke(); }
-        for (let i = -12; i <= 12; i++) { const x0 = vx + i * W * .06, x1 = vx + (x0 - vx) * (H - vy) / (floorY - vy); x.strokeStyle = "rgba(0,0,0,.42)"; x.lineWidth = 1.6; x.beginPath(); x.moveTo(x0, floorY); x.lineTo(x1, H); x.stroke(); }
-        // kilau lembab di lantai + bayangan dasar dinding
-        g = x.createRadialGradient(W / 2, floorY + (H - floorY) * .3, 10, W / 2, floorY + (H - floorY) * .3, W * .42); g.addColorStop(0, "rgba(255,190,120,.07)"); g.addColorStop(1, "rgba(255,190,120,0)");
-        x.fillStyle = g; x.fillRect(0, floorY, W, H - floorY);
-        g = x.createLinearGradient(0, floorY - 16, 0, floorY + 6); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.55)"); x.fillStyle = g; x.fillRect(0, floorY - 16, W, 22);
-        // vinyet
-        g = x.createRadialGradient(W / 2, H / 2, H * .15, W / 2, H / 2, W * .72); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.72)");
-        x.fillStyle = g; x.fillRect(0, 0, W, H);
+        for (let i = 0; i < 7; i++) Bx(x, "rgba(0,0,0,.11)", 0, 0, LW, Math.round(fy * .4 * (7 - i) / 7));
+        for (let i = 0; i < 6; i++) { const w = Math.round(LW * .2 * (6 - i) / 6); Bx(x, "rgba(0,0,0,.1)", 0, 0, w, fy); Bx(x, "rgba(0,0,0,.1)", LW - w, 0, w, fy); }
+        Bx(x, "rgba(0,0,0,.3)", 0, fy - 4, LW, 4);
+        Bx(x, "#1c1814", 0, fy, LW, LH - fy);
+        for (let i = 1; i <= 7; i++) { const t = i / 7, yy = fy + Math.round((LH - fy) * t * t); Bx(x, "#0c0a08", 0, yy, LW, i > 3 ? 2 : 1); Bx(x, "rgba(255,230,190,.05)", 0, yy + 2, LW, 1); }
+        const vx = LW / 2, vy = fy - LH * .38;
+        for (let i = -12; i <= 12; i++) { const x0 = vx + i * LW * .06; for (let y = fy; y < LH; y++) Bx(x, "rgba(0,0,0,.45)", Math.round(vx + (x0 - vx) * (y - vy) / (fy - vy)), y, 1, 1); }
+        for (let i = 1; i <= 5; i++) Bx(x, "rgba(0,0,0,.1)", 0, fy + Math.round((LH - fy) * i / 6), LW, LH);
+        for (let i = 0; i < 4; i++) Bx(x, "rgba(0,0,0,.12)", 0, 0, Math.round(LW * .1 * (4 - i) / 4), LH), Bx(x, "rgba(0,0,0,.12)", LW - Math.round(LW * .1 * (4 - i) / 4), 0, LW, LH);
         return c;
       }
-
-      function drawBackground(time) {
-        const k = W + "x" + H; if (!bgCache || bgKey !== k) { bgCache = buildBackground(); bgKey = k; }
-        ctx.drawImage(bgCache, 0, 0);
-      }
+      function drawBackground(time) { const k = W + "x" + H; if (!bgCache || bgKey !== k) { bgCache = buildBackground(); bgKey = k; } blit(bgCache, 0, 0); }
 
       function drawTorch(x, y, time) {
-        const u = clamp(H / 720, .6, 1.5), t = time * .001;
-        const f = Math.sin(t * 9 + x) * .5 + Math.sin(t * 14.3 + x * 2.1) * .3 + Math.sin(t * 23 + x * .7) * .2, k = 1 + f * .08, sway = f * 3 * u;
-        ctx.save(); ctx.translate(x, y); ctx.scale(u, u);
-        let g = ctx.createLinearGradient(-10, 0, 10, 0); g.addColorStop(0, "#26221e"); g.addColorStop(.5, "#4b453d"); g.addColorStop(1, "#1b1815");
-        ctx.fillStyle = g; rrect(ctx, -10, 10, 20, 28, 3); ctx.fill();
-        g = ctx.createLinearGradient(-5, 0, 5, 0); g.addColorStop(0, "#4a3626"); g.addColorStop(.5, "#76583a"); g.addColorStop(1, "#33261a");
-        ctx.fillStyle = g; rrect(ctx, -5, -2, 10, 48, 2); ctx.fill();
-        g = ctx.createLinearGradient(-10, 0, 10, 0); g.addColorStop(0, "#3a352f"); g.addColorStop(.5, "#8b7a5a"); g.addColorStop(1, "#2c2823");
-        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-10, -5); ctx.lineTo(10, -5); ctx.lineTo(6, 8); ctx.lineTo(-6, 8); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = "rgba(255,230,170,.35)"; ctx.fillRect(-9, -5, 18, 1.5);
-        ctx.restore();
-        // cahaya (additif) - kolam cahaya di dinding
+        const t = time * .001, lx = Math.round(x / PS), ly = Math.round(y / PS), u = Math.max(1, Math.round(LH / 260));
+        const f = Math.sin(t * 9 + x) * .5 + Math.sin(t * 14.3 + x * 2.1) * .3 + Math.sin(t * 23 + x * .7) * .2, k = 1 + f * .08, sw = Math.round(f * 1.5 * u);
+        pr("#26221e", lx - 4 * u, ly + 4 * u, 8 * u, 10 * u); pr("#4b453d", lx - 3 * u, ly + 4 * u, 2 * u, 10 * u); pr("#14110f", lx + 3 * u, ly + 4 * u, u, 10 * u);
+        pr("#4a3626", lx - 2 * u, ly - u, 4 * u, 18 * u); pr("#76583a", lx - 2 * u, ly - u, u, 18 * u); pr("#33261a", lx + u, ly - u, u, 18 * u);
+        pr("#3a352f", lx - 5 * u, ly - 3 * u, 10 * u, 3 * u); pr("#8b7a5a", lx - 5 * u, ly - 3 * u, 10 * u, u); pr("#2c2823", lx - 4 * u, ly, 8 * u, u);
         ctx.save(); ctx.globalCompositeOperation = "lighter";
-        const R = 170 * u * k; g = ctx.createRadialGradient(x, y - 22 * u, 2, x, y - 22 * u, R);
-        g.addColorStop(0, "rgba(255,176,86,.36)"); g.addColorStop(.35, "rgba(255,130,50,.14)"); g.addColorStop(1, "rgba(255,110,30,0)");
-        ctx.fillStyle = g; ctx.fillRect(x - R, y - 22 * u - R, R * 2, R * 2);
+        [[62, .035], [46, .04], [32, .05], [20, .06]].forEach(q => pdisc(`rgba(255,140,60,${q[1]})`, lx, ly - 8 * u, Math.round(q[0] * u * k * .8)));
         ctx.restore();
-        // api tiga lapis
-        const fl = (w, h, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, y - 4 * u); ctx.bezierCurveTo(x - w, y - h * .25, x - w * .8 + sway * .3, y - h * .62, x + sway, y - h); ctx.bezierCurveTo(x + w * .8 + sway * .3, y - h * .62, x + w, y - h * .25, x, y - 4 * u); ctx.fill(); };
-        fl(15 * u, 48 * u * k, "rgba(255,112,28,.92)"); fl(10.5 * u, 38 * u * k, "#ffa23a"); fl(5.5 * u, 25 * u * k, "#ffe9a8");
-        // percikan
-        for (let i = 0; i < 5; i++) { const ph = (t * .32 + i * .2 + x * .0013) % 1, ex = x + Math.sin(ph * 6 + i * 2.1) * 10 * u + sway, ey = y - 24 * u - ph * 74 * u; ctx.fillStyle = `rgba(255,190,100,${(1 - ph) * .8})`; ctx.beginPath(); ctx.arc(ex, ey, (1.7 - ph) * 1.4 * u, 0, 7); ctx.fill(); }
+        [["#e8561a", 5, 17], ["#ffa23a", 3.6, 12], ["#ffe9a8", 2, 7]].forEach(q => { const h = Math.round(q[2] * u * k); for (let kk = 0; kk < h; kk++) { const half = Math.round(q[1] * u * Math.pow(1 - kk / h, .65)); pr(q[0], lx - half + Math.round(sw * kk / h), ly - 4 * u - kk, 2 * half + 1, 1); } });
+        for (let i = 0; i < 4; i++) { const ph = (t * .32 + i * .25 + x * .0013) % 1; ctx.globalAlpha = (1 - ph) * .9; pr("#ffc46a", lx + Math.round(Math.sin(ph * 6 + i * 2.1) * 5 * u) + sw, ly - 10 * u - Math.round(ph * 26 * u), 1, 1); } ctx.globalAlpha = 1;
       }
 
-      function buildFrame(doorW, doorH) {
-        const pw = Math.max(30, doorW * .2), lt = Math.max(36, doorH * .075), ph = doorW * .42, ox = pw + 60, oy = lt + ph + 40;
-        const c = mkCv(doorW * 2 + ox * 2, doorH + oy + 60), x = c.getContext("2d");
-        const stone = (sx, sy, sw, sh, tone) => {
-          const g = x.createLinearGradient(sx, sy, sx + sw, sy + sh); g.addColorStop(0, `rgb(${tone + 34},${tone + 26},${tone + 8})`); g.addColorStop(1, `rgb(${tone - 8},${tone - 14},${tone - 26})`);
-          x.fillStyle = g; x.fillRect(sx, sy, sw, sh); x.fillStyle = "rgba(255,240,200,.18)"; x.fillRect(sx, sy, sw, 1.5);
-          x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(sx, sy + sh - 1.5, sw, 1.5); x.fillStyle = "rgba(0,0,0,.22)"; x.fillRect(sx + sw - 1, sy, 1, sh);
+      function buildFrame(dw, dh) {
+        const pw = Math.max(8, Math.round(dw * .2)), lt = Math.max(9, Math.round(dh * .075)), ph = Math.round(dw * .42), ox = pw + 26, oy = lt + ph + 16, w2 = dw * 2, cx = ox + dw;
+        const c = mkCv(w2 + ox * 2, dh + oy + 24), x = c.getContext("2d"), r = seeded(5);
+        const stone = (sx, sy, sw, sh, t) => {
+          Bx(x, `rgb(${t + 26},${t + 20},${t + 6})`, sx, sy, sw, sh); Bx(x, `rgb(${t + 44},${t + 36},${t + 16})`, sx, sy, sw, 1); Bx(x, `rgb(${t + 36},${t + 30},${t + 12})`, sx, sy, 1, sh);
+          Bx(x, `rgb(${t - 12},${t - 18},${t - 30})`, sx, sy + sh - 1, sw, 1); Bx(x, `rgb(${t - 6},${t - 12},${t - 24})`, sx + sw - 1, sy, 1, sh);
+          for (let k = 0; k < (sw * sh >> 6); k++) Bx(x, r() < .5 ? "rgba(255,240,200,.1)" : "rgba(0,0,0,.14)", sx + 1 + (r() * (sw - 2) | 0), sy + 1 + (r() * (sh - 2) | 0), 1 + (r() * 2 | 0), 1);
         };
-        const cx = ox + doorW, W2 = doorW * 2, pillarTop = oy - lt, pillarBot = oy + doorH + 6, cH = pw * 1.15;
-        // pilar berlapis balok
-        [ox - pw, ox + W2].forEach((px, side) => { for (let yy = pillarTop, i = 0; yy < pillarBot; yy += cH, i++) stone(px, yy, pw, Math.min(cH, pillarBot - yy), 88 + (i % 2) * 6 - side * 3); });
-        stone(ox - pw - 8, oy + doorH - 12, pw + 8, 18, 82); stone(ox + W2, oy + doorH - 12, pw + 8, 18, 79);
-        // ambang atas, kunci lengkung, dan cornice
-        stone(ox - pw - 14, oy - lt, W2 + pw * 2 + 28, lt, 94); stone(cx - pw * .9, oy - lt, pw * 1.8, lt + 9, 108);
-        x.fillStyle = "rgba(0,0,0,.3)";[cx - pw * 2.6, cx + pw * 2.6].forEach(sx => x.fillRect(sx, oy - lt + 2, 1.5, lt - 3));
-        stone(ox - pw - 22, oy - lt - 9, W2 + pw * 2 + 44, 9, 104);
-        // pediment segitiga
-        const A = [ox - pw - 22, oy - lt - 9], B = [cx, oy - lt - 9 - ph], C = [ox + W2 + pw + 22, oy - lt - 9];
-        let g = x.createLinearGradient(0, B[1], 0, A[1]); g.addColorStop(0, "#9a8f78"); g.addColorStop(1, "#6f6652");
-        x.fillStyle = g; x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.lineTo(...C); x.closePath(); x.fill();
-        x.strokeStyle = "rgba(255,240,200,.35)"; x.lineWidth = 2; x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.lineTo(...C); x.stroke();
-        const ins = 13; x.fillStyle = "rgba(20,16,12,.38)"; x.beginPath(); x.moveTo(A[0] + ins * 2.2, A[1] - 3); x.lineTo(B[0], B[1] + ins * 1.5); x.lineTo(C[0] - ins * 2.2, C[1] - 3); x.closePath(); x.fill();
-        // lambang berlian emas di pediment
-        const ey = oy - lt - 9 - ph * .38, es = Math.max(7, doorW * .08);
-        g = x.createLinearGradient(cx, ey - es * 1.4, cx, ey + es * 1.4); g.addColorStop(0, "#ffe9a8"); g.addColorStop(1, "#b98b48");
-        x.save(); x.shadowColor = "rgba(255,200,100,.6)"; x.shadowBlur = 8; x.strokeStyle = g; x.lineWidth = 2.2; x.beginPath(); x.moveTo(cx, ey - es * 1.4); x.lineTo(cx + es, ey); x.lineTo(cx, ey + es * 1.4); x.lineTo(cx - es, ey); x.closePath(); x.stroke(); x.restore();
-        // anak tangga
-        stone(ox - pw - 30, oy + doorH + 6, W2 + pw * 2 + 60, 11, 84); stone(ox - pw - 52, oy + doorH + 17, W2 + pw * 2 + 104, 12, 72);
-        // kedalaman ambang pintu (bayangan sisi dalam)
-        const jd = Math.max(14, doorW * .12);
-        g = x.createLinearGradient(ox, 0, ox + jd, 0); g.addColorStop(0, "rgba(0,0,0,.7)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(ox, oy, jd, doorH);
-        g = x.createLinearGradient(ox + W2, 0, ox + W2 - jd, 0); g.addColorStop(0, "rgba(0,0,0,.7)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(ox + W2 - jd, oy, jd, doorH);
-        g = x.createLinearGradient(0, oy, 0, oy + jd * 1.5); g.addColorStop(0, "rgba(0,0,0,.75)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(ox, oy, W2, jd * 1.5);
+        const top = oy - lt, bot = oy + dh + 2, cH = Math.round(pw * 1.15);
+        [ox - pw, ox + w2].forEach((px, side) => { for (let yy = top, i = 0; yy < bot; yy += cH, i++) stone(px, yy, pw, Math.min(cH, bot - yy), 88 + (i % 2) * 6 - side * 3); });
+        stone(ox - pw - 3, oy + dh - 4, pw + 3, 7, 82); stone(ox + w2, oy + dh - 4, pw + 3, 7, 79);
+        stone(ox - pw - 5, top, w2 + pw * 2 + 10, lt, 94); stone(cx - Math.round(pw * .9), top, Math.round(pw * 1.8), lt + 3, 108); stone(ox - pw - 8, top - 3, w2 + pw * 2 + 16, 3, 104);
+        const A0 = ox - pw - 8, C0 = ox + w2 + pw + 8, py0 = top - 3;
+        for (let i = 0; i < ph; i++) { const y = py0 - ph + i, half = Math.round((C0 - A0) / 2 * (i + 1) / ph); Bx(x, "#8e846e", cx - half, y, half * 2, 1); Bx(x, "#c0b497", cx - half, y, 1, 1); Bx(x, "#c0b497", cx + half - 1, y, 1, 1); if (i > ph * .3 && half > 8) { const h2 = half - 6 - Math.round(i * .1); Bx(x, "rgba(20,16,12,.35)", cx - h2, y, h2 * 2, 1); } }
+        Bx(x, "#c0b497", A0, py0 - 1, C0 - A0, 1);
+        const es = Math.max(4, Math.round(dw * .07)), ey = py0 - Math.round(ph * .38);
+        for (let d = -es; d <= es; d++) { const hw = es - Math.abs(d); if (hw > 1) Bx(x, d < 0 ? "#6b5530" : "#7a6038", cx - hw + 1, ey + d, 2 * hw - 1, 1); Bx(x, d < 0 ? "#ffe9a8" : "#c79a50", cx - hw, ey + d, 1, 1); Bx(x, d < 0 ? "#ffe9a8" : "#c79a50", cx + hw, ey + d, 1, 1); }
+        stone(ox - pw - 10, oy + dh + 2, w2 + pw * 2 + 20, 4, 84); stone(ox - pw - 18, oy + dh + 6, w2 + pw * 2 + 36, 5, 72);
+        for (let i = 0; i < 4; i++) { const a = [.55, .35, .18, .08][i]; Bx(x, `rgba(0,0,0,${a})`, ox + i, oy, 1, dh); Bx(x, `rgba(0,0,0,${a})`, ox + w2 - 1 - i, oy, 1, dh); Bx(x, `rgba(0,0,0,${a})`, ox, oy + i, w2, 1); }
         return { cv: c, ox, oy };
       }
-
-      function drawDoorFrame(cx, top, doorW, doorH) {
-        const k = Math.round(doorW) + "x" + Math.round(doorH); if (!frameCache || frameKey !== k) { frameCache = buildFrame(doorW, doorH); frameKey = k; }
-        ctx.drawImage(frameCache.cv, Math.round(cx - doorW - frameCache.ox), Math.round(top - frameCache.oy));
-      }
+      function drawDoorFrame(cx, top, dw, dh) { const k = dw + "x" + dh + "x" + PS; if (!frameCache || frameKey !== k) { frameCache = buildFrame(dw, dh); frameKey = k; } blit(frameCache.cv, cx - dw - frameCache.ox, top - frameCache.oy); }
 
       function buildLeaf(w, h) {
-        const c = mkCv(w, h), x = c.getContext("2d"), r = seeded(33), n = 4, pwd = w / n;
-        // papan kayu vertikal
-        for (let i = 0; i < n; i++) {
-          const px = i * pwd, g = x.createLinearGradient(px, 0, px + pwd, 0);
-          g.addColorStop(0, "#5d4830"); g.addColorStop(.5, "#6e563a"); g.addColorStop(1, "#4a3a28");
-          x.fillStyle = g; x.fillRect(px, 0, pwd + 1, h);
-          for (let k = 0; k < 16; k++) { const gx = px + 3 + r() * (pwd - 6); x.strokeStyle = r() < .6 ? "rgba(0,0,0,.16)" : "rgba(255,220,160,.06)"; x.lineWidth = .8 + r() * .8; x.beginPath(); x.moveTo(gx, 0); for (let yy = 0; yy <= h; yy += h / 8) x.lineTo(gx + Math.sin(yy * .02 + k) * 1.6, yy); x.stroke(); }
-          x.fillStyle = "rgba(0,0,0,.5)"; x.fillRect(px + pwd - 1.5, 0, 2, h); x.fillStyle = "rgba(255,220,160,.07)"; x.fillRect(px, 0, 1, h);
-        }
-        let g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "rgba(255,230,180,.1)"); g.addColorStop(.5, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.38)"); x.fillStyle = g; x.fillRect(0, 0, w, h);
-        const iron = (rx, ry, rw, rh, vert) => { const gg = vert ? x.createLinearGradient(rx, 0, rx + rw, 0) : x.createLinearGradient(0, ry, 0, ry + rh); gg.addColorStop(0, "#4a463f"); gg.addColorStop(.45, "#2b2824"); gg.addColorStop(1, "#171512"); x.fillStyle = gg; x.fillRect(rx, ry, rw, rh); x.fillStyle = "rgba(255,240,210,.18)"; if (vert) x.fillRect(rx, ry, 1.2, rh); else x.fillRect(rx, ry, rw, 1.2); };
-        const bt = Math.max(9, w * .07);
-        iron(0, 0, w, bt, false); iron(0, h - bt, w, bt, false); iron(0, 0, bt, h, true); iron(w - bt, 0, bt, h, true);
-        const bandH = Math.max(12, h * .028); iron(bt, h * .2 - bandH / 2, w - bt * 2, bandH, false); iron(bt, h * .8 - bandH / 2, w - bt * 2, bandH, false);
-        const rivet = (rx, ry, rr) => { const gg = x.createRadialGradient(rx - rr * .3, ry - rr * .3, 0, rx, ry, rr); gg.addColorStop(0, "#e8d4a0"); gg.addColorStop(.6, "#a8864c"); gg.addColorStop(1, "#4d3a1e"); x.fillStyle = gg; x.beginPath(); x.arc(rx, ry, rr, 0, 7); x.fill(); };
-        const rr = Math.max(3.4, w * .022);
-        for (let i = 1; i <= 4; i++) { rivet(bt + (w - bt * 2) * i / 5, h * .2, rr); rivet(bt + (w - bt * 2) * i / 5, h * .8, rr); }
-        [[bt / 2, bt / 2], [w - bt / 2, bt / 2], [bt / 2, h - bt / 2], [w - bt / 2, h - bt / 2]].forEach(q => rivet(q[0], q[1], rr * 1.1));
-        // hiasan emas: berlian dan lingkaran bersilang
-        const gold = x.createLinearGradient(0, h * .2, 0, h * .8); gold.addColorStop(0, "#f6dc9a"); gold.addColorStop(1, "#b98b48");
-        x.save(); x.shadowColor = "rgba(255,200,100,.5)"; x.shadowBlur = 7; x.strokeStyle = gold; x.lineWidth = Math.max(2.4, w * .017); x.lineJoin = "round";
-        x.strokeRect(w * .15, h * .24, w * .64, h * .26); x.strokeRect(w * .15, h * .57, w * .64, h * .17);
-        x.beginPath(); x.moveTo(w * .47, h * .275); x.lineTo(w * .64, h * .37); x.lineTo(w * .47, h * .465); x.lineTo(w * .3, h * .37); x.closePath(); x.stroke();
-        x.beginPath(); x.arc(w * .47, h * .655, w * .09, 0, 7); x.stroke(); x.beginPath(); x.moveTo(w * .47, h * .6); x.lineTo(w * .47, h * .71); x.moveTo(w * .41, h * .655); x.lineTo(w * .53, h * .655); x.stroke();
-        x.restore();
-        // sisi pertemuan + gagang cincin
-        g = x.createLinearGradient(w - bt - 8, 0, w, 0); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.6)"); x.fillStyle = g; x.fillRect(w - bt - 8, 0, bt + 8, h);
-        const hx = w - bt - 14, hy = h * .5; rivet(hx, hy - 15, rr * 1.4);
-        x.strokeStyle = gold; x.lineWidth = 3.4; x.beginPath(); x.arc(hx, hy + 2, 11, 0, 7); x.stroke(); x.strokeStyle = "rgba(0,0,0,.4)"; x.lineWidth = 1; x.beginPath(); x.arc(hx, hy + 2, 12.6, 0, 7); x.stroke();
-        // lapisan tepi lembut
-        x.strokeStyle = "rgba(255,235,190,.12)"; x.lineWidth = 1; x.strokeRect(.5, .5, w - 1, h - 1);
+        const c = mkCv(w, h), x = c.getContext("2d"), r = seeded(33), n = 4, pw = w / n | 0, gold = "#e0bd72", gd = "#8a6a2c";
+        for (let i = 0; i < n; i++) { const px = i * pw; Bx(x, "#5b4630", px, 0, pw, h); Bx(x, "#6c553a", px + 1, 0, pw - 3, h); Bx(x, "#7a6244", px + 1, 0, 1, h); Bx(x, "#3d2f20", px + pw - 1, 0, 1, h); for (let k = 0; k < (h >> 2); k++) Bx(x, r() < .6 ? "rgba(0,0,0,.2)" : "rgba(255,220,160,.1)", px + 2 + (r() * (pw - 4) | 0), r() * h | 0, 1, 2 + (r() * 4 | 0)); }
+        Bx(x, "rgba(0,0,0,.28)", 0, h - (h * .18 | 0), w, h * .18 | 0);
+        const bt = Math.max(3, Math.round(w * .07)), iron = (a, b, ww, hh) => { Bx(x, "#2b2824", a, b, ww, hh); Bx(x, "#4a463f", a, b, ww, 1); Bx(x, "#171512", a, b + hh - 1, ww, 1); };
+        iron(0, 0, w, bt); iron(0, h - bt, w, bt); iron(0, 0, bt, h); iron(w - bt, 0, bt, h);
+        const bH = Math.max(3, h * .028 | 0); iron(bt, h * .2 | 0, w - 2 * bt, bH); iron(bt, h * .8 | 0, w - 2 * bt, bH);
+        const rv = (a, b) => { Bx(x, "#a8864c", a - 1, b - 1, 2, 2); Bx(x, "#f0dca8", a - 1, b - 1, 1, 1); };
+        for (let i = 1; i <= 4; i++) { const a = bt + Math.round((w - bt * 2) * i / 5); rv(a, (h * .2 | 0) + (bH >> 1)); rv(a, (h * .8 | 0) + (bH >> 1)); }
+        [[bt >> 1, bt >> 1], [w - (bt >> 1), bt >> 1], [bt >> 1, h - (bt >> 1)], [w - (bt >> 1), h - (bt >> 1)]].forEach(q => rv(q[0], q[1]));
+        const fr = (a, b, ww, hh) => { Bx(x, gd, a + 1, b + 1, ww, hh);[[a, b, ww, 1], [a, b + hh - 1, ww, 1], [a, b, 1, hh], [a + ww - 1, b, 1, hh]].forEach(q => Bx(x, gold, ...q)); };
+        fr(w * .15 | 0, h * .27 | 0, w * .64 | 0, h * .23 | 0); fr(w * .15 | 0, h * .57 | 0, w * .64 | 0, h * .17 | 0);
+        const dcx = w * .47 | 0, dcy = h * .385 | 0, ds = Math.round(w * .13);
+        for (let d = -ds; d <= ds; d++) { const hw = ds - Math.abs(d); Bx(x, gold, dcx - hw, dcy + d, 1, 1); Bx(x, gold, dcx + hw, dcy + d, 1, 1); } Bx(x, gold, dcx, dcy, 1, 1);
+        const ccy = h * .655 | 0, cr = Math.max(3, Math.round(w * .09)); for (let a = 0; a < 6.3; a += .1) Bx(x, gold, Math.round(dcx + Math.cos(a) * cr), Math.round(ccy + Math.sin(a) * cr), 1, 1); Bx(x, gold, dcx, ccy - cr, 1, cr * 2); Bx(x, gold, dcx - cr, ccy, cr * 2, 1);
+        Bx(x, "rgba(0,0,0,.35)", w - bt - 3, 0, 3, h);
+        const hx = w - bt - 6, hy = h * .5 | 0, hr = Math.max(3, Math.round(w * .06)); rv(hx, hy - hr - 3); for (let a = 0; a < 6.3; a += .12) { Bx(x, gold, Math.round(hx + Math.cos(a) * hr), Math.round(hy + 1 + Math.sin(a) * hr), 1, 1); }
         return c;
       }
-
       function drawDoorLeaf(x, y, w, h, side, progress) {
-        const k = Math.round(w) + "x" + Math.round(h); if (!leafCache || leafKey !== k) { leafCache = buildLeaf(w, h); leafKey = k; }
-        const move = smoother(progress) * w * .97, dir = side === "left" ? -1 : 1;
+        const k = w + "x" + h + "x" + PS; if (!leafCache || leafKey !== k) { leafCache = buildLeaf(w, h); leafKey = k; }
+        const move = Math.round(smoother(progress) * w * .97);
         ctx.save();
-        if (side === "left") ctx.translate(x + dir * move, y); else { ctx.translate(x + w + dir * move, y); ctx.scale(-1, 1); }
-        if (progress > 0) { ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 20; ctx.shadowOffsetX = side === "left" ? 7 : -7; }
-        ctx.drawImage(leafCache, 0, 0);
-        ctx.restore();
+        if (side === "left") ctx.translate((x - move) * PS, y * PS); else { ctx.translate((x + w + move) * PS, y * PS); ctx.scale(-1, 1); }
+        ctx.drawImage(leafCache, 0, 0, w * PS, h * PS); ctx.restore();
+        if (progress > 0) { const e = side === "left" ? x + w - move : x + move - 3; pr("rgba(0,0,0,.4)", e, y, 3, h); }
       }
-
       function drawDoor(time) {
-        const cx = W / 2, doorW = Math.min(W * .205, H * .28), doorH = H * .59, top = H * .23, left = cx - doorW, t = time * .001, p = doorProgress, open = smoother(p), baseY = top + doorH;
-        // 1) ruang di balik pintu
-        ctx.fillStyle = "#05060a"; ctx.fillRect(left, top, doorW * 2, doorH);
-        if (p > 0) {
-          const pulse = 1 + Math.sin(t * 2.3) * .025 + Math.sin(t * 5.1) * .012;
-          ctx.save(); ctx.beginPath(); ctx.rect(left, top, doorW * 2, doorH); ctx.clip();
-          const g = ctx.createRadialGradient(cx, top + doorH * .55, 4, cx, top + doorH * .55, doorW * 1.9 * pulse);
-          g.addColorStop(0, `rgba(255,240,200,${.98 * open})`); g.addColorStop(.35, `rgba(255,192,112,${.85 * open})`); g.addColorStop(.75, `rgba(205,122,52,${.5 * open})`); g.addColorStop(1, `rgba(120,70,30,${.22 * open})`);
-          ctx.fillStyle = g; ctx.fillRect(left, top, doorW * 2, doorH);
-          const gv = ctx.createLinearGradient(0, top, 0, baseY); gv.addColorStop(0, `rgba(255,236,190,${.0})`); gv.addColorStop(1, `rgba(255,225,170,${.35 * open})`); ctx.fillStyle = gv; ctx.fillRect(left, top, doorW * 2, doorH);
-          ctx.restore();
+        const dw = Math.min(Math.round(W * .205 / PS), Math.round(H * .28 / PS)), dh = Math.round(H * .59 / PS), top = Math.round(H * .23 / PS), cx = Math.round(LW / 2), left = cx - dw, w2 = dw * 2;
+        const p = doorProgress, open = smoother(p), baseY = top + dh;
+        pr("#05060a", left, top, w2, dh);
+        if (p > 0) {   // terowongan cahaya: persegi bersarang (tampak berundak seperti pixel art)
+          const cols = [[120, 70, 30], [205, 122, 52], [255, 192, 112], [255, 226, 160], [255, 240, 200]];
+          cols.forEach((c, i) => { const ix = Math.round(i * dw * .2), iy = Math.round(i * dh * .1); pr(`rgb(${5 + (c[0] - 5) * open | 0},${6 + (c[1] - 6) * open | 0},${10 + (c[2] - 10) * open | 0})`, left + ix, top + iy, w2 - 2 * ix, dh - iy); });
         }
-        // 2) daun pintu meluncur masuk ke dinding (dipotong pada bukaan)
-        ctx.save(); ctx.beginPath(); ctx.rect(left, top - 2, doorW * 2, doorH + 4); ctx.clip();
-        drawDoorLeaf(left, top, doorW, doorH, "left", p); drawDoorLeaf(cx, top, doorW, doorH, "right", p);
-        ctx.restore();
-        // 3) rangka batu
-        drawDoorFrame(cx, top, doorW, doorH);
-        // 4) cahaya yang tumpah keluar (additif)
-        if (p > 0) {
+        ctx.save(); ctx.beginPath(); ctx.rect(left * PS, (top - 1) * PS, w2 * PS, (dh + 2) * PS); ctx.clip();
+        drawDoorLeaf(left, top, dw, dh, "left", p); drawDoorLeaf(cx, top, dw, dh, "right", p); ctx.restore();
+        drawDoorFrame(cx, top, dw, dh);
+        if (p > 0) {   // cahaya tumpah ke lantai, dibuat berundak 6 tingkat
           ctx.save(); ctx.globalCompositeOperation = "lighter";
-          const halo = ctx.createRadialGradient(cx, top + doorH * .5, doorW * .3, cx, top + doorH * .5, doorW * 3.2);
-          halo.addColorStop(0, `rgba(255,190,110,${.3 * open})`); halo.addColorStop(1, "rgba(255,150,60,0)"); ctx.fillStyle = halo; ctx.fillRect(cx - doorW * 3.2, top - doorH * .4, doorW * 6.4, doorH * 1.9);
-          const spread = doorW * (.5 + .9 * open), fg = ctx.createLinearGradient(0, baseY, 0, H); fg.addColorStop(0, `rgba(255,205,140,${.42 * open})`); fg.addColorStop(1, "rgba(255,170,90,0)");
-          ctx.fillStyle = fg; ctx.beginPath(); ctx.moveTo(cx - spread, baseY); ctx.lineTo(cx + spread, baseY); ctx.lineTo(cx + spread * 2.6, H); ctx.lineTo(cx - spread * 2.6, H); ctx.closePath(); ctx.fill();
-          for (let i = -3; i <= 3; i++) { const sw = Math.sin(t * .8 + i) * .02, a = (.07 - Math.abs(i) * .01) * open; ctx.fillStyle = `rgba(255,214,150,${Math.max(0, a)})`; ctx.beginPath(); ctx.moveTo(cx + i * doorW * .12, top + doorH * .5); ctx.lineTo(cx + (i + sw) * doorW * .95 - doorW * .1, baseY + (H - baseY) * .75); ctx.lineTo(cx + (i + sw) * doorW * .95 + doorW * .1, baseY + (H - baseY) * .75); ctx.closePath(); ctx.fill(); }
+          for (let y = baseY; y < LH; y++) { const tt = (y - baseY) / (LH - baseY), a = Math.round(.4 * open * (1 - tt) * 6) / 6, half = Math.round(dw * (.5 + .9 * open) * (1 + 1.6 * tt)); if (a > 0) { ctx.fillStyle = `rgba(255,205,140,${a})`; ctx.fillRect(Math.round(cx - half) * PS, y * PS, half * 2 * PS, PS); } }
           ctx.restore();
         }
       }
@@ -4407,7 +4337,7 @@
         particles.push({
           x: W / 2 + (Math.random() - .5) * W * .5,
           y: H * (.4 + Math.random() * .5),
-          size: Math.random() * 3 + 1,
+          size: PS * (1 + (Math.random() * 2 | 0)),
           speed: Math.random() * .7 + .2,
           alpha: Math.random() * .6 + .2
         });
@@ -4421,7 +4351,7 @@
           p.alpha -= .0015;
 
           ctx.fillStyle = `rgba(255,205,135,${Math.max(0, p.alpha)})`;
-          ctx.fillRect(p.x, p.y, p.size, p.size);
+          ctx.fillRect(Math.round(p.x / PS) * PS, Math.round(p.y / PS) * PS, p.size, p.size);
 
           if (p.alpha <= 0 || p.y < 0) particles.splice(i, 1);
         }
@@ -4471,7 +4401,7 @@
 
         // Kamera mendekati pintu setelah pintu terbuka.
         const zoomProgress = clamp((elapsed - 5.5) / 3.5, 0, 1);
-        const zoom = 1 + ease(zoomProgress) * .22;
+        const zoom = 1;   // zoom dimatikan: skala pecahan merusak kerapian piksel
 
         ctx.translate(W / 2, H / 2);
         ctx.scale(zoom, zoom);
@@ -4571,7 +4501,7 @@
         drawBackground(time);
         drawTorch(W * .16, H * .52, time);
         drawTorch(W * (W > 900 ? .94 : .9), H * .52, time);
-        ctx.save(); ctx.translate(W > 900 ? W * .13 : W * .06, 0);   // pintu bergeser ke kanan agar tidak tertimpa judul menu
+        ctx.save(); ctx.translate(Math.round((W > 900 ? W * .13 : W * .06) / PS) * PS, 0);   // pintu bergeser ke kanan agar tidak tertimpa judul menu
         drawDoor(time);
         ctx.restore();
         mAnim = requestAnimationFrame(menuFrame);
@@ -4596,6 +4526,7 @@
           cv.style.visibility = "visible"; resizeGameCanvas(); cv.focus();
           playing = true; inGame = true; menuOn = false;
           SFX.mode("game");
+          if (typeof entryStart === "function") entryStart();   // adegan pahlawan masuk lobby
           startBtn.textContent = "CONTINUE";
           if (isMobile) {
             const mob = document.getElementById("mobileControls");
@@ -6613,6 +6544,62 @@
       };
     })();
   </script>
+  <script>
+    /* ===== ADEGAN MASUK LOBBY =====
+       Menyambung sinematik pintu: setelah START, pintu di dinding selatan lobby terbuka, cahaya hangat tumpah,
+       pahlawan berjalan keluar menuju Safe Zone (kontrol terkunci), lalu pintu menutup & tersegel.
+       Tekan Space/Enter untuk melewati. Hanya diputar sekali, saat game pertama kali dimulai. */
+    (function () {
+      const E = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u) };
+      const ENT = { on: 0, t: 0, played: 0, sfx: 0, cl: 0, lo: -1 };
+      const T_WALK0 = .6, T_WALK1 = 2.5, T_CLOSE = 1.9, T_END = 3.0, Y0 = 393, Y1 = 322;
+      const SX = 274, SY = 330, SW = 92, SH = 70;
+      const bak = document.createElement('canvas'); bak.width = SW; bak.height = SH; bak.getContext('2d').drawImage(BGL, SX, SY, SW, SH, 0, 0, SW, SH);
+
+      /* pintu lobby dilukis langsung ke latar (di bawah player); o: 0 tertutup .. 1 terbuka penuh (sekaligus intensitas cahaya) */
+      function paintDoor(o) {
+        const b = BGL.getContext('2d'); b.imageSmoothingEnabled = false; b.save(); b.globalCompositeOperation = 'source-over'; b.globalAlpha = 1; b.drawImage(bak, SX, SY);
+        const R = (c, x, y, w, h) => { b.fillStyle = c; b.fillRect(x, y, w, h) };
+        R('#252329', 300, 382, 40, 18); R('#3a3640', 300, 383, 2, 17); R('#3a3640', 338, 383, 2, 17);
+        R('#b6a38a', 298, 378, 44, 5); R('#d8cbb4', 298, 378, 44, 1); R('#6b5f55', 298, 382, 44, 1);
+        R('#07060c', 306, 384, 28, 16);
+        if (o > .02) [[120, 70, 30], [205, 122, 52], [255, 192, 112], [255, 232, 170]].forEach((c, i) => R(`rgb(${7 + (c[0] - 7) * o | 0},${6 + (c[1] - 6) * o | 0},${12 + (c[2] - 12) * o | 0})`, 306 + i * 3, 384 + i * 2, 28 - i * 6, 16 - i * 2));
+        b.save(); b.beginPath(); b.rect(306, 384, 28, 16); b.clip(); const off = Math.round(o * 14);
+        [306 - off, 320 + off].forEach(x0 => { R('#6b5f55', x0, 384, 14, 16); R('#8a7d70', x0, 384, 14, 1); R('#4f463e', x0 + 4, 384, 1, 16); R('#4f463e', x0 + 9, 384, 1, 16); R('#3a342e', x0, 390, 14, 2); R('#b18b59', x0 + 2, 390, 1, 1); R('#b18b59', x0 + 11, 390, 1, 1); R('#2b2620', x0, 399, 14, 1) });
+        if (off < 2) { R('#b18b59', 319, 384, 2, 16); R('#c39a5d', 318, 389, 4, 5) } b.restore();
+        if (o > .02) { b.globalCompositeOperation = 'lighter'; for (let yy = 384; yy > 340; yy -= 2) { const tt = (384 - yy) / 44, half = Math.round(13 + tt * 24), a = Math.round(.2 * o * (1 - tt) * 25) / 25; if (a > 0) { b.fillStyle = `rgba(255,205,140,${a})`; b.fillRect(320 - half, yy - 2, half * 2, 2) } } }
+        b.restore();
+      }
+      paintDoor(0);   // pintu tersegel selalu ada di lobby
+
+      window.entryStart = function () {
+        if (ENT.played || !lobby || !p) return; ENT.played = ENT.on = 1; ENT.t = 0; ENT.sfx = ENT.cl = 0; ENT.lo = -1;
+        p.x = 320; p.y = Y0; p.vx = p.vy = 0; p.face = -Math.PI / 2; camInit = false; paintDoor(0);
+      };
+      function finish() {
+        ENT.on = 0; paintDoor(0); p.x = 320; p.y = Y1; p.vx = p.vy = 0; p.wb = 0; for (const k in P) delete P[k]; M.d = 0;
+        try { msg('Kau tiba di Lobby — Zona Aman. Tidak ada musuh yang menyerang di sini.') } catch (e) { }
+      }
+      function step(dt) {
+        const skip = P.Space || P.Enter; ENT.t += dt; t += dt; shake = Math.max(0, shake - 20 * dt); camUpd(dt); if (typeof psStep === 'function') psStep(dt);
+        for (const k in P) delete P[k]; M.d = 0;
+        if (skip && ENT.t > T_WALK0 + .3) ENT.t = T_END;
+        const T = ENT.t;
+        if (!ENT.sfx) { ENT.sfx = 1; try { SFX.door() } catch (e) { } }
+        if (T >= T_CLOSE && !ENT.cl) { ENT.cl = 1; try { SFX.door() } catch (e) { } }
+        const o = T < T_WALK0 ? E(T / .6) : T < T_CLOSE ? 1 : 1 - E((T - T_CLOSE) / .7), oq = Math.round(o * 28) / 28;
+        if (oq !== ENT.lo) { ENT.lo = oq; paintDoor(oq) }
+        const k = Math.max(0, Math.min(1, (T - T_WALK0) / (T_WALK1 - T_WALK0))), y = Y0 + (Y1 - Y0) * (1 - Math.pow(1 - k, 2));
+        p.vy = (y - p.y) / Math.max(dt, 1e-3); p.y = y; p.x = 320; p.vx = 0; p.face = -Math.PI / 2;
+        p.wb += ((k > 0 && k < 1 ? 1 : 0) - p.wb) * Math.min(1, dt * 12); p.wph += dt * 12 * (.2 + p.wb * .8) * Math.max(1, Math.min(1.5, Math.abs(p.vy) / 85)); p.idt += dt * 3;
+        if (T >= T_END) finish();
+      }
+      const _hero = drawHero, _armed = drawArmed, _upd = upd;
+      drawHero = function () { if (ENT.on && ENT.t < T_WALK0) return; return _hero.apply(this, arguments) };
+      drawArmed = function () { if (ENT.on && ENT.t < T_WALK0) return; return _armed.apply(this, arguments) };
+      upd = function (dt) { if (ENT.on) { step(dt); return } _upd(dt) };
+    })();
+  </script>
   <!-- ===== INTRO SINEMATIK: LANGIT BERAWAN → KERAJAAN → BUKIT HIJAU → LADANG DAUN → MENU UTAMA ===== -->
   <style>
     #intro {
@@ -6663,327 +6650,183 @@
   <script>
     (function () {
       const root = document.getElementById('intro'), cv = document.getElementById('introCv'), ctx = cv.getContext('2d'), menu = document.getElementById('menu');
-      const DUR = 12.6;                       // durasi intro (detik)
-      let W = 0, H = 0, raf = 0, t0 = 0, last = 0, done = false, skipAt = 0, A = null, rz = 0;
+      const tcv = document.createElement('canvas'); tcv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; root.insertBefore(tcv, document.getElementById('introSkip')); const tx = tcv.getContext('2d');
+      const DUR = 12.6; let W = 0, H = 0, SC = 2, raf = 0, t0 = 0, last = 0, done = false, skipAt = 0, A = null, rz = 0;
       const cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)), ez = u => { u = cl(u); return u * u * (3 - 2 * u) };
       const rng = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 };
       const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c };
-
-      /* ---------- Kamera: turun perlahan, melambat di kerajaan, lalu menukik ke ladang (Hermite monoton) ---------- */
-      const KT = [0, 1.4, 5, 9, 12.2], KS = [0, .06, .85, 1.2, 1.9];   // KS dalam satuan tinggi layar
+      /* ===== PIXEL ART: semua digambar di kanvas resolusi rendah (1 piksel = SC px layar), tanpa antialias ===== */
+      const F = (x, c, a, b, w, h) => { x.fillStyle = c; const x0 = Math.round(a), y0 = Math.round(b); x.fillRect(x0, y0, Math.max(1, Math.round(a + w) - x0), Math.max(1, Math.round(b + h) - y0)) };
+      const disc = (x, c, cx, cy, r) => { x.fillStyle = c; cx = Math.round(cx); cy = Math.round(cy); for (let d = -r; d <= r; d++) { const w = Math.floor(Math.sqrt(r * r - d * d + .5)); x.fillRect(cx - w, cy + d, 2 * w + 1, 1) } };
+      const rgb = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+      const B4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+      const KT = [0, 1.4, 5, 9, 12.2], KS = [0, .06, .85, 1.2, 1.9];
       const KM = (() => { const n = KT.length, d = [], m = []; for (let i = 0; i < n - 1; i++) d[i] = (KS[i + 1] - KS[i]) / (KT[i + 1] - KT[i]); m[0] = 0; for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2; m[n - 1] = d[n - 2]; return m })();
-      function camS(t) {
-        t = Math.min(t, KT[KT.length - 1]); let i = 0; while (i < KT.length - 2 && t > KT[i + 1]) i++;
-        const h = KT[i + 1] - KT[i], u = (t - KT[i]) / h, u2 = u * u, u3 = u2 * u;
-        return (2 * u3 - 3 * u2 + 1) * KS[i] + (u3 - 2 * u2 + u) * h * KM[i] + (-2 * u3 + 3 * u2) * KS[i + 1] + (u3 - u2) * h * KM[i + 1];
+      function camS(t) { t = Math.min(t, KT[KT.length - 1]); let i = 0; while (i < KT.length - 2 && t > KT[i + 1]) i++; const h = KT[i + 1] - KT[i], u = (t - KT[i]) / h, u2 = u * u, u3 = u2 * u; return (2 * u3 - 3 * u2 + 1) * KS[i] + (u3 - 2 * u2 + u) * h * KM[i] + (-2 * u3 + 3 * u2) * KS[i + 1] + (u3 - u2) * h * KM[i + 1] }
+      const WY = { mount: 1.30, A: 1.46, B: 1.60, C: 1.74, field: 1.80 }, F2 = { sky: .55, sun: .35, mount: .8, A: .88, B: .95, C: 1.0, field: 1.05, grass: 1.3 }, GW = 2.82;
+      /* langit: pita warna lembut + dithering tipis di sambungan */
+      const SKY = ['#3f72c4', '#4c82d0', '#5c92da', '#6fa4e2', '#84b5ea', '#9cc6f0', '#b6d7f5', '#cfe5f9'];
+      function mkSky(h) { const c = mk(W, h), x = c.getContext('2d'), im = x.createImageData(W, h), d = im.data, P = SKY.map(rgb), n = P.length; for (let y = 0; y < h; y++) { const t = y / h * (n - 1), i = Math.min(n - 2, t | 0), f = cl((t - i - .55) / .45); for (let px = 0; px < W; px++) { const k = P[i + (f * 16 > B4[(y & 3) * 4 + (px & 3)] ? 1 : 0)], o = (y * W + px) * 4; d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255 } } x.putImageData(im, 0, 0); return c }
+      /* awan pixel: bentuk dari gabungan lingkaran, diarsir per baris (terang atas, bayangan biru lembut di bawah) */
+      function mkCloud(r, k) {
+        const w = Math.round(132 * k), h = Math.round(58 * k), c = mk(w, h), x = c.getContext('2d'), base = h - 2, n = 6 + (r() * 3 | 0), cs = [];
+        for (let i = 0; i < n; i++) { const u = i / (n - 1), rad = k * (8 + Math.sin(u * Math.PI) * 12 + r() * 5); cs.push([w * (.13 + .74 * u) + (r() - .5) * 5 * k, base - rad * .75, rad]) }
+        const m = new Uint8Array(w * h); for (let y = 0; y < base; y++)for (let px = 0; px < w; px++)for (const q of cs) if ((px - q[0]) ** 2 + (y - q[1]) ** 2 <= q[2] * q[2]) { m[y * w + px] = 1; break }
+        for (let y = 0; y < base; y++)for (let px = 0; px < w; px++) {
+          if (!m[y * w + px]) continue; let up = 0, dn = 0; while (up < 4 && y - up - 1 >= 0 && m[(y - up - 1) * w + px]) up++; while (dn < 5 && y + dn + 1 < base && m[(y + dn + 1) * w + px]) dn++;
+          x.fillStyle = up == 0 ? '#fdfeff' : dn == 0 ? '#93a9d4' : dn < 2 ? '#b4c6e6' : dn < 4 ? '#ccdaf0' : up < 3 ? '#f0f5fd' : '#e1eaf8'; x.fillRect(px, y, 1, 1)
+        } return c
       }
-      // posisi dunia (× tinggi layar) & kecepatan paralaks tiap lapisan
-      const WY = { mount: 1.30, A: 1.46, B: 1.60, C: 1.74, field: 1.80 }, F = { sky: .55, sun: .35, mount: .8, A: .88, B: .95, C: 1.0, field: 1.05, grass: 1.3 }, GW = 2.82;   // GW: posisi dunia tepi atas semak depan (× tinggi layar)
-
-      /* ---------- Sprite awan ---------- */
-      function puff(x, cx, cy, r) {
-        const g = x.createRadialGradient(cx, cy, r * .12, cx, cy, r); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.6, 'rgba(255,255,255,.93)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-        x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
-      }
-      function mkCloud(r) {
-        const c = mk(420, 200), x = c.getContext('2d'), n = 11;
-        for (let i = 0; i < n; i++) { const u = i / (n - 1), s = Math.sin(u * Math.PI), rr = 36 + s * 34 + r() * 14; puff(x, 62 + u * 296 + (r() - .5) * 20, 150 - s * 34 - r() * 10 - rr * .35, rr) }
-        for (let i = 0; i < 6; i++) puff(x, 56 + i * 62, 152, 32 + r() * 12);
-        x.globalCompositeOperation = 'source-atop';
-        const g = x.createLinearGradient(0, 55, 0, 195); g.addColorStop(0, 'rgba(150,175,215,0)'); g.addColorStop(1, 'rgba(135,160,205,.55)'); x.fillStyle = g; x.fillRect(0, 0, 420, 200);
-        return c;
-      }
-
-      /* ---------- Bukit, pohon, petak ladang ---------- */
-      function ridge(seed, amp) { const r = rng(seed), p = [r() * 6, r() * 6, r() * 6], f = [.0032 + r() * .001, .0075, .017]; return px => amp * (.55 * Math.sin(px * f[0] + p[0]) + .3 * Math.sin(px * f[1] + p[1]) + .15 * Math.sin(px * f[2] + p[2])) }
-      function tree(x, px, py, s, dark) {
-        x.fillStyle = '#5a3d26'; x.fillRect(px - s * .5, py - s * 2, s, s * 2.4);
-        x.fillStyle = dark; x.beginPath(); x.arc(px, py - s * 3.4, s * 2.6, 0, 7); x.fill();
-        x.fillStyle = 'rgba(190,230,120,.35)'; x.beginPath(); x.arc(px - s * .8, py - s * 4.1, s * 1.5, 0, 7); x.fill();
-      }
+      function ridge(seed, amp) { const r = rng(seed), p = [r() * 6, r() * 6, r() * 6], f = [.0032 + r() * .001, .0075, .017]; return px => amp * (.55 * Math.sin(px * f[0] * 2.2 + p[0]) + .3 * Math.sin(px * f[1] * 2.2 + p[1]) + .15 * Math.sin(px * f[2] * 2.2 + p[2])) }
+      const TP = ['#245f31', '#3b8440', '#7dbd5a'];
+      function tree(x, px, py, s, pal) { const r = Math.max(2, Math.round(s * 2.3)); x.fillStyle = '#4e3626'; x.fillRect(Math.round(px) - (r > 3 ? 1 : 0), Math.round(py - r), r > 3 ? 2 : 1, r + 1); disc(x, pal[0], px, py - r * 1.5, r); disc(x, pal[1], px - r * .25, py - r * 1.65, r * .78 | 0); disc(x, pal[2], px - r * .4, py - r * 1.9, Math.max(1, r * .4 | 0)) }
+      function tufts(x, ry, rr, n, col, span) { x.fillStyle = col; for (let k = 0; k < n; k++) { const px = rr() * W | 0, py = ry(px) + 4 + (rr() * span | 0); x.fillRect(px, py, 1, 1); x.fillRect(px + 1, py - 1, 1, 1); x.fillRect(px + 2, py, 1, 1) } }
       function mkHill(o) {
         const M = o.M, h = M + Math.ceil(1.35 * H), c = mk(W, h), x = c.getContext('2d'), R = ridge(o.seed, o.amp);
-        const ry0 = px => M - R(px) - (o.bump ? o.bump.h * Math.exp(-Math.pow((px - o.bump.x) / o.bump.w, 2)) : 0);
-        const pl = o.plateau, pY = pl ? ry0(pl.x) : 0;   // dataran rata di puncak bukit (untuk bangunan)
-        const ry = pl ? (px => { let t = cl((Math.abs(px - pl.x) - pl.hw) / pl.ramp); t = t * t * (3 - 2 * t); return pY * (1 - t) + ry0(px) * t }) : ry0;
-        const g = x.createLinearGradient(0, M - o.amp, 0, M + .5 * H); g.addColorStop(0, o.c0); g.addColorStop(1, o.c1);
-        x.fillStyle = g; x.beginPath(); x.moveTo(0, h); for (let px = 0; px <= W; px += 4) x.lineTo(px, ry(px)); x.lineTo(W, h); x.closePath(); x.fill();
-        x.strokeStyle = o.rim; x.lineWidth = 2; x.beginPath(); for (let px = 0; px <= W; px += 4) px ? x.lineTo(px, ry(px)) : x.moveTo(px, ry(px)); x.stroke();
-        if (o.extra) o.extra(x, ry, M);
-        return { cv: c, M, h, ry };
+        const ry0 = px => M - R(px) - (o.bump ? o.bump.h * Math.exp(-Math.pow((px - o.bump.x) / o.bump.w, 2)) : 0), pl = o.plateau, pY = pl ? ry0(pl.x) : 0;
+        const ry = pl ? (px => { let t = cl((Math.abs(px - pl.x) - pl.hw) / pl.ramp); t = t * t * (3 - 2 * t); return Math.round(pY * (1 - t) + ry0(px) * t) }) : (px => Math.round(ry0(px)));
+        const [rim, c0, c1, c2] = o.cols;
+        for (let px = 0; px < W; px++) { const top = ry(px); x.fillStyle = rim; x.fillRect(px, top, 1, 1); x.fillStyle = c0; x.fillRect(px, top + 1, 1, 15); x.fillStyle = c1; x.fillRect(px, top + 16, 1, 24); x.fillStyle = c2; x.fillRect(px, top + 40, 1, h - top - 40); if (px & 1) { x.fillStyle = c1; x.fillRect(px, top + 14, 1, 2); x.fillStyle = c2; x.fillRect(px, top + 38, 1, 2) } }
+        if (o.extra) o.extra(x, ry, M); return { cv: c, M, h, ry }
       }
-
-      /* ---------- Kerajaan ---------- */
+      /* kerajaan pixel: tembok bata, menara beratap sirap biru, jendela berpendar, gerbang kayu, rumah-rumah kecil */
       function drawCastle(x, ox, oy, cw, flags) {
-        const u = cw / 100, gy = 76; x.save(); x.translate(ox, oy); x.scale(u, u);
-        const stone = '#e8e2d4', stoneS = '#cbc4b3', stoneD = '#a9a191', roofL = '#4a72d8', roofR = '#2f4fa8', win = '#3a3350', glow = '#f4d77c';
-        const rect = (a, b, w, h, c) => { x.fillStyle = c; x.fillRect(a, b, w, h) };
-        const cone = (cx, w, top, apex, fl) => {
-          x.fillStyle = roofL; x.beginPath(); x.moveTo(cx - w * .68, top); x.lineTo(cx, apex); x.lineTo(cx, top); x.closePath(); x.fill();
-          x.fillStyle = roofR; x.beginPath(); x.moveTo(cx + w * .68, top); x.lineTo(cx, apex); x.lineTo(cx, top); x.closePath(); x.fill();
-          if (fl) flags.push({ x: ox + cx * u, y: oy + apex * u, s: u });
-        };
-        const tower = (cx, w, top, roofH, wins) => {
-          rect(cx - w / 2, top, w, gy - top, stone); rect(cx + w * .12, top, w * .38, gy - top, stoneS); rect(cx - w / 2 - .6, top - .2, w + 1.2, 1.4, stoneD);
-          cone(cx, w + 1.8, top - .2, top - roofH, 1);
-          for (let i = 0; i < wins; i++) { rect(cx - .9, top + 5 + i * 8, 1.8, 3.4, win); rect(cx - .5, top + 5.3 + i * 8, 1, 1.6, glow) }
-        };
-        // tembok
-        rect(8, 40, 84, gy - 40, stone); rect(8, 40, 84, 2, stoneD); rect(8, 62, 84, gy - 62, stoneS);
-        for (let i = 8; i < 92; i += 4.2) rect(i, 37, 2.6, 3.2, stone);
-        // menara luar & dalam, bangunan utama
+        const u = cw / 100, gy = 76, ST = '#ddd6c4', SL = '#efe9d9', SS = '#bdb5a2', SD = '#8f887a', OL = '#5f5a74', RL = '#5a82dc', RR = '#3b5db4', RD = '#2a428a', WN = '#2e2842', GL = '#f6dc86';
+        const R = (a, b, w, h, c) => F(x, c, ox + a * u, oy + b * u, w * u, h * u);
+        const bricks = (a, b, w, h) => { for (let yy = b, i = 0; yy < b + h; yy += 2.4, i++) { R(a, yy, w, .3, SS); for (let xx = a + (i & 1) * 2.4 + 1; xx < a + w - 1; xx += 4.8)R(xx, yy, .3, 2.4, SS) } };
+        const roof = (cx, w, top, apex, fl) => { const y0 = Math.round(oy + apex * u), y1 = Math.round(oy + top * u), hw = w * .68 * u, c = Math.round(ox + cx * u); for (let py = y0; py <= y1; py++) { const k = Math.round((py - y0 + 1) / (y1 - y0 + 1) * hw), sh = (py - y0) % 5 == 4; x.fillStyle = sh ? RD : RL; x.fillRect(c - k, py, k, 1); x.fillStyle = sh ? RD : RR; x.fillRect(c, py, k, 1) } R(cx - w * .68 - .5, top - .2, w * 1.36 + 1, .9, OL); R(cx - .3, apex - 1.4, .6, 1.6, GL); if (fl) flags.push({ x: ox + cx * u, y: oy + (apex - 1.4) * u }) };
+        const win = (cx, y) => { R(cx - 1, y - .5, 2, 4, WN); R(cx - .6, y + .2, 1.2, 1.8, GL); R(cx - 1.3, y + 3.5, 2.6, .5, SD) };
+        const tower = (cx, w, top, rh, wins) => { R(cx - w / 2, top, w, gy - top, ST); R(cx + w * .12, top, w * .38, gy - top, SS); bricks(cx - w / 2, top, w, gy - top); R(cx - w / 2, top, .6, gy - top, SL); R(cx - w / 2 - .4, top, .4, gy - top, OL); R(cx + w / 2, top, .4, gy - top, OL); R(cx - w / 2 - .8, top - .4, w + 1.6, 1.2, SD); roof(cx, w + 1.8, top - .2, top - rh, 1); for (let i = 0; i < wins; i++)win(cx, top + 5 + i * 8) };
+        R(8, 40, 84, gy - 40, ST); R(8, 62, 84, gy - 62, SS); bricks(8, 40, 84, gy - 40); R(8, 40, 84, .6, SL); R(7.6, 40, .4, gy - 40, OL); R(92, 40, .4, gy - 40, OL);
+        for (let i = 8; i < 92; i += 4.2) { R(i, 37, 2.6, 3.2, ST); R(i, 37, 2.6, .5, SL); R(i + 2.4, 37, .3, 3.2, SD) } R(8, 39.6, 84, .8, SD);
         tower(10, 8, 28, 15, 2); tower(90, 8, 28, 15, 2); tower(29, 7, 33, 13, 1); tower(71, 7, 33, 13, 1);
-        rect(42, 14, 16, gy - 14, stone); rect(52, 14, 6, gy - 14, stoneS); rect(41, 13, 18, 2, stoneD);
-        cone(50, 19, 13, -2, 1);
-        for (let i = 0; i < 3; i++) { rect(46 + i * 4.2, 22, 2, 5, win); rect(46.4 + i * 4.2, 22.5, 1.2, 2.2, glow) }
-        rect(48.5, 32, 3, 7, win); rect(49, 32.5, 2, 3, glow);
-        // pondasi batu: dasar tembok menyatu dengan tanah
-        rect(6.5, gy - 2.6, 87, 2.6, stoneD); rect(6.5, gy - 2.6, 87, .7, stoneS);
-        [10, 90, 29, 71].forEach((c, i) => { const w = i < 2 ? 9.6 : 8.6; rect(c - w / 2, gy - 2.6, w, 2.6, stoneD) });
-        // gerbang
-        x.fillStyle = '#2a2630'; x.beginPath(); x.moveTo(45.5, gy); x.lineTo(45.5, 62); x.arc(50, 62, 4.5, Math.PI, 0); x.lineTo(54.5, gy); x.closePath(); x.fill();
-        x.strokeStyle = stoneD; x.lineWidth = .8; x.beginPath(); x.moveTo(45.5, gy); x.lineTo(45.5, 62); x.arc(50, 62, 4.5, Math.PI, 0); x.lineTo(54.5, gy); x.stroke();
-        // rumah penduduk di kaki bukit
-        const house = (hx, hy, w, h, roof, wall) => {
-          x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(hx + 1, hy + h, w, 1.2);
-          x.fillStyle = wall; x.fillRect(hx, hy, w, h); x.fillStyle = 'rgba(0,0,0,.14)'; x.fillRect(hx + w * .6, hy, w * .4, h);
-          x.fillStyle = roof; x.beginPath(); x.moveTo(hx - 1.2, hy); x.lineTo(hx + w / 2, hy - h * .75); x.lineTo(hx + w + 1.2, hy); x.closePath(); x.fill();
-          x.fillStyle = 'rgba(0,0,0,.2)'; x.beginPath(); x.moveTo(hx + w / 2, hy - h * .75); x.lineTo(hx + w + 1.2, hy); x.lineTo(hx + w / 2, hy); x.closePath(); x.fill();
-          x.fillStyle = '#5b3d2a'; x.fillRect(hx + w * .4, hy + h * .45, w * .2, h * .55); x.fillStyle = glow; x.fillRect(hx + w * .12, hy + h * .28, w * .2, h * .22);
-        };
+        R(42, 14, 16, gy - 14, ST); R(52, 14, 6, gy - 14, SS); bricks(42, 14, 16, gy - 14); R(42, 14, .6, gy - 14, SL); R(41.6, 14, .4, gy - 14, OL); R(58, 14, .4, gy - 14, OL); R(41, 13, 18, 1.4, SD); roof(50, 19, 13, -2, 1);
+        for (let i = 0; i < 3; i++)win(47 + i * 3.1, 22); R(39.5, 30, 21, 1.2, SD); win(50, 33);
+        R(6.5, gy - 2.6, 87, 2.6, SD); R(6.5, gy - 2.6, 87, .5, SL);
+        for (let d = 0; d <= 5.4; d += .35) { const hw = Math.sqrt(5.4 * 5.4 - d * d); R(50 - hw, 62 - d - .35, hw * 2, .4, SD) } R(44.6, 62, 10.8, gy - 62, SD);
+        for (let d = 0; d <= 4.5; d += .35) { const hw = Math.sqrt(4.5 * 4.5 - d * d); R(50 - hw, 62 - d - .35, hw * 2, .4, '#6b4d33') } R(45.5, 62, 9, gy - 62, '#6b4d33');
+        R(47.5, 57, .35, gy - 57, '#3a2a1c'); R(52.1, 57, .35, gy - 57, '#3a2a1c'); R(50, 57, .35, gy - 57, '#3a2a1c'); R(45.5, 66, 9, .8, '#2b2833'); R(45.5, 71, 9, .8, '#2b2833'); R(52.6, 70, 1, 1.4, GL);
         const roofs = ['#c8643c', '#b9472f', '#d98a3a', '#a8453a'], walls = ['#f0e4c8', '#e9d9b8', '#f4ecd8'];
+        const house = (hx, hy, w, h, rf, wl) => { R(hx + 1, hy + h, w, 1.2, 'rgba(0,0,0,.18)'); R(hx, hy, w, h, wl); R(hx + w * .6, hy, w * .4, h, 'rgba(0,0,0,.14)'); R(hx, hy, w, .4, SL); const rh = h * .75; for (let d = 0; d < rh; d += .5) { const wd = (w + 2.4) * (d / rh); R(hx + w / 2 - wd / 2, hy - rh + d, wd, .55, rf); R(hx + w / 2, hy - rh + d, wd / 2, .55, 'rgba(0,0,0,.2)') } R(hx + w * .4, hy + h * .45, w * .2, h * .55, '#5b3d2a'); R(hx + w * .12, hy + h * .28, w * .2, h * .22, GL) };
         [[1, 62, 9, 8], [12, 65, 8, 7], [22, 63, 9, 8], [33, 67, 7, 6], [60, 67, 7, 6], [70, 63, 9, 8], [81, 65, 8, 7], [91, 62, 9, 8], [6, 70, 8, 6], [78, 70, 8, 6]].forEach((q, i) => house(q[0], q[1] + 4, q[2], q[3], roofs[i % 4], walls[i % 3]));
-        [[40, 74], [60, 74], [28, 76], [68, 76]].forEach(q => { x.fillStyle = '#5a3d26'; x.fillRect(q[0] - .5, q[1] - 3, 1, 4); x.fillStyle = '#2f7a3a'; x.beginPath(); x.arc(q[0], q[1] - 4.6, 3.4, 0, 7); x.fill(); x.fillStyle = 'rgba(190,230,120,.35)'; x.beginPath(); x.arc(q[0] - 1, q[1] - 5.4, 1.9, 0, 7); x.fill() });
-        x.restore();
+        [[40, 74], [60, 74], [28, 76], [68, 76]].forEach(q => tree(x, ox + q[0] * u, oy + q[1] * u, Math.max(1, Math.round(u * .45)), TP))
       }
-
-      /* ---------- Tanaman daun untuk ladang ---------- */
-      function mkPlant(seed, c0, c1) {
-        const c = mk(190, 150), x = c.getContext('2d'), r = rng(seed), n = 9, ls = [];
-        for (let i = 0; i < n; i++) { const a = (-1 + 2 * (i / (n - 1))) * .85 + (r() - .5) * .18; ls.push({ a, len: 68 + r() * 44 * (1 - Math.abs(a) * .35), wd: 14 + r() * 9 }) }
-        ls.sort((p, q) => Math.abs(q.a) - Math.abs(p.a)).forEach(l => {
-          x.save(); x.translate(95, 146); x.rotate(l.a);
-          const g = x.createLinearGradient(0, 0, 0, -l.len); g.addColorStop(0, c0); g.addColorStop(1, c1); x.fillStyle = g;
-          x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(-l.wd, -l.len * .45, 0, -l.len); x.quadraticCurveTo(l.wd, -l.len * .45, 0, 0); x.fill();
-          x.strokeStyle = 'rgba(255,255,255,.28)'; x.lineWidth = 1.3; x.beginPath(); x.moveTo(0, -4); x.lineTo(0, -l.len * .88); x.stroke(); x.restore();
-        });
-        return c;
+      function mkPlant(seed, dk, lt, z) {
+        const c = mk(z * 2, Math.ceil(z * 1.6)), x = c.getContext('2d'), r = rng(seed), cx = z, bs = c.height - 1, L = [];
+        for (let i = 0; i < 7; i++) { const a = (-1 + 2 * i / 6) * .9 + (r() - .5) * .2; L.push([a, z * (.85 + r() * .5) * (1 - Math.abs(a) * .3)]) }
+        L.sort((p, q) => Math.abs(q[0]) - Math.abs(p[0])).forEach(([a, len]) => { for (let j = 0; j < len; j++) { const px = Math.round(cx + Math.sin(a) * j), py = Math.round(bs - Math.cos(a) * j), w = Math.round(Math.sin(Math.PI * Math.min(1, j / len)) * z * .14 + .5); x.fillStyle = dk; x.fillRect(px - w, py, 2 * w + 1, 1); if (w > 1) { x.fillStyle = lt; x.fillRect(px - w + 1, py, 2 * w - 1, 1) } } }); return c
       }
-
-      /* ---------- Bangun semua aset sesuai ukuran layar ---------- */
       function build() {
-        W = cv.width = innerWidth; H = cv.height = innerHeight; const u8 = H / 800, r = rng(11);
-        A = { clouds: [], birds: [], leaves: [], flags: [] };
-        A.cl = [0, 1, 2, 3].map(i => mkCloud(rng(100 + i)));
-        [[.55, .3, .55, .78, 12], [.8, .55, 1, .9, 16], [1.2, 1, 1.7, .97, 22]].forEach(([f, a, b, al, n]) => { for (let i = 0; i < n; i++) A.clouds.push({ v: Math.floor(r() * 4), x: r() * (W + 700), wy: r() * (f > 1 ? 1.05 : 1.25) * H, sc: a + r() * (b - a), f, sp: 4 + r() * 10 * f, a: al * (.85 + r() * .15) }) });
+        SC = Math.max(2, Math.round(innerHeight / 340)); W = cv.width = Math.ceil(innerWidth / SC); H = cv.height = Math.ceil(innerHeight / SC);
+        cv.style.cssText = 'position:absolute;left:0;top:0;display:block;image-rendering:pixelated;width:' + W * SC + 'px;height:' + H * SC + 'px'; ctx.imageSmoothingEnabled = false;
+        tcv.width = innerWidth; tcv.height = innerHeight;
+        const u8 = H / 340, r = rng(11); A = { clouds: [], birds: [], leaves: [], flags: [] };
+        A.sky = mkSky(Math.ceil(1.65 * H));
+        A.cl = [.6, .9, 1.35].map((k, i) => [0, 1, 2].map(v => mkCloud(rng(100 + i * 9 + v), k)));
+        [[.55, .3, 0, .8, 12], [.8, .55, 1, .9, 16], [1.2, 1, 2, .96, 22]].forEach(([f, a, ki, al, n]) => { for (let i = 0; i < n; i++)A.clouds.push({ v: r() * 3 | 0, k: ki, x: r() * (W + 300), wy: r() * (f > 1 ? 1.05 : 1.25) * H, f, sp: (1 + r() * 3) * f, a: al * (.88 + r() * .12) }) });
         A.clouds.sort((p, q) => p.f - q.f);
-        for (let i = 0; i < 7; i++) A.birds.push({ x: r() * (W + 300), wy: (.5 + r() * .65) * H, ph: r() * 6, sp: 40 + r() * 30 });
-        for (let i = 0; i < 28; i++) A.leaves.push({ x: r() * W, y: r() * H, vx: 40 + r() * 90, vy: 8 + r() * 30, s: (4 + r() * 6) * Math.max(.8, u8), rot: r() * 6, vr: (r() - .5) * 4, ph: r() * 6, col: ['#6cbf3f', '#8bd04a', '#4f9d34', '#b8cc4a', '#d6b43c'][Math.floor(r() * 5)] });
-        // pegunungan jauh
+        for (let i = 0; i < 7; i++)A.birds.push({ x: r() * (W + 120), wy: (.5 + r() * .65) * H, ph: r() * 6, sp: 14 + r() * 10 });
+        for (let i = 0; i < 20; i++)A.leaves.push({ x: r() * W, y: r() * H, vx: 16 + r() * 34, vy: 4 + r() * 12, rot: r() * 6, ph: r() * 6, col: ['#74b84a', '#8fc552', '#5aa23a', '#b5c552', '#cfae45'][r() * 5 | 0] });
         {
           const M = Math.round(.2 * H), c = mk(W, M + .6 * H), x = c.getContext('2d'), R1 = ridge(31, .12 * H), R2 = ridge(77, .09 * H);
-          [[R2, '#b9cde2', '#d8e6f2', 1.1], [R1, '#9db9d6', '#c9dcec', 1]].forEach(([R, c0, c1, k]) => {
-            const g = x.createLinearGradient(0, M - .15 * H, 0, M + .3 * H); g.addColorStop(0, c0); g.addColorStop(1, c1); x.fillStyle = g; x.beginPath(); x.moveTo(0, c.height);
-            for (let px = 0; px <= W; px += 3) x.lineTo(px, M - .06 * H * k - Math.abs(R(px * 1.6)) * 1.15 - R(px) * .3); x.lineTo(W, c.height); x.closePath(); x.fill();
-          });
-          A.mount = { cv: c, M };
+          [[R2, '#b6cae1', '#a5bbd7', 1.1], [R1, '#9ab5d4', '#89a6c9', 1]].forEach(([R, c0, c1, k]) => { for (let px = 0; px < W; px++) { const top = Math.round(M - .06 * H * k - Math.abs(R(px * 1.6)) * 1.15 - R(px) * .3); x.fillStyle = c0; x.fillRect(px, top, 1, c.height - top); x.fillStyle = c1; x.fillRect(px, top + Math.round(.1 * H), 1, c.height); if (px & 1) x.fillRect(px, top + Math.round(.1 * H) - 2, 1, 2); x.fillStyle = '#d6e4f3'; x.fillRect(px, top, 1, 1) } });
+          A.mount = { cv: c, M }
         }
-        // bukit A (tempat kerajaan)
         {
-          const cw = Math.max(300, Math.min(W * .4, H * .9)), ch = cw * .84, cx = W * .64, M = Math.round(ch + .06 * H);
+          const cw = Math.max(150, Math.min(W * .4, H * .9)), ch = cw * .84, cx = W * .64, M = Math.round(ch + .06 * H);
           A.A = mkHill({
-            seed: 5, amp: .03 * H, M, c0: '#86bf86', c1: '#6fae6a', rim: 'rgba(210,245,190,.55)', bump: { x: cx, h: .05 * H, w: W * .2 }, plateau: { x: cx, hw: cw * .62, ramp: cw * .4 },
+            seed: 5, amp: .03 * H, M, cols: ['#d2f0bc', '#86bf86', '#79b676', '#6aa868'], bump: { x: cx, h: .05 * H, w: W * .2 }, plateau: { x: cx, hw: cw * .62, ramp: cw * .4 },
             extra: (x, ry) => {
-              const yb = ry(cx), gY = yb + 4, x0 = cx - cw * .6, x1 = cx + cw * .6, dp = .3 * cw;
-              {
-                x.save();
-                // bayangan jatuh di kaki tembok
-                const sg = x.createLinearGradient(0, gY, 0, gY + .05 * cw); sg.addColorStop(0, 'rgba(20,50,30,.38)'); sg.addColorStop(1, 'rgba(20,50,30,0)');
-                x.fillStyle = sg; x.fillRect(cx - cw * .47, gY, cw * .94, .05 * cw); x.restore();
-              }
-              // jalan berliku dari gerbang
-              x.save(); x.globalCompositeOperation = 'source-atop'; x.fillStyle = '#e4d3a0'; x.beginPath();
-              const pts = []; for (let i = 0; i <= 14; i++) { const t = i / 14; pts.push([cx + Math.sin(t * 3.4) * W * .06 * t, yb + 2 + t * .2 * H, 2 + t * 16 * u8]) }
-              pts.forEach(q => x.lineTo(q[0] - q[2], q[1])); for (let i = pts.length - 1; i >= 0; i--) x.lineTo(pts[i][0] + pts[i][2], pts[i][1]); x.closePath(); x.fill(); x.restore();
-              const rr = rng(9); for (let k = 0; k < 40; k++) { const px = rr() * W, py = ry(px) + 6 + rr() * .1 * H; if (Math.abs(px - cx) > cw * .46) tree(x, px, py, .9 * u8 + rr() * .6, '#2f7a3a') }
-              const fl = []; drawCastle(x, cx - cw / 2, yb - .905 * ch + 4, cw, fl); A.flags = fl;
+              const yb = ry(cx), rr = rng(9); F(x, 'rgba(20,50,30,.35)', cx - cw * .47, yb + 4, cw * .94, .04 * cw);
+              x.save(); x.globalCompositeOperation = 'source-atop'; const n = Math.round(.2 * H); for (let i = 0; i <= n; i++) { const t = i / n, c0 = cx + Math.sin(t * 3.4) * W * .06 * t, hw = Math.round(2 + t * 16 * u8); x.fillStyle = '#dcc994'; x.fillRect(Math.round(c0 - hw), yb + 2 + i, hw * 2, 1); x.fillStyle = '#b9a56e'; x.fillRect(Math.round(c0 - hw), yb + 2 + i, 1, 1); x.fillRect(Math.round(c0 + hw - 1), yb + 2 + i, 1, 1) } x.restore();
+              tufts(x, ry, rr, 70, '#a9d99a', .12 * H); for (let k = 0; k < 40; k++) { const px = rr() * W, py = ry(px) + 6 + rr() * .1 * H; if (Math.abs(px - cx) > cw * .46) tree(x, px, py, Math.max(1, Math.round(.9 * u8 + rr() * .6)), TP) }
+              const fl = []; drawCastle(x, cx - cw / 2, yb - .905 * ch + 4, cw, fl); A.flags = fl
             }
-          });
+          })
         }
-        // bukit B (petak ladang + pohon)
         A.B = mkHill({
-          seed: 13, amp: .04 * H, M: Math.round(.14 * H), c0: '#6cae55', c1: '#58993f', rim: 'rgba(200,240,150,.5)',
-          extra: (x, ry, M) => {
-            const rr = rng(21), cols = ['#8cc152', '#a4c64a', '#6aa84f', '#c9c957', '#7fb844']; x.save(); x.globalCompositeOperation = 'source-atop';
-            for (let k = 0; k < 90; k++) { const px = rr() * W, py = M + rr() * .5 * H, w = 40 + rr() * 90, h = 10 + rr() * 22, sk = (rr() - .5) * 26; x.fillStyle = cols[k % 5]; x.globalAlpha = .55; x.beginPath(); x.moveTo(px, py); x.lineTo(px + w, py + sk * .2); x.lineTo(px + w + sk, py + h); x.lineTo(px + sk, py + h); x.closePath(); x.fill() }
-            x.restore();
-            for (let k = 0; k < 70; k++) { const px = rr() * W, py = ry(px) + 8 + rr() * .2 * H; tree(x, px, py, (.7 + rr() * .7) * Math.max(.8, u8), '#2c7536') }
+          seed: 13, amp: .04 * H, M: Math.round(.14 * H), cols: ['#c8ec9c', '#6cae55', '#60a04a', '#55943f'], extra: (x, ry, M) => {
+            const rr = rng(21), cs = ['#8cc152', '#a4c64a', '#6aa84f', '#c9c957', '#7fb844'];
+            for (let k = 0; k < 60; k++) { const px = rr() * W, py = M + 10 + rr() * .45 * H, w = 14 + rr() * 34, h = 4 + rr() * 8; x.save(); x.globalCompositeOperation = 'source-atop'; x.globalAlpha = .6; x.fillStyle = cs[k % 5]; x.fillRect(Math.round(px), Math.round(py), Math.round(w), Math.round(h)); x.fillStyle = 'rgba(40,80,30,.5)'; x.fillRect(Math.round(px), Math.round(py + h), Math.round(w), 1); x.restore() }
+            tufts(x, ry, rr, 90, '#9dd47a', .4 * H); for (let k = 0; k < 70; k++) { const px = rr() * W, py = ry(px) + 8 + rr() * .2 * H; tree(x, px, py, Math.max(1, Math.round((.7 + rr() * .7) * Math.max(.8, u8))), TP) }
           }
         });
-        // bukit C (paling depan)
         A.C = mkHill({
-          seed: 29, amp: .05 * H, M: Math.round(.14 * H), c0: '#5ba544', c1: '#3f8a2f', rim: 'rgba(190,240,140,.55)',
-          extra: (x, ry, M) => {
-            const rr = rng(33); for (let k = 0; k < 220; k++) { const px = rr() * W, py = ry(px) + 6 + rr() * .4 * H; x.fillStyle = k % 3 ? '#fff4a8' : '#ffffff'; x.globalAlpha = .75; x.fillRect(px, py, 2, 2) } x.globalAlpha = 1;
-            for (let k = 0; k < 28; k++) { const px = rr() * W, py = ry(px) + 10 + rr() * .12 * H; tree(x, px, py, (1 + rr() * .8) * Math.max(.8, u8), '#256a2e') }
+          seed: 29, amp: .05 * H, M: Math.round(.14 * H), cols: ['#c2eba4', '#5ba544', '#4f9a3b', '#43902f'], extra: (x, ry) => {
+            const rr = rng(33); tufts(x, ry, rr, 110, '#8fd070', .4 * H);
+            for (let k = 0; k < 120; k++) { const px = rr() * W | 0, py = ry(px) + 6 + (rr() * .4 * H | 0); x.fillStyle = k % 3 ? '#fff0a0' : '#f4f8ec'; x.fillRect(px, py, 1, 1) } for (let k = 0; k < 28; k++) { const px = rr() * W, py = ry(px) + 10 + rr() * .12 * H; tree(x, px, py, Math.max(1, Math.round((1 + rr() * .8) * Math.max(.8, u8))), ['#1f5a2a', '#2f7a38', '#6bb352']) }
           }
         });
-        // tanaman daun (3 varian warna)
-        A.plants = [mkPlant(1, '#1f6b34', '#58b24a'), mkPlant(2, '#3f7d2a', '#a3cf5a'), mkPlant(3, '#185e3a', '#4fae6d')];
-        // rumput depan
-        A.grass = [[], []]; const gr = rng(77), nb = Math.ceil(W / 7);
-        for (let L = 0; L < 2; L++) for (let i = 0; i < nb * (L ? 1 : 1.3); i++) A.grass[L].push({ x: gr() * (W + 40) - 20, o: (L ? .13 : .035) * H + gr() * .035 * H, h: (L ? .09 : .06) * H * (.55 + gr() * .9), w: (L ? 7 : 5) * Math.max(.8, u8) * (.7 + gr() * .8), ph: gr() * 6, lean: (gr() - .5) * .5, t: gr() });
+        A.plants = [[[1, '#1f6b34', '#58b24a'], [2, '#3f7d2a', '#a3cf5a'], [3, '#185e3a', '#4fae6d']].map(a => [7, 13, 24].map(z => mkPlant(a[0] + z, a[1], a[2], z)))];
+        A.plants = A.plants[0]; A.grass = [[], []]; const gr = rng(77);
+        for (let L = 0; L < 2; L++)for (let i = 0; i < Math.ceil(W / (L ? 3.8 : 3)); i++)A.grass[L].push({ x: gr() * (W + 8) - 4 | 0, o: Math.round((L ? .13 : .035) * H + gr() * .035 * H), h: Math.round((L ? .09 : .06) * H * (.55 + gr() * .9)), w: gr() > (L ? .55 : .75) ? 2 : 1, ph: gr() * 6, lean: gr() - .5 })
       }
-
-      /* ---------- Gambar tiap frame ---------- */
-      function drawClouds(S, time, f0, f1, fade) {
-        const k = H / 800;
-        A.clouds.forEach(c => {
-          if (c.f < f0 || c.f >= f1) return;
-          const cw = 420 * c.sc * k, chh = 200 * c.sc * k, span = W + cw * 2, x = ((c.x + c.sp * time) % span) - cw, y = c.wy - S * c.f - chh * .6;
-          if (y > H || y + chh < 0) return; ctx.globalAlpha = c.a * fade; ctx.drawImage(A.cl[c.v], x, y, cw, chh);
-        }); ctx.globalAlpha = 1;
-      }
-      function layer(L, wy, f, S) { const y = wy * H - L.M - S * f; if (y > H || y + L.h < 0) return y; ctx.drawImage(L.cv, 0, y); return y }
-      function haze(y, a, h) { const g = ctx.createLinearGradient(0, y - h, 0, y + h); g.addColorStop(0, 'rgba(225,240,255,0)'); g.addColorStop(.5, 'rgba(225,240,255,' + a + ')'); g.addColorStop(1, 'rgba(225,240,255,0)'); ctx.fillStyle = g; ctx.fillRect(0, y - h, W, h * 2) }
+      function drawClouds(S, time, f0, f1, fade) { A.clouds.forEach(c => { if (c.f < f0 || c.f >= f1) return; const im = A.cl[c.k][c.v], span = W + im.width * 2, x = Math.round(((c.x + c.sp * time) % span) - im.width), y = Math.round(c.wy - S * c.f - im.height * .6); if (y > H || y + im.height < 0) return; ctx.globalAlpha = c.a * fade; ctx.drawImage(im, x, y) }); ctx.globalAlpha = 1 }
+      function layer(L, wy, f, S) { const y = Math.round(wy * H - L.M - S * f); if (y > H || y + L.h < 0) return y; ctx.drawImage(L.cv, 0, y); return y }
+      function haze(y, a, h) { y = Math.round(y);[.2, .5, 1, .5, .2].forEach((k, i) => { ctx.fillStyle = 'rgba(225,240,255,' + a * k + ')'; ctx.fillRect(0, y - h + Math.round(i * h * .4), W, Math.round(h * .4) + 1) }) }
       function drawField(S, time) {
-        const top = WY.field * H - S * F.field, Fh = 1.7 * H; if (top > H) return;
-        const g = ctx.createLinearGradient(0, top, 0, top + Fh), fadeP = Math.min(1, .07 * H / Fh);
-        g.addColorStop(0, 'rgba(120,184,90,0)'); g.addColorStop(fadeP, 'rgba(112,178,84,1)'); g.addColorStop(.4, '#5c9a3c'); g.addColorStop(1, '#3f7a2a'); ctx.fillStyle = g; ctx.fillRect(0, Math.max(0, top), W, H - Math.max(0, top));
-        const N = 26, u8 = H / 800;
-        for (let i = 0; i < N; i++) {
-          const ty = Math.pow((i + 1) / N, 1.9), y = top + Fh * ty, sc = (.25 + 3.4 * ty) * u8, ph = sc * 38;
-          if (y < -10 || y - ph > H + 40) continue; if (y - ph * 1.3 > H) continue;
-          ctx.fillStyle = 'rgba(70,46,24,' + (.1 + .28 * cl(sc)) + ')'; ctx.fillRect(0, y - sc * 1, W, sc * 5);
-          const sp = 24 * sc;
-          if (sc < .9) {   // lapisan jauh: pita hijau sederhana
-            for (let x = ((i & 1) * sp) % (sp * 2) - sp * 2; x < W; x += sp * 2) { const j = Math.floor((x - W / 2) / (sp * 2)); ctx.fillStyle = ['#2f7d3a', '#8fbf4a', '#2a6f46'][((Math.floor(j / 3) % 3) + 3) % 3]; ctx.globalAlpha = .85; ctx.fillRect(x, y - sc * 8, sp * 1.1, sc * 8) }
-            ctx.globalAlpha = 1; continue;
-          }
-          const half = (i & 1) * .5, j0 = Math.floor((-(W / 2) - 200) / sp) - 1, j1 = Math.ceil((W / 2 + 200) / sp) + 1, k = ph / 115;
-          for (let j = j0; j <= j1; j++) {
-            const x = W / 2 + (j + half) * sp; if (x < -ph || x > W + ph) continue;
-            const v = ((Math.floor(j / 5) % 3) + 3) % 3, sw = Math.sin(time * 1.6 + x * .01 + i * .7) * .05;
-            ctx.save(); ctx.translate(x, y); ctx.rotate(sw); ctx.drawImage(A.plants[v], -95 * k, -146 * k, 190 * k, 150 * k); ctx.restore();
-          }
+        const top = Math.round(WY.field * H - S * F2.field), Fh = 1.7 * H; if (top > H) return; ctx.fillStyle = '#6aab4e'; ctx.fillRect(0, Math.max(0, top), W, H);
+        const N = 16; for (let i = 0; i < N; i++) {
+          const ty = Math.pow((i + 1) / N, 1.9), y = Math.round(top + Fh * ty), y1 = Math.round(top + Fh * Math.pow((i + 2) / N, 1.9)); if (y > H + 4 || y1 < -4) continue;
+          ctx.fillStyle = i & 1 ? '#5f9e46' : '#68a94c'; ctx.fillRect(0, y, W, y1 - y); ctx.fillStyle = '#3f6e2c'; ctx.fillRect(0, y1 - 1, W, ty > .5 ? 2 : 1);
+          const cls = ty < .22 ? 0 : ty < .55 ? 1 : 2, z = [7, 13, 24][cls], sp = Math.round(z * 1.9); if (y1 - z * 1.6 > H) continue;
+          for (let x = -(i & 1) * (sp >> 1) - sp, j = 0; x < W + sp; x += sp, j++) { const v = ((Math.floor(j / 4) % 3) + 3) % 3, sw = cls == 2 ? Math.round(Math.sin(time * 1.6 + x * .02 + i * .7) * .9) : 0; ctx.drawImage(A.plants[v][cls], x - z + sw, y1 - Math.ceil(z * 1.6) + 1) }
         }
       }
+      /* rumput depan: helai pixel 3 nada, goyang pelan per langkah 1 piksel (tidak berkedip) */
       function drawGrass(S, time) {
-        const y0 = GW * H - S * F.grass; if (y0 > H + 4) return;
-        const cols = [['#17491f', '#2f7d2c', '#6fb94a'], ['#103d1b', '#2b7a30', '#8fd05a']];
-        ctx.save();
+        const y0 = Math.round(GW * H - S * F2.grass); if (y0 > H + 4) return; const cols = [['#1b5224', '#32823a', '#6fb94d'], ['#154520', '#2d7a33', '#86c657']];
         for (let L = 0; L < 2; L++) {
-          const fy = y0 + (L ? .17 : .075) * H, g0 = ctx.createLinearGradient(0, fy, 0, H);   // tanah solid di bawah pangkal helai
-          g0.addColorStop(0, cols[L][0]); g0.addColorStop(1, L ? '#0a2a15' : '#0d321a');
-          ctx.fillStyle = g0; ctx.fillRect(0, fy, W, H - fy + 2);
+          const c = cols[L], fy = y0 + Math.round((L ? .13 : .035) * H); ctx.fillStyle = c[0]; ctx.fillRect(0, fy, W, H - fy + 2);
           A.grass[L].forEach(b => {
-            const by = y0 + b.o; if (by - b.h > H) return;
-            const sw = Math.sin(time * 1.8 + b.ph + b.x * .008) * b.h * .13 + b.lean * b.h, tx = b.x + sw, ty = by - b.h, ext = .12 * H;
-            const g = ctx.createLinearGradient(0, by, 0, ty), c = cols[L]; g.addColorStop(0, c[0]); g.addColorStop(.5, c[1]); g.addColorStop(1, c[2]);
-            ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(b.x - b.w, by + ext);
-            ctx.lineTo(b.x - b.w, by);
-            ctx.quadraticCurveTo(b.x - b.w * .4 + sw * .2, by - b.h * .55, tx, ty);
-            ctx.quadraticCurveTo(b.x + b.w * .5 + sw * .3, by - b.h * .5, b.x + b.w, by); ctx.lineTo(b.x + b.w, by + ext); ctx.closePath(); ctx.fill();
-          });
+            const by = y0 + b.o; if (by - b.h > H) return; const bend = Math.round(Math.sin(time * 1.8 + b.ph + b.x * .02) * 1.4 + b.lean * 3), h = b.h;
+            for (let k = -3; k < h; k++) { const q = Math.max(0, k) / h, dx = Math.round(bend * q * q * 2); ctx.fillStyle = q < .35 ? c[0] : q < .72 ? c[1] : c[2]; ctx.fillRect(b.x + dx, by - k, k > h - 3 ? 1 : b.w, 1) }
+          })
         }
-        ctx.restore();
       }
       function drawFlags(S, time) {
-        const y0 = WY.A * H - A.A.M - S * F.A; if (y0 > H || y0 + A.A.M < -20) return;
-        A.flags.forEach(f => {
-          const x = f.x, y = y0 + f.y, s = f.s, w = Math.sin(time * 4 + f.x) * 1.4 * s;
-          ctx.strokeStyle = '#5b4a3a'; ctx.lineWidth = Math.max(1, s * .5); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 7 * s); ctx.stroke();
-          ctx.fillStyle = '#d6403f'; ctx.beginPath(); ctx.moveTo(x, y - 7 * s); ctx.quadraticCurveTo(x + 4 * s, y - 7.8 * s + w, x + 8 * s, y - 6.4 * s + w * 1.3); ctx.quadraticCurveTo(x + 4 * s, y - 4.6 * s + w, x, y - 4 * s); ctx.closePath(); ctx.fill();
-        });
+        const y0 = Math.round(WY.A * H - A.A.M - S * F2.A); if (y0 > H || y0 + A.A.M < -20) return;
+        A.flags.forEach(f => { const x = Math.round(f.x), y = y0 + Math.round(f.y); ctx.fillStyle = '#5b4a3a'; ctx.fillRect(x, y - 9, 1, 9); for (let i = 0; i < 7; i++) { const o = Math.round(Math.sin(time * 4 + f.x + i * .8) * 1.2 * (i / 6)); ctx.fillStyle = '#c9453f'; ctx.fillRect(x + 1 + i, y - 9 + o, 1, 4 - (i > 4 ? 1 : 0)); ctx.fillStyle = '#e3665b'; ctx.fillRect(x + 1 + i, y - 9 + o, 1, 1) } })
       }
-      function drawBirds(S, time) {
-        const k = H / 800; ctx.strokeStyle = 'rgba(40,52,76,.85)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
-        A.birds.forEach(b => {
-          const x = ((b.x + b.sp * time) % (W + 240)) - 120, y = b.wy - S * .9 + Math.sin(time * 1.3 + b.ph) * 8 * k; if (y < -20 || y > H + 20) return;
-          const f = Math.sin(time * 9 + b.ph) * 5 * k, s = 8 * k; ctx.beginPath(); ctx.moveTo(x - s, y - f); ctx.quadraticCurveTo(x - s * .4, y - s * .45 - f * .3, x, y); ctx.quadraticCurveTo(x + s * .4, y - s * .45 - f * .3, x + s, y - f); ctx.stroke();
-        });
-      }
+      function drawBirds(S, time) { ctx.fillStyle = '#2a3550'; A.birds.forEach(b => { const x = Math.round(((b.x + b.sp * time) % (W + 60)) - 30), y = Math.round(b.wy - S * .9 + Math.sin(time * 1.3 + b.ph) * 3); if (y < -6 || y > H + 6) return; const up = (time * 5 + b.ph | 0) & 1; (up ? [[-3, -1], [-2, 0], [-1, 0], [0, 1], [1, 0], [2, 0], [3, -1]] : [[-3, 0], [-2, -1], [-1, 0], [0, 1], [1, 0], [2, -1], [3, 0]]).forEach(p => ctx.fillRect(x + p[0], y + p[1], 1, 1)) }) }
       function drawLeaves(dt, time, a) {
-        if (a <= .01) return;
-        A.leaves.forEach(l => {
-          l.x += l.vx * dt; l.y += (l.vy + Math.sin(time * 2 + l.ph) * 22) * dt; l.rot += l.vr * dt;
-          if (l.x > W + 20) { l.x = -20; l.y = Math.random() * H } if (l.y > H + 20) l.y = -20;
-          ctx.save(); ctx.globalAlpha = a; ctx.translate(l.x, l.y); ctx.rotate(l.rot); ctx.scale(1, Math.abs(Math.cos(l.rot * .7)) * .6 + .4); ctx.fillStyle = l.col;
-          ctx.beginPath(); ctx.moveTo(-l.s, 0); ctx.quadraticCurveTo(0, -l.s * .8, l.s, 0); ctx.quadraticCurveTo(0, l.s * .8, -l.s, 0); ctx.fill();
-          ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-l.s, 0); ctx.lineTo(l.s * .8, 0); ctx.stroke(); ctx.restore();
-        });
+        if (a <= .01) return; ctx.globalAlpha = a;
+        A.leaves.forEach(l => { l.x += l.vx * dt; l.y += (l.vy + Math.sin(time * 2 + l.ph) * 9) * dt; l.rot += dt * 2; if (l.x > W + 6) { l.x = -6; l.y = Math.random() * H } if (l.y > H + 6) l.y = -6; const x = Math.round(l.x), y = Math.round(l.y); ctx.fillStyle = l.col; if ((l.rot | 0) & 1) { ctx.fillRect(x, y, 2, 1); ctx.fillRect(x + 1, y + 1, 2, 1) } else { ctx.fillRect(x, y + 1, 2, 1); ctx.fillRect(x + 1, y, 2, 1) } }); ctx.globalAlpha = 1
       }
       function frame(now) {
         if (done) return; raf = requestAnimationFrame(frame);
         const el = (now - t0) / 1000, dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now;
-        const sH = camS(el), S = sH * H, time = el;
-        // skip: pudar ke hitam lalu selesai
-        const sk = skipAt ? cl((now - skipAt) / 450) : 0;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        const zk = 1 + .16 * ez((el - 10.8) / 1.6);
-        ctx.translate(W / 2, H * .78); ctx.scale(zk, zk); ctx.translate(-W / 2, -H * .78);
-        // langit
-        const y1 = WY.mount * H - S * F.sky, g = ctx.createLinearGradient(0, -.35 * H - S * F.sky, 0, y1);
-        g.addColorStop(0, '#2563c7'); g.addColorStop(.35, '#4c93e6'); g.addColorStop(.7, '#8cc7f5'); g.addColorStop(1, '#d4ecff'); ctx.fillStyle = g; ctx.fillRect(-W, -H, W * 3, H * 3);
-        // matahari
-        {
-          const sx = W * .77, sy = .27 * H - S * F.sun, rr = .55 * H, sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, rr);
-          sg.addColorStop(0, 'rgba(255,252,230,.95)'); sg.addColorStop(.07, 'rgba(255,244,200,.8)'); sg.addColorStop(.25, 'rgba(255,236,180,.3)'); sg.addColorStop(1, 'rgba(255,230,170,0)');
-          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = sg; ctx.fillRect(sx - rr, sy - rr, rr * 2, rr * 2); ctx.restore();
+        const sH = camS(el), S = Math.round(sH * H), time = el, sk = skipAt ? cl((now - skipAt) / 450) : 0;
+        ctx.drawImage(A.sky, 0, Math.round(-.35 * H - S * F2.sky));
+        { const sx = Math.round(W * .77), sy = Math.round(.27 * H - S * F2.sun), r = Math.round(H * .06);[[r * 3.4, 'rgba(255,240,190,.10)'], [r * 2.4, 'rgba(255,240,190,.14)'], [r * 1.6, 'rgba(255,244,200,.22)'], [r, '#fff6d2']].forEach(a => disc(ctx, a[1], sx, sy, Math.round(a[0]))) }
+        drawClouds(S, time, 0, .7, 1); drawBirds(S, time);
+        { const y = Math.round(WY.mount * H - A.mount.M - S * F2.mount); if (y < H) ctx.drawImage(A.mount.cv, 0, y) }
+        haze(WY.mount * H - S * F2.mount + .02 * H, .45, Math.round(.05 * H)); drawClouds(S, time, .7, 1, 1);
+        layer(A.A, WY.A, F2.A, S); drawFlags(S, time); haze(WY.A * H - S * F2.A - .03 * H, .2, Math.round(.04 * H));
+        layer(A.B, WY.B, F2.B, S); layer(A.C, WY.C, F2.C, S); drawField(S, time);
+        drawClouds(S, time, 1, 9, 1 - cl((sH - .9) / .45)); drawGrass(S, time); drawLeaves(dt, time, cl((sH - .55) / .5) * .7);
+        tx.clearRect(0, 0, tcv.width, tcv.height); const TW = tcv.width, TH = tcv.height, ta = ez((el - .9) / 1.2) * (1 - ez((el - 4.4) / 1.2));
+        if (ta > .01) {
+          const fs = Math.max(26, Math.min(TW * .062, TH * .105)), px = TW * (TW > TH ? .27 : .5), py = TH * .3;
+          tx.save(); tx.globalAlpha = ta; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(8,20,60,.85)'; tx.shadowBlur = 20; tx.shadowOffsetY = 2; tx.lineJoin = 'round'; tx.strokeStyle = 'rgba(14,30,80,.55)';
+          if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fs * .1) + 'px';
+          tx.fillStyle = '#fff4d6'; tx.font = '700 ' + fs + 'px Cinzel, Georgia, "Times New Roman", serif'; tx.lineWidth = fs * .06; tx.strokeText('ECHOES', px, py); tx.fillText('ECHOES', px, py);
+          if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fs * .26) + 'px';
+          tx.font = '700 ' + fs * .42 + 'px Cinzel, Georgia, "Times New Roman", serif'; tx.fillStyle = '#ffe7ad'; tx.lineWidth = fs * .05; tx.strokeText('OF THE ABYSS', px, py + fs * .78); tx.fillText('OF THE ABYSS', px, py + fs * .78);
+          tx.shadowBlur = 0; const lw = fs * 2.4 * ez((el - 1.4) / 1.2); tx.fillStyle = 'rgba(246,217,154,.8)'; tx.fillRect(px - lw / 2, py + fs * 1.12, lw, 1.5); tx.restore()
         }
-        drawClouds(S, time, 0, .7, 1);
-        drawBirds(S, time);
-        { const y = WY.mount * H - A.mount.M - S * F.mount; if (y < H) ctx.drawImage(A.mount.cv, 0, y) }
-        haze(WY.mount * H - S * F.mount + .02 * H, .5, .1 * H);
-        drawClouds(S, time, .7, 1, 1);
-        layer(A.A, WY.A, F.A, S); drawFlags(S, time);
-        haze(WY.A * H - S * F.A - .03 * H, .22, .08 * H);
-        layer(A.B, WY.B, F.B, S);
-        layer(A.C, WY.C, F.C, S);
-        drawField(S, time);
-        drawClouds(S, time, 1, 9, 1 - cl((sH - .9) / .45));
-        drawGrass(S, time);
-        drawLeaves(dt, time, cl((sH - .55) / .5) * .7);
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        // vinyet halus
-        { const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .45, W / 2, H / 2, Math.max(W, H) * .78); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(8,16,40,.35)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H) }
-        // judul sinematik
-        {
-          const ta = ez((el - .9) / 1.2) * (1 - ez((el - 4.4) / 1.2));
-          if (ta > .01) {
-            const fs = Math.max(26, Math.min(W * .062, H * .105)), tx = W * (W > H ? .27 : .5), ty = H * .3;
-            ctx.save(); ctx.globalAlpha = ta; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(8,20,60,.85)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 2; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(14,30,80,.55)';
-            if ('letterSpacing' in ctx) ctx.letterSpacing = Math.round(fs * .1) + 'px';
-            ctx.fillStyle = '#fff4d6'; ctx.font = '700 ' + fs + 'px Cinzel, Georgia, "Times New Roman", serif'; ctx.lineWidth = fs * .06; ctx.strokeText('ECHOES', tx, ty); ctx.fillText('ECHOES', tx, ty);
-            if ('letterSpacing' in ctx) ctx.letterSpacing = Math.round(fs * .26) + 'px';
-            ctx.font = '700 ' + fs * .42 + 'px Cinzel, Georgia, "Times New Roman", serif'; ctx.fillStyle = '#ffe7ad'; ctx.lineWidth = fs * .05; ctx.strokeText('OF THE ABYSS', tx, ty + fs * .78); ctx.fillText('OF THE ABYSS', tx, ty + fs * .78);
-            ctx.shadowBlur = 0; const lw = fs * 2.4 * ez((el - 1.4) / 1.2); ctx.fillStyle = 'rgba(246,217,154,.8)'; ctx.fillRect(tx - lw / 2, ty + fs * 1.12, lw, 1.5);
-            ctx.restore();
-          }
-        }
-        // fade masuk di awal & fade hitam menuju menu
-        const bl = Math.max(ez((el - 11.2) / 1.2), sk, 1 - ez(el / .9));
-        if (bl > 0) { ctx.fillStyle = 'rgba(0,0,0,' + bl + ')'; ctx.fillRect(0, 0, W, H) }
+        const bl = Math.max(ez((el - 11.2) / 1.2), sk, 1 - ez(el / .9)); if (bl > 0) { ctx.fillStyle = 'rgba(0,0,0,' + bl + ')'; ctx.fillRect(0, 0, W, H) }
         if (el >= DUR || sk >= 1) finish();
       }
-
-      /* ---------- Selesai → tampilkan menu utama ---------- */
       function finish() {
         if (done) return; done = true; cancelAnimationFrame(raf); removeEventListener('resize', onResize); removeEventListener('keydown', onKey);
-        menu.classList.remove('hidden');                       // animasi muncul menu berjalan di bawah intro yang memudar
-        root.style.background = '#000'; root.style.pointerEvents = 'none'; root.style.transition = 'opacity .9s ease'; root.style.opacity = '0';
+        menu.classList.remove('hidden'); root.style.background = '#000'; root.style.pointerEvents = 'none'; root.style.transition = 'opacity .9s ease'; root.style.opacity = '0';
         setTimeout(() => { root.remove(); A = null }, 1000);
       }
       const skip = () => { if (!skipAt && !done) skipAt = performance.now() };
       const onKey = e => { if (e.code == 'Enter' || e.code == 'Space' || e.code == 'Escape') { e.preventDefault(); skip() } };
       const onResize = () => { clearTimeout(rz); rz = setTimeout(() => { if (!done) try { build() } catch (e) { } }, 200) };
-
-      try {
-        menu.classList.add('hidden'); build();
-        root.addEventListener('pointerdown', skip); addEventListener('keydown', onKey); addEventListener('resize', onResize);
-        t0 = last = performance.now(); raf = requestAnimationFrame(frame);
-      } catch (e) { console.error(e); done = false; finish() }
+      try { menu.classList.add('hidden'); build(); root.addEventListener('pointerdown', skip); addEventListener('keydown', onKey); addEventListener('resize', onResize); t0 = last = performance.now(); raf = requestAnimationFrame(frame) } catch (e) { console.error(e); done = false; finish() }
     })();
   </script>
 </body>
