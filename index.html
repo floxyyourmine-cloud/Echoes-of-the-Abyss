@@ -2210,7 +2210,7 @@
     }
     function hit(e, d, sx, sy, kb = 70) {
       if (e.sw > 0) return; if (e.k == 'dummy') return hitDummy(e, d, sx, sy, kb); const c = R() < .15; d *= c ? 2 : 1; SFX.hit(c); ultGain(Math.min(d, Math.max(0, e.hp))); e.hp -= d; e.stg += d * 1.2; e.fl = .1; const a = Math.atan2(e.y - sy, e.x - sx); e.vx = Math.cos(a) * kb; e.vy = Math.sin(a) * kb;
-      dn(e.x, e.y - 8, Math.round(d), c); impact(e, a, c); impact2(e, a, c); shake = Math.max(shake, c ? 5 : p.hn == 2 ? 4 : 2.5); HST = Math.max(HST, c || p.hn == 2 ? .05 : .02);
+      dn(e.x, e.y - 8, Math.round(d), c); impact(e, a, c); impact2(e, a, c); shake = Math.max(shake, c ? 5 : p.hn == 2 ? 4 : 2.5); if (!(wi == 1 && (p.dod > 0 && p.dsp > 0 || SG.rf > 0))) HST = Math.max(HST, c || p.hn == 2 ? .05 : .02);
       if (e.stg >= e.sg && !e.stun) { e.stun = 1.4; e.stg = 0; dn(e.x, e.y - 20, 'STAGGER', 0, '#ffd34d'); SFX.stagger() }
       if (e.hp <= 0) kill(e)
     }
@@ -2266,10 +2266,22 @@
       sk('Bulwark Counter', 10, .95, (a, m) => {
         SG.g = SG.gm = .7; SG.hits = 0; p.vx *= .25; p.vy *= .25;
         fx.push({ k: 'ring', x: p.x, y: p.y, r: 30, w: 3, life: .7, max: .7, col: '#ffe08a' }, { k: 'rune', x: p.x, y: p.y + 4, life: .7, max: .7, sc: 1.6, w: 2 });
+        // Setelah menahan, lepaskan serangan BERTUBI-TUBI: banyak tusukan cepat beruntun + tusukan penutup.
+        // Makin banyak pukulan yang diblok, makin banyak & makin kuat tusukannya.
         skLater(.7, () => {
-          const n = SG.hits, b = p.face, c = n > 0 ? Math.min(5, 2 + n) : 1, dm = (13 + 7 * Math.min(n, 4)) * m; SG.g = 0; SG.hits = 0; SG.bash = .3;
-          for (let i = 0; i < c; i++) { p.face = b + (i - (c - 1) / 2) * .36; melee(80, .42, dm, 190, { hn: 2, sd: 1, lg: i ? 0 : 70 }) } p.face = b;
-          if (n > 0) { ultSweep(60, 8 * n * m, 230); sgFlash(p.x, p.y, 18); shake = Math.max(shake, 7); fx.push({ k: 'ring', x: p.x, y: p.y, r: 66, w: 4, life: .4, max: .4, col: '#ff5a5a' }) }
+          const n = SG.hits, k = Math.min(n, 4), N = n > 0 ? 6 + 2 * k : 5, iv = .055, dm = (n > 0 ? 6 + 2 * k : 4.5) * m, T = N * iv; SG.g = 0; SG.hits = 0;
+          SG.bash = T + .25; SG.rf = T - .01; p.skb = Math.max(p.skb, T + .2);
+          fx.push({ k: 'ring', x: p.x, y: p.y, r: 24, w: 3, life: .3, max: .3, col: '#ffe08a' });
+          for (let i = 0; i < N; i++) skLater(i * iv, () => {
+            const b = p.face, q = b + (R() - .5) * .22; p.face = q;
+            melee(78 + R() * 10, .34, dm, 70, { hn: 0, sd: 1, lg: 14 });
+            dp.push({ k: 'l', x: p.x + Math.cos(q) * 46, y: p.y - 2 + Math.sin(q) * 46, a: q, len: 54 + R() * 22, w: 4, cc: i % 2 ? '#ffe08a' : '#ffb0a0', life: .13, max: .13 });
+            sgSpark(p.x + Math.cos(q) * 70, p.y + Math.sin(q) * 70, 3); shake = Math.max(shake, 2); p.face = b
+          });
+          skLater(T, () => {   // tusukan penutup yang menembus
+            melee(98, .5, dm * 2.4, 230, { hn: 2, sd: 1, lg: 60 }); shake = Math.max(shake, 6); sgFlash(p.x + Math.cos(p.face) * 50, p.y + Math.sin(p.face) * 50, 12);
+            if (n > 0) { ultSweep(60, 8 * n * m, 230); sgFlash(p.x, p.y, 18); shake = Math.max(shake, 7); fx.push({ k: 'ring', x: p.x, y: p.y, r: 66, w: 4, life: .4, max: .4, col: '#ff5a5a' }) }
+          })
         })
       }),
       sk('Wyrmfang Charge', 13, .75, (a, m) => {
@@ -2302,16 +2314,16 @@
       })
     ]];
     /* ===== REVAMP SPEAR: Crimson Dragon Aegis (perisai tema naga merah, dipegang tangan satunya) ===== */
-    const SG = { g: 0, gm: 0, hits: 0, bash: 0, fl: 0 };
+    const SG = { g: 0, gm: 0, hits: 0, bash: 0, fl: 0, bt: 1, rf: 0 };
     function sgSpark(x, y, n) { for (let i = 0; i < n; i++) { const q = R() * 6.283, v = 50 + R() * 110; dp.push({ k: 'p', x, y, vx: Math.cos(q) * v, vy: Math.sin(q) * v, life: .25 + R() * .2, max: .45, s: 1 + R() * 2, c: i % 2 ? '#ffe08a' : '#fff' }) } }
     function sgFlash(x, y, n) { sgSpark(x, y, n); fx.push({ k: 'ring', x, y, r: 30, w: 4, life: .3, max: .3, col: '#ffe08a' }, { k: 'gl', x, y, r: 40, c: '255,200,120', life: .25, max: .25 }); SFX.hit(1) }
     const _hurtSG = hurt;
     hurt = function (d) {
-      if (SG.g > 0 && p.dead <= 0) { SG.hits = Math.min(6, SG.hits + 1); SG.fl = .22; sgFlash(p.x + Math.cos(p.face) * 14, p.y - 6 + Math.sin(p.face) * 14, 8); dn(p.x, p.y - 22, 'BLOCK', 0, '#ffe08a'); shake = Math.max(shake, 3); HST = Math.max(HST, .04); return }
+      if (SG.g > 0 && p.dead <= 0) { SG.hits = Math.min(6, SG.hits + 1); SG.fl = .22; sgFlash(p.x + Math.cos(p.face) * 14, p.y - 6 + Math.sin(p.face) * 14, 8); dn(p.x, p.y - 22, 'BLOCK', 0, '#ffe08a'); shake = Math.max(shake, 3); if (!(p.dod > 0 && p.dsp > 0)) HST = Math.max(HST, .04); return }
       return _hurtSG(d)
     };
     const _updSG = upd;
-    upd = function (dt) { SG.g = Math.max(0, SG.g - dt); SG.bash = Math.max(0, SG.bash - dt); SG.fl = Math.max(0, SG.fl - dt); if (p && p.dead > 0) { SG.g = 0; SG.hits = 0 } _updSG(dt) };
+    upd = function (dt) { const b0 = SG.bash; SG.g = Math.max(0, SG.g - dt); SG.bash = Math.max(0, SG.bash - dt); SG.fl = Math.max(0, SG.fl - dt); SG.rf = Math.max(0, SG.rf - dt); if (p && p.dead > 0) { SG.g = 0; SG.hits = 0 } _updSG(dt); if (SG.bash > b0) SG.bt = 0; else SG.bt += dt };
     function drawShield(x, y, sc, gk, fl) {
       g.save(); g.translate(Math.round(x), Math.round(y)); g.scale(sc, sc);
       const sh = () => { g.beginPath(); g.moveTo(-7, -8); g.quadraticCurveTo(0, -10.5, 7, -8); g.lineTo(7, 1); g.quadraticCurveTo(6, 8, 0, 12.5); g.quadraticCurveTo(-6, 8, -7, 1); g.closePath() };
@@ -2333,7 +2345,7 @@
     wpose = function () {
       const o = _wposeSG(); if (wi != 1) return o;
       const hs = HSd, f = p.face, cf = Math.cos(f), sf = Math.sin(f), s = hs >= 0 ? -1 : 1, bl = p.dod > 0 ? 1 : p.wb, bob = Math.abs(Math.sin(p.wph)) * 1.5 * bl + Math.sin(p.idt) * .5,
-        k = p.swing > 0 ? 1 : p.al, Cx = p.x + o.lx, Cy = p.y - 8 - bob + o.ly, H = HSH || { ox: p.x, oy: p.y - 12, st: 0 }, gk = SG.g > 0 ? 1 : 0, bk = Math.min(1, SG.bash / .25), fw = Math.max(gk, bk);
+        k = p.swing > 0 ? 1 : p.al, Cx = p.x + o.lx, Cy = p.y - 8 - bob + o.ly, H = { ox: Math.round(p.x + o.lx), oy: Math.round(p.y - 10 - bob + o.ly), st: Math.sin(p.wph) * bl }, gk = SG.g > 0 ? 1 : 0, bk = Math.min(1, SG.bash / .25, SG.bt / .07), fw = Math.max(gk, bk);
       const rx = H.ox + s * 10, ry = H.oy + 12 - Math.round(s * H.st * 1.5), bx = Cx + s * 8 + cf * 3, by = Cy + 3 + sf * 3, fx0 = p.x + cf * (9 + bk * 9), fy0 = p.y - 7 + sf * (9 + bk * 9);
       const hx = lp(lp(rx, bx, k), fx0, fw), hy = lp(lp(ry, by, k), fy0, fw), cx = hx + s * (fw > 0 ? 0 : 3.5), cy = hy + 1, sc = 1 + gk * .3 + bk * .15, old = o.fn;
       o.gr.push({ x: hx, y: hy, s }); o.fn = () => { if (old) old(); drawShield(cx, cy, sc, gk, SG.fl) };
@@ -2341,7 +2353,7 @@
     };
     // ===== EFEK TEBAL =====
     const WCL = ['110,175,255', '255,70,70', '150,255,120', '200,120,255', '255,120,100'], WCOL = ['#bfe4ff', '#ff8a8a', '#b6f08a', '#e6b8ff', '#ff9a8a']; let FLSH = 0, FLSC = '255,255,255', HST = 0;
-    function skCast(i) { FLSH = i == 2 ? .9 : .5; FLSC = WCL[wi]; shake = Math.max(shake, i == 2 ? 6 : 3); fx.push({ k: 'ring', x: p.x, y: p.y, r: i == 2 ? 38 : 26, w: wi == 2 || wi == 3 ? 3.5 : 1, life: .45, max: .45, col: 'rgb(' + WCL[wi] + ')' }); HST = Math.max(HST, i == 2 ? .07 : .04) }
+    function skCast(i) { FLSH = i == 2 ? .9 : .5; FLSC = WCL[wi]; shake = Math.max(shake, i == 2 ? 6 : 3); fx.push({ k: 'ring', x: p.x, y: p.y, r: i == 2 ? 38 : 26, w: wi == 2 || wi == 3 ? 3.5 : 1, life: .45, max: .45, col: 'rgb(' + WCL[wi] + ')' }); if (wi != 1) HST = Math.max(HST, i == 2 ? .07 : .04) }
     function pilFx(f, k) { const gr = g.createLinearGradient(0, f.y, 0, f.y - f.h); gr.addColorStop(0, 'rgba(' + f.c + ',' + k * .8 + ')'); gr.addColorStop(1, 'rgba(' + f.c + ',0)'); g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = gr; const w = f.w * (.4 + k * .6); g.fillRect(f.x - w / 2, f.y - f.h, w, f.h); g.fillStyle = 'rgba(255,255,255,' + k * .7 + ')'; g.fillRect(f.x - w / 6, f.y - f.h * .8, w / 3, f.h * .8); g.restore() }
     function gflame(q, k) { const a = 1 - k, r = q.s * (1.3 - a * .7), c1 = a < .25 ? '255,225,215' : a < .55 ? '255,90,70' : '200,25,25'; g.save(); g.globalCompositeOperation = 'lighter'; const gr = g.createRadialGradient(q.x, q.y, 0, q.x, q.y, r * 2); gr.addColorStop(0, 'rgba(' + c1 + ',' + k * .9 + ')'); gr.addColorStop(.5, 'rgba(255,60,40,' + k * .45 + ')'); gr.addColorStop(1, 'rgba(130,10,10,0)'); g.fillStyle = gr; g.beginPath(); g.arc(q.x, q.y, r * 2, 0, 7); g.fill(); g.restore() }
     function slashFx2(f, pg) {
@@ -3396,7 +3408,7 @@
     function dummyTick(e, dt) { e.fl -= dt; e.tv += (-e.tl * 140 - e.tv * 7) * dt; e.tl = Math.max(-.6, Math.min(.6, e.tl + e.tv * dt)) }
     function hitDummy(e, d, sx, sy, kb) {
       const c = R() < .15; d *= c ? 2 : 1; ultGain(d); SFX.hit(c); e.fl = .12; const a = Math.atan2(e.y - sy, e.x - sx); e.tv = Math.max(-9, Math.min(9, e.tv + Math.cos(a) * (c ? 7 : 4.5)));
-      dn(e.x, e.y - e.ht - 4, Math.round(d), c); impact(e, a, c); impact2(e, a, c); shake = Math.max(shake, c ? 4 : 1.8); HST = Math.max(HST, c ? .04 : .015);
+      dn(e.x, e.y - e.ht - 4, Math.round(d), c); impact(e, a, c); impact2(e, a, c); shake = Math.max(shake, c ? 4 : 1.8); if (!(wi == 1 && (p.dod > 0 && p.dsp > 0 || SG.rf > 0))) HST = Math.max(HST, c ? .04 : .015);
       if (t - DM.last > 3) { DM.t0 = t; DM.sum = 0; DM.n = 0; DM.max = 0 } DM.last = t; DM.sum += d; DM.n++; DM.max = Math.max(DM.max, d);
       for (let i = 0; i < 4; i++)dp.push({ k: 'p', x: e.x, y: e.y - 8, vx: (R() - .5) * 60, vy: -20 - R() * 40, life: .4, max: .4, s: 1.5 + R() * 1.5, c: i % 2 ? '#d8b878' : '#8a6a3a' })
     }
@@ -4461,7 +4473,8 @@
 
         // Kamera mendekati pintu setelah pintu terbuka.
         const zoomProgress = clamp((elapsed - 5.5) / 3.5, 0, 1);
-        const zoom = 1;   // zoom dimatikan: skala pecahan merusak kerapian piksel
+        const zoomEase = zoomProgress * zoomProgress * (3 - 2 * zoomProgress);
+        const zoom = 1 + zoomEase * .7;   // kamera mendekat ke pintu (smoothing piksel tetap mati, jadi tetap tajam)
 
         ctx.translate(W / 2, H / 2);
         ctx.scale(zoom, zoom);
@@ -6741,7 +6754,7 @@
       const ENT = { on: 0, t: 0, played: 0, sfx: 0, cl: 0, lo: -1 };
       const T_WALK0 = .6, T_WALK1 = 2.5, T_CLOSE = 1.9, T_END = 3.0, Y0 = 393, Y1 = 322;
       const SX = 274, SY = 330, SW = 92, SH = 70;
-      const ZB = CAM_Z, Z0 = 3.4;   // zoom dasar & zoom awal sinematik pintu (dekat ke pintu, lalu menjauh)
+      const ZB = CAM_Z, Z0 = ZB;   // zoom dasar; zoom awal disamakan (efek zoom saat masuk dihapus)
       const bak = document.createElement('canvas'); bak.width = SW; bak.height = SH; bak.getContext('2d').drawImage(BGL, SX, SY, SW, SH, 0, 0, SW, SH);
 
       /* pintu lobby dilukis langsung ke latar (di bawah player); o: 0 tertutup .. 1 terbuka penuh (sekaligus intensitas cahaya) */
