@@ -5362,29 +5362,156 @@
     const TO2 = [100, 200, 300, 400, 500, 600, 700].flatMap(x => [[x, 8], [x, DH - 7]]);
     const BR2 = [[40, 60], [40, DH - 60], [DW - 40, 60], [DW - 40, DH - 60]];
     const BGB = document.createElement('canvas'); BGB.width = DW; BGB.height = DH;
+    /* ===== LABIRIN MINOTAUR: arena batu pasir tua, perunggu, ukiran labirin & bukranion ===== */
     (function () {
-      const b = BGB.getContext('2d'); let sd = 5; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296;
-      b.fillStyle = '#120a10'; b.fillRect(0, 0, DW, DH);
-      const FL = ['#2a1620', '#301a26', '#25131c', '#2e1824'];
-      for (let y = 0; y < DH; y += 32) for (let x = 0; x < DW; x += 32) {
-        b.fillStyle = FL[Math.floor(r() * 4)]; b.fillRect(x + 1, y + 1, 30, 30);
-        b.fillStyle = 'rgba(255,255,255,.05)'; b.fillRect(x + 1, y + 1, 30, 1); b.fillRect(x + 1, y + 1, 1, 30);
-        b.fillStyle = 'rgba(0,0,0,.3)'; b.fillRect(x + 1, y + 30, 30, 1); b.fillRect(x + 30, y + 1, 1, 30);
+      const b = BGB.getContext('2d'); let sd = 7; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296;
+      const cx = DW / 2, cy = DY, TAU = Math.PI * 2, PI = Math.PI;
+      const BRZ = '#b8863b', BRZD = '#6a4a22', BONE = '#d9ccb0', BONED = '#a8987a';
+      const px = (x, y, w, h, c) => { b.fillStyle = c; b.fillRect(Math.round(x), Math.round(y), w, h) };
+      const arc = (x, y, rr, a0, a1, c, lw) => { b.strokeStyle = c; b.lineWidth = lw; b.beginPath(); b.arc(x, y, rr, a0, a1); b.stroke() };
+
+      /* kepala banteng (dipakai di lantai, banner, dinding) */
+      const bull = (x, y, s, hc, hl, sc, ss) => {
+        b.save(); b.translate(x, y); b.scale(s, s); b.lineCap = 'butt';
+        [-1, 1].forEach(d => {
+          b.strokeStyle = hc; b.lineWidth = 4; b.beginPath(); b.moveTo(d * 6, 0); b.quadraticCurveTo(d * 23, 3, d * 20, -13); b.stroke();
+          b.strokeStyle = hl; b.lineWidth = 2; b.beginPath(); b.moveTo(d * 20, -7); b.lineTo(d * 20, -13); b.stroke();
+        });
+        b.fillStyle = sc; b.fillRect(-6, -5, 12, 11); b.fillRect(-4, 6, 8, 7);
+        b.fillStyle = ss; b.fillRect(3, -5, 3, 11); b.fillRect(2, 6, 2, 7);
+        b.fillStyle = '#120a0a'; b.fillRect(-5, -1, 3, 3); b.fillRect(2, -1, 3, 3); b.fillRect(-2, 9, 1, 2); b.fillRect(1, 9, 1, 2);
+        b.restore();
+      };
+      const skullB = (x, y, s) => bull(x, y, s, BONE, '#fff4d8', '#d8ccb0', BONED);
+
+      /* 1. LANTAI: lempeng batu pasir tua yang aus */
+      px(0, 0, DW, DH, '#150e0c');
+      const FL = ['#3a2c27', '#41322b', '#34261f', '#3d2e26', '#46362c'];
+      for (let y = 0, j = 0; y < DH; y += 32, j++) for (let x = -(j % 2) * 24; x < DW; x += 48) {
+        px(x + 1, y + 1, 46, 30, FL[Math.floor(r() * 5)]);
+        px(x + 1, y + 1, 46, 1, 'rgba(255,230,190,.07)'); px(x + 1, y + 1, 1, 30, 'rgba(255,230,190,.05)');
+        px(x + 1, y + 30, 46, 1, 'rgba(0,0,0,.35)'); px(x + 46, y + 1, 1, 30, 'rgba(0,0,0,.3)');
+        for (let i = 0; i < 5; i++) px(x + 3 + r() * 40, y + 3 + r() * 26, 1 + (r() * 2 | 0), 1, r() < .5 ? 'rgba(0,0,0,.22)' : 'rgba(255,230,190,.07)');
       }
-      const cx = DW / 2, cy = DY; b.lineWidth = 2;
-      [[170, .5], [140, .4], [60, .35]].forEach(([rr, a]) => { b.strokeStyle = 'rgba(200,40,70,' + a + ')'; b.beginPath(); b.arc(cx, cy, rr, 0, 7); b.stroke() });
-      b.strokeStyle = 'rgba(200,40,70,.4)'; b.beginPath(); for (let i = 0; i < 5; i++) { const a = -1.5708 + i * 2.5133; b.lineTo(cx + Math.cos(a) * 140, cy + Math.sin(a) * 140) } b.closePath(); b.stroke();
-      for (let i = 0; i < 24; i++) { const a = i * .2618; b.fillStyle = 'rgba(255,90,110,.5)'; b.fillRect(cx + Math.cos(a) * 155 - 2, cy + Math.sin(a) * 155 - 1, 4, 3) }
-      blood(b, 300, 160, 12, 6); blood(b, 520, 330, 14, 6); blood(b, 650, 200, 10, 5); rubble(b, 120, 400); rubble(b, 700, 80); skulls(b, 90, 90); skulls(b, 720, 420);
-      const BC = ['#3a1f2c', '#42253a', '#351b28'];
-      const wall = (x, y, w, h, bw) => { b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip(); b.fillStyle = '#1a0d14'; b.fillRect(x, y, w, h); for (let j = 0, ry = y; ry < y + h; ry += 7, j++) for (let rx = x - (j % 2 ? bw / 2 : 0); rx < x + w; rx += bw) { b.fillStyle = BC[Math.floor(r() * 3)]; b.fillRect(rx + 1, ry + 1, bw - 1, 6); b.fillStyle = 'rgba(255,255,255,.07)'; b.fillRect(rx + 1, ry + 1, bw - 1, 1) } b.restore() };
-      WB().forEach(w => wall(w[0], w[1], w[2], w[3], 16));
-      b.fillStyle = '#7a2a44'; b.fillRect(14, 12, DW - 28, 2); b.fillRect(14, DH - 14, DW - 28, 2); b.fillRect(12, 14, 2, DH - 28); b.fillRect(DW - 14, 14, 2, DH - 28);
-      W2.slice(4).forEach(([x, y, w, h]) => { b.fillStyle = 'rgba(0,0,0,.4)'; b.fillRect(x + 3, y + 5, w, h); b.fillStyle = '#25151d'; b.fillRect(x, y, w, h); b.fillStyle = '#6a4458'; b.fillRect(x + 3, y + 3, w - 6, h - 6); b.fillStyle = '#9a6a82'; b.fillRect(x - 2, y - 2, w + 4, 6); b.fillRect(x - 2, y + h - 4, w + 4, 6) });
-      [150, 300, 450, 600, 750].forEach(x => banner(b, x, 14, '#5a1428', '#ff6a8a'));
-      TO2.forEach(([x, y]) => { b.fillStyle = '#14121f'; b.fillRect(x - 2, y - 1, 4, 6); b.fillStyle = '#6b5a44'; b.fillRect(x - 3, y - 2, 6, 2) });
-      BR2.forEach(([x, y]) => bzBase(b, x, y));
+      b.lineWidth = 1; b.strokeStyle = 'rgba(0,0,0,.5)';
+      for (let i = 0; i < 16; i++) { let x = 30 + r() * (DW - 60), y = 30 + r() * (DH - 60), a = r() * TAU; b.beginPath(); b.moveTo(x, y); for (let k = 0; k < 5; k++) { a += (r() - .5) * 1.2; x += Math.cos(a) * 9; y += Math.sin(a) * 9; b.lineTo(x, y) } b.stroke() }
+
+      /* 2. PITA MEANDER (kunci Yunani) mengelilingi arena */
+      const key = (x0, y0, len, ang) => {
+        b.save(); b.translate(x0, y0); b.rotate(ang);
+        px(0, 0, len, 12, '#1b1210'); px(0, 0, len, 1, BRZD); px(0, 11, len, 1, BRZD);
+        b.strokeStyle = BRZ; b.lineWidth = 1.5;
+        for (let i = 0; i + 12 <= len; i += 12) { b.beginPath(); b.moveTo(i + 1, 10); b.lineTo(i + 1, 2); b.lineTo(i + 10, 2); b.lineTo(i + 10, 8); b.lineTo(i + 4, 8); b.lineTo(i + 4, 5); b.lineTo(i + 7, 5); b.stroke() }
+        b.restore();
+      };
+      key(16, 16, DW - 32, 0); key(16, DH - 28, DW - 32, 0); key(28, 28, DH - 56, PI / 2); key(DW - 16, 28, DH - 56, PI / 2);
+
+      /* 3. JEJAK KAKI BANTENG dari pintu masuk menuju pusat */
+      for (let i = 0; i < 11; i++) { const x = 60 + i * 17, y = cy + (i % 2 ? 13 : -13) + Math.sin(i) * 3; px(x - 3, y - 4, 2, 7, 'rgba(0,0,0,.4)'); px(x + 1, y - 4, 2, 7, 'rgba(0,0,0,.4)'); px(x - 3, y - 4, 6, 1, 'rgba(0,0,0,.2)') }
+
+      /* 4. LABIRIN DI LANTAI: enam lingkar dengan celah berputar */
+      [176, 156, 136, 116, 96, 76].forEach((rr, k) => {
+        const a0 = k * 1.15 + .5, s = a0 + .3, e = a0 + TAU - .3;
+        arc(cx, cy + 2, rr, s, e, 'rgba(0,0,0,.55)', 5); arc(cx, cy, rr, s, e, BRZD, 4); arc(cx, cy - 1, rr, s, e, BRZ, 2);
+        [s, e].forEach(a => px(cx + Math.cos(a) * rr - 2, cy + Math.sin(a) * rr - 2, 4, 4, '#e0b866'));
+      });
+      arc(cx, cy + 2, 192, 0, TAU, 'rgba(0,0,0,.5)', 6); arc(cx, cy, 192, 0, TAU, BONED, 4); arc(cx, cy - 1, 193, 0, TAU, BONE, 1);
+      for (let i = 0; i < 48; i++) { const a = i * TAU / 48; px(cx + Math.cos(a) * 184 - 1, cy + Math.sin(a) * 184 - 1, 3, 3, i % 4 ? BRZD : BRZ) }
+
+      /* retakan lava yang menyala dari inti arena */
+      b.save(); b.shadowColor = '#ff2a44'; b.shadowBlur = 8; b.lineCap = 'round'; b.strokeStyle = 'rgba(255,70,80,.7)'; b.lineWidth = 1.5;
+      for (let i = 0; i < 9; i++) { let a = i * TAU / 9 + r() * .3, d = 60; b.beginPath(); b.moveTo(cx + Math.cos(a) * d, cy + Math.sin(a) * d); for (let k = 0; k < 5; k++) { d += 10 + r() * 14; a += (r() - .5) * .35; b.lineTo(cx + Math.cos(a) * d, cy + Math.sin(a) * d) } b.stroke() }
+      b.restore();
+
+      /* cakram pusat dengan lambang banteng */
+      b.fillStyle = '#0d0808'; b.beginPath(); b.arc(cx, cy, 58, 0, TAU); b.fill();
+      arc(cx, cy, 58, 0, TAU, BRZ, 3); arc(cx, cy, 52, 0, TAU, BRZD, 1);
+      b.save(); b.shadowColor = '#ff2a44'; b.shadowBlur = 10; bull(cx, cy + 2, 1.7, '#c8283e', '#ff8a9a', '#8a1a2c', '#5a1020'); b.restore();
+
+      /* 5. PROPERTI: sisa pahlawan yang kalah */
+      const bone = (x, y, a) => { b.save(); b.translate(x, y); b.rotate(a); px(-8, -1, 16, 2, BONE); px(-10, -2, 3, 4, BONE); px(7, -2, 3, 4, BONE); px(-8, 0, 16, 1, BONED); b.restore() };
+      const sword = (x, y, a) => { b.save(); b.translate(x, y); b.rotate(a); px(-12, -1, 20, 2, '#9ba8b5'); px(-12, -1, 20, 1, '#e0e5e9'); px(8, -3, 2, 6, BRZ); px(10, -1, 5, 2, '#4a2a1a'); b.restore() };
+      const shield = (x, y) => { b.fillStyle = 'rgba(0,0,0,.35)'; b.beginPath(); b.arc(x + 1, y + 2, 7, 0, TAU); b.fill(); b.fillStyle = '#6b4a2a'; b.beginPath(); b.arc(x, y, 6, 0, TAU); b.fill(); arc(x, y, 6, 0, TAU, BRZD, 1.5); px(x - 2, y - 2, 4, 4, BRZ); b.strokeStyle = 'rgba(0,0,0,.6)'; b.lineWidth = 1; b.beginPath(); b.moveTo(x + 2, y - 5); b.lineTo(x - 1, y + 1); b.lineTo(x + 3, y + 5); b.stroke() };
+      const helm = (x, y) => { b.fillStyle = '#6a6672'; b.beginPath(); b.arc(x, y, 6, PI, 0); b.fill(); px(x - 6, y, 12, 2, '#4d4a58'); px(x - 1, y - 6, 2, 6, '#8a8692') };
+      const hay = (x, y) => { for (let i = 0; i < 16; i++) { const a = r() * PI; b.strokeStyle = i % 2 ? '#a8893f' : '#7a6130'; b.lineWidth = 1; b.beginPath(); b.moveTo(x + (r() - .5) * 14, y + (r() - .5) * 8); b.lineTo(x + (r() - .5) * 14 + Math.cos(a) * 5, y + (r() - .5) * 8 + Math.sin(a) * 3); b.stroke() } };
+      [[110, 150, .3], [690, 380, -.6], [300, 420, 1.2], [520, 62, .8], [70, 330, -.2], [740, 110, .5], [250, 66, -.4]].forEach(a => bone(...a));
+      [[330, 380, .5], [470, 100, -.3], [110, 300, 1.4]].forEach(a => sword(...a));
+      [[560, 400], [250, 440], [640, 160]].forEach(a => shield(...a));
+      [[660, 250], [140, 420]].forEach(a => helm(...a));
+      [[100, 400], [700, 90], [650, 430], [150, 140]].forEach(a => hay(...a));
+      blood(b, 300, 160, 12, 6); blood(b, 520, 330, 14, 6); blood(b, 650, 200, 10, 5); blood(b, 400, 60, 9, 4); rubble(b, 120, 400); rubble(b, 700, 80); rubble(b, 440, 440); skulls(b, 90, 90); skulls(b, 720, 420); skulls(b, 60, 410);
+
+      /* 6. DINDING: balok batu pasir dengan list perunggu */
+      const BC = ['#4a3a30', '#54423a', '#43332a', '#4f3d33'];
+      const wall = (x, y, w, h, bw) => { b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip(); b.fillStyle = '#1a1210'; b.fillRect(x, y, w, h); for (let j = 0, ry = y; ry < y + h; ry += 7, j++) for (let rx = x - (j % 2 ? bw / 2 : 0); rx < x + w; rx += bw) { b.fillStyle = BC[Math.floor(r() * 4)]; b.fillRect(rx + 1, ry + 1, bw - 1, 6); b.fillStyle = 'rgba(255,230,190,.08)'; b.fillRect(rx + 1, ry + 1, bw - 1, 1) } b.restore() };
+      WB().forEach(w => wall(w[0], w[1], w[2], w[3], 20));
+      px(14, 14, DW - 28, 2, BRZD); px(14, 14, DW - 28, 1, BRZ); px(14, DH - 16, DW - 28, 2, BRZD); px(14, DH - 16, DW - 28, 1, BRZ);
+      px(14, 14, 2, DH - 28, BRZD); px(14, 14, 1, DH - 28, BRZ); px(DW - 16, 14, 2, DH - 28, BRZD); px(DW - 16, 14, 1, DH - 28, BRZ);
+      const sh = (x, y, w, h, ax, ay, bx, by) => { const q = b.createLinearGradient(ax, ay, bx, by); q.addColorStop(0, 'rgba(0,0,0,.5)'); q.addColorStop(1, 'rgba(0,0,0,0)'); b.fillStyle = q; b.fillRect(x, y, w, h) };
+      sh(16, 16, DW - 32, 24, 0, 16, 0, 40); sh(16, DH - 40, DW - 32, 24, 0, DH - 16, 0, DH - 40); sh(16, 16, 24, DH - 32, 16, 0, 40, 0); sh(DW - 40, 16, 24, DH - 32, DW - 16, 0, DW - 40, 0);
+
+      /* 7. HIASAN DINDING */
+      const bannerB = (x, y) => {
+        px(x - 11, y, 22, 3, BRZD); px(x - 11, y, 22, 1, BRZ);
+        b.fillStyle = '#5a1428'; b.beginPath(); b.moveTo(x - 9, y + 3); b.lineTo(x + 9, y + 3); b.lineTo(x + 9, y + 38); b.lineTo(x, y + 32); b.lineTo(x - 9, y + 38); b.closePath(); b.fill();
+        px(x - 9, y + 3, 3, 33, 'rgba(0,0,0,.25)'); px(x + 6, y + 3, 3, 33, 'rgba(255,255,255,.05)');
+        bull(x, y + 20, .5, '#e0b866', '#fff4d8', '#d9aa3c', '#9a741f');
+      };
+      const labrys = (x, y, a) => {
+        b.save(); b.translate(x, y); b.rotate(a); px(-1, -12, 3, 26, '#5a3a22'); px(-1, -12, 1, 26, '#7a5230');
+        [-1, 1].forEach(d => { b.fillStyle = '#9ba8b5'; b.beginPath(); b.moveTo(d, -11); b.quadraticCurveTo(d * 15, -14, d * 13, -1); b.quadraticCurveTo(d * 7, -5, d, -4); b.closePath(); b.fill(); b.strokeStyle = '#e0e5e9'; b.lineWidth = 1; b.beginPath(); b.moveTo(d * 13, -2); b.quadraticCurveTo(d * 15, -13, d * 2, -11); b.stroke() });
+        px(-2, -5, 5, 2, BRZ); b.restore();
+      };
+      [150, 250, 550, 650].forEach(x => bannerB(x, 14));
+      skullB(400, 30, 1.1); chain(b, 355, 14, 22); chain(b, 445, 14, 22);
+      skullB(400, DH - 26, 1.1); labrys(150, DH - 28, .6); labrys(150, DH - 28, -.6); labrys(650, DH - 28, .6); labrys(650, DH - 28, -.6);
+
+      /* gerbang tersegel di sisi kanan: tidak ada jalan kembali */
+      px(754, 188, 32, 104, '#2a1d17'); px(754, 188, 32, 1, BRZ); px(754, 291, 32, 1, BRZD);
+      px(758, 194, 12, 92, '#4a2f1a'); px(771, 194, 12, 92, '#4a2f1a'); px(770, 194, 1, 92, '#120a08');
+      for (let y = 206; y < 286; y += 12) { px(758, y, 25, 1, 'rgba(0,0,0,.35)') }
+      [214, 248, 272].forEach(y => { px(758, y, 25, 3, BRZD); px(758, y, 25, 1, BRZ) });
+      arc(770, 240, 5, 0, TAU, BRZ, 2); arc(770, 240, 5, 0, TAU, 'rgba(0,0,0,.4)', .6);
+      b.strokeStyle = '#7d7a88'; b.lineWidth = 2; b.setLineDash([3, 2]); b.beginPath(); b.moveTo(756, 196); b.lineTo(784, 284); b.moveTo(784, 196); b.lineTo(756, 284); b.stroke(); b.setLineDash([]);
+      skullB(770, 176, .8);
+
+      /* 8. PILAR: kolom bulat dengan cincin perunggu */
+      W2.slice(4).forEach(([x, y, w, h]) => {
+        const mx = x + w / 2, my = y + h / 2;
+        b.fillStyle = 'rgba(0,0,0,.45)'; b.beginPath(); b.ellipse(mx + 4, my + 8, 17, 12, 0, 0, TAU); b.fill();
+        px(x - 1, y - 1, w + 2, h + 2, '#1a110e'); px(x, y, w, h, '#4a3a30'); px(x, y, w, 2, '#7a634f'); px(x, y, 2, h, '#6a5444'); px(x + w - 2, y, 2, h, '#2e221b'); px(x, y + h - 2, w, 2, '#2e221b');
+        const q = b.createRadialGradient(mx - 3, my - 3, 1, mx, my, 12); q.addColorStop(0, '#a58a6e'); q.addColorStop(1, '#5e4a3a');
+        b.fillStyle = q; b.beginPath(); b.arc(mx, my, 11, 0, TAU); b.fill();
+        arc(mx, my, 11, 0, TAU, BRZ, 2); arc(mx, my, 6, 0, TAU, BRZD, 1); px(mx - 1, my - 1, 2, 2, '#e0b866');
+      });
+
+      /* obor & perapian */
+      TO2.forEach(([x, y]) => { px(x - 4, y - 3, 8, 10, '#2a1c14'); px(x - 3, y - 2, 6, 2, BRZ); px(x - 2, y + 2, 4, 4, BRZD) });
+      BR2.forEach(([x, y]) => { bzBase(b, x, y); px(x - 9, y - 6, 18, 3, BRZD); px(x - 9, y - 6, 18, 1, BRZ) });
+
+      /* 9. CAHAYA & VIGNET */
+      const v = b.createRadialGradient(cx, cy, 230, cx, cy, 470); v.addColorStop(0, 'rgba(6,2,4,0)'); v.addColorStop(1, 'rgba(6,2,4,.6)'); b.fillStyle = v; b.fillRect(0, 0, DW, DH);
+      b.save(); b.globalCompositeOperation = 'lighter';
+      const pool = (x, y, rd, c) => { const q = b.createRadialGradient(x, y, 0, x, y, rd); q.addColorStop(0, c); q.addColorStop(1, 'rgba(0,0,0,0)'); b.fillStyle = q; b.fillRect(x - rd, y - rd, rd * 2, rd * 2) };
+      BR2.forEach(([x, y]) => pool(x, y, 120, 'rgba(255,140,50,.2)')); TO2.forEach(([x, y]) => pool(x, y, 60, 'rgba(255,140,50,.08)')); pool(cx, cy, 200, 'rgba(210,30,55,.15)');
+      b.restore();
     })();
+
+    /* efek hidup ruang bos: lingkar rune berdenyut, bara dari perapian, denyut inti sesuai fase */
+    function bossEnvFx() {
+      const ph = BOSS.ph || 1, cx = DW / 2, cy = DY, pu = .5 + .5 * Math.sin(t * (1.6 + ph * .9));
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const q = g.createRadialGradient(cx, cy, 20, cx, cy, 200); q.addColorStop(0, 'rgba(255,40,60,' + (.03 + .05 * ph * pu) + ')'); q.addColorStop(.6, 'rgba(255,40,60,' + (.02 + .02 * ph * pu) + ')'); q.addColorStop(1, 'rgba(255,40,60,0)');
+      g.fillStyle = q; g.fillRect(cx - 200, cy - 200, 400, 400);
+      g.strokeStyle = 'rgba(255,120,90,' + (.22 + .14 * ph * pu) + ')'; g.lineWidth = 2; g.setLineDash([3, 9]); g.lineDashOffset = -t * 10; g.beginPath(); g.arc(cx, cy, 184, 0, 7); g.stroke(); g.setLineDash([]);
+      const n = ph >= 3 ? 28 : 16;
+      for (let i = 0; i < n; i++) {
+        const b = BR2[i % 4], life = (t * .35 + i * .137) % 1, x = b[0] + Math.sin(i * 1.7 + t * .8 + life * 5) * 14 * (1 + life), y = b[1] - 4 - life * 90;
+        g.fillStyle = 'rgba(255,' + ((120 + 80 * (1 - life)) | 0) + ',60,' + ((1 - life) * .8).toFixed(2) + ')'; g.fillRect(Math.round(x), Math.round(y), 2, 2);
+      }
+      g.restore();
+    }
+    const _envFxBoss = envFx; envFx = function () { _envFxBoss(); if (room == 2 && !lobby) bossEnvFx() };
 
     function toBoss() {
       room = 2; WW = DW; WH = DH; walls = W2; TO = TO2; BR = BR2; BG = BGB;
