@@ -2134,6 +2134,14 @@
         chop() { N(.15, .5, 500, 4500, 1.6, 'bandpass', 0, { at: .02 }); CK(.3, .05); T(150, 50, .14, 'sine', .5, .05); RING(1700, .07, .3, .05) },
         shot(a) { if (a) { N(.28, .3, 2000, 9000, 2, 'bandpass', 0, { at: .05 }); T(280, 1300, .3, 'sawtooth', .07, 0, { lp: 2500 }); T(90, 40, .25, 'sine', .4); RING(2100, .04, .4, .03, { send: .4 }) } else arrow() },
         eshot() { arrow(.65) },
+        fireball() {   /* suara bola api: nyala "fwoosh", gemuruh rendah, dan letikan api */
+          if (!ac) return;
+          noise(.38, .26, 350, 2600, 1.1, 'bandpass', 0, .03);
+          noise(.5, .2, 1100, 160, .8, 'lowpass', 0, .02);
+          tone(190, 55, .45, 'sawtooth', .13, 0, undefined, .02);
+          tone(900, 140, .26, 'sine', .1, 0, undefined, .004);
+          for (let i = 0; i < 6; i++) noise(.05 + Math.random() * .05, .07, 3200 + Math.random() * 3000, 2200, 2, 'highpass', .04 + i * .055 + Math.random() * .03, .002)
+        },
         hit(c) {
           if (!ac || !gt('h', .06, 3)) return; const w = typeof wi == 'number' ? wi : 0, k = 1 - (lim.h.length - 1) * .22; CK(.4 * k); T(190, 60, .12, 'sine', .5 * k);
           if (w == 2) { T(330, 110, .09, 'triangle', .55 * k); N(.045, .5 * k, 1300, 350, 1, 'bandpass'); N(.03, .45 * k, 3500, 8000, 1, 'bandpass', 0, { at: .0006 }); T(1600, 900, .1, 'triangle', .08 * k); N(.12, .2 * k, 800, 200, .8, 'lowpass', .01, { dist: 1 }); RING(2400, .04 * k, .22, .01) }
@@ -3251,8 +3259,8 @@
       es.forEach(e => {
         if (e.sw > 0) { spawnDraw(e); return }
         if (e.wind > 0) {
-          const k = 1 - e.wind / (e.k == 'skel' ? .6 : .7); g.fillStyle = 'rgba(255,60,60,' + (.15 + k * .35) + ')';
-          if (e.k == 'skel') { g.beginPath(); g.arc(e.tx, e.ty, 28, 0, 7); g.fill() } else { g.strokeStyle = 'rgba(255,60,60,.6)'; g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(e.tx, e.ty); g.stroke() }
+          const k = 1 - e.wind / (e.k == 'skel' ? .6 : .7); g.fillStyle = (lavaOn() ? 'rgba(255,140,30,' : 'rgba(255,60,60,') + (.15 + k * .35) + ')';
+          if (e.k == 'skel') { g.beginPath(); g.arc(e.tx, e.ty, lavaOn() ? 42 : 28, 0, 7); g.fill() } else { g.strokeStyle = lavaOn() ? 'rgba(255,150,40,.7)' : 'rgba(255,60,60,.6)'; g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(e.tx, e.ty); g.stroke() }
         }
         g.fillStyle = '#0006'; g.fillRect(e.x - 10, e.y + 6, 20, 3);
         drawEnemy(e); if (e.k == 'dummy' || e.dying) return;
@@ -3555,7 +3563,7 @@
     function lobbyTick(dt) {
       if (!lobby) return;
       if (!trn && p.x > 660) { trn = 1; msg('Ruang Pelatihan — serang manekin untuk uji DPS. Pintu kiri = kembali ke lobby.') } else if (trn && p.x < 620) { trn = 0; msg('Lobby — Zona Aman.') }
-      if (p.y < 34 && Math.abs(p.x - 320) < 30) { enterDungeon(); return }
+      if (p.y < 34 && Math.abs(p.x - 320) < 30) { openDungeonSelect(); return }
       if (R() < dt * 7) dp.push({ k: 'p', x: 62 + R() * 30, y: 60 + R() * 8, vx: (R() - .5) * 30, vy: -30 - R() * 30, life: .6, max: .6, s: 1.5, c: R() < .5 ? '#ffb050' : '#ff7a2a' });
       if (dlg && dist(dlg.n, p) > 70) dlg = null;
       if (P.KeyG) { if (dlg) { dlg.i++; if (dlg.i >= dlg.n.lines.length) { const a = dlg.n.act; dlg = null; if (a) a() } else SFX.point() } else { const n = NP.concat(TN).find(n => dist(n, p) < 36); if (n) { dlg = { n, i: 0 }; SFX.pickup() } } }
@@ -5574,9 +5582,9 @@
     function bossEnvFx() {
       const ph = BOSS.ph || 1, cx = DW / 2, cy = DY, pu = .5 + .5 * Math.sin(t * (1.6 + ph * .9));
       g.save(); g.globalCompositeOperation = 'lighter';
-      const q = g.createRadialGradient(cx, cy, 20, cx, cy, 200); q.addColorStop(0, 'rgba(255,40,60,' + (.03 + .05 * ph * pu) + ')'); q.addColorStop(.6, 'rgba(255,40,60,' + (.02 + .02 * ph * pu) + ')'); q.addColorStop(1, 'rgba(255,40,60,0)');
+      const q = g.createRadialGradient(cx, cy, 20, cx, cy, 200); q.addColorStop(0, (lavaOn() ? 'rgba(255,110,20,' : 'rgba(255,40,60,') + (.03 + .05 * ph * pu) + ')'); q.addColorStop(.6, (lavaOn() ? 'rgba(255,110,20,' : 'rgba(255,40,60,') + (.02 + .02 * ph * pu) + ')'); q.addColorStop(1, 'rgba(255,40,60,0)');
       g.fillStyle = q; g.fillRect(cx - 200, cy - 200, 400, 400);
-      g.strokeStyle = 'rgba(255,120,90,' + (.22 + .14 * ph * pu) + ')'; g.lineWidth = 2; g.setLineDash([3, 9]); g.lineDashOffset = -t * 10; g.beginPath(); g.arc(cx, cy, 184, 0, 7); g.stroke(); g.setLineDash([]);
+      g.strokeStyle = (lavaOn() ? 'rgba(255,160,60,' : 'rgba(255,120,90,') + (.22 + .14 * ph * pu) + ')'; g.lineWidth = 2; g.setLineDash([3, 9]); g.lineDashOffset = -t * 10; g.beginPath(); g.arc(cx, cy, 184, 0, 7); g.stroke(); g.setLineDash([]);
       const n = ph >= 3 ? 28 : 16;
       for (let i = 0; i < n; i++) {
         const b = BR2[i % 4], life = (t * .35 + i * .137) % 1, x = b[0] + Math.sin(i * 1.7 + t * .8 + life * 5) * 14 * (1 + life), y = b[1] - 4 - life * 90;
@@ -5680,7 +5688,7 @@
     };
     function bossGround(e) {
       if (e.sw > 0) return; const B = BOSS;
-      if (B.ph >= 3) { g.save(); g.globalCompositeOperation = 'lighter'; const q = g.createRadialGradient(e.x, e.y, 0, e.x, e.y, 60); q.addColorStop(0, 'rgba(255,40,70,' + (.25 + .1 * Math.sin(t * 8)) + ')'); q.addColorStop(1, 'rgba(255,40,70,0)'); g.fillStyle = q; g.fillRect(e.x - 60, e.y - 60, 120, 120); g.restore() }
+      if (B.ph >= 3) { g.save(); g.globalCompositeOperation = 'lighter'; const q = g.createRadialGradient(e.x, e.y, 0, e.x, e.y, 60); q.addColorStop(0, (lavaOn() ? 'rgba(255,100,20,' : 'rgba(255,40,70,') + (.25 + .1 * Math.sin(t * 8)) + ')'); q.addColorStop(1, lavaOn() ? 'rgba(255,100,20,0)' : 'rgba(255,40,70,0)'); g.fillStyle = q; g.fillRect(e.x - 60, e.y - 60, 120, 120); g.restore() }
       if (e.s2 == 'wind' && e.atk == 'charge') { const k = 1 - e.tm / e.tmx; g.save(); g.translate(e.x, e.y); g.rotate(e.ca); g.fillStyle = 'rgba(255,60,60,' + (.12 + .28 * k) + ')'; g.fillRect(0, -14, 190, 28); g.strokeStyle = 'rgba(255,120,120,.7)'; g.strokeRect(.5, -13.5, 190, 27); g.restore() }
       B.hz.forEach(h => { const k = 1 - h.t / h.mx; g.fillStyle = 'rgba(255,50,60,' + (.1 + .18 * k) + ')'; g.beginPath(); g.arc(h.x, h.y, h.r, 0, 7); g.fill(); g.strokeStyle = 'rgba(255,90,90,' + (.5 + .4 * k) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(h.x, h.y, h.r, 0, 7); g.stroke(); g.lineWidth = 1; g.fillStyle = 'rgba(255,70,70,.35)'; g.beginPath(); g.arc(h.x, h.y, h.r * k, 0, 7); g.fill() });
     }
@@ -5692,7 +5700,7 @@
         const bw = Math.min(W * .5, 360), x = W / 2 - bw / 2, y = 76; g.fillStyle = '#000b'; g.fillRect(x - 2, y - 2, bw + 4, 10);
         g.fillStyle = B.ph >= 3 ? '#ff3b4d' : '#c8283e'; g.fillRect(x, y, bw * Math.max(0, e.hp) / e.mhp, 6);
         g.fillStyle = '#fff6';[.6, .3].forEach(k => g.fillRect(x + bw * k, y - 2, 1, 10));
-        g.font = 'bold 9px monospace'; txt('MORVATH, SANG MINOTAUR', W / 2, y - 5, '#ffd0da', 'center')
+        g.font = 'bold 9px monospace'; txt(lavaOn() ? 'MORVATH · ' + LFORMS[Math.min(2, Math.max(0, B.ph - 1))] : 'MORVATH, SANG MINOTAUR', W / 2, y - 5, lavaOn() ? '#ffb070' : '#ffd0da', 'center')
       }
       if (B.ban > 0) { const al = Math.max(0, Math.min(1, B.ban / .5, (3.2 - B.ban) / .4)); g.save(); g.globalAlpha = al; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(0, 100, W, 44); g.fillStyle = 'rgba(255,60,90,.9)'; g.fillRect(0, 100, W, 1); g.fillRect(0, 143, W, 1); g.font = '8px monospace'; txt('— B O S S —', W / 2, 113, '#fff', 'center'); g.font = 'bold 18px monospace'; txt('MORVATH', W / 2, 136, '#ff6a8a', 'center'); g.restore() }
     }
@@ -7030,6 +7038,585 @@
       try { menu.classList.add('hidden'); build(); root.addEventListener('pointerdown', skip); addEventListener('keydown', onKey); addEventListener('resize', onResize); t0 = last = performance.now(); raf = requestAnimationFrame(frame) } catch (e) { console.error(e); done = false; finish() }
     })();
   </script>
+
+<style>
+#dsel{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(6,4,12,.82);backdrop-filter:blur(3px);font-family:Cinzel,Georgia,serif;color:#e6e3f4;padding:env(safe-area-inset-top,0) 8px env(safe-area-inset-bottom,0)}
+#dsel.on{display:flex}
+#dsel .bx{width:min(760px,96vw);max-height:94vh;overflow:auto;background:linear-gradient(#1a1830,#100f1e);border:2px solid #4a4472;border-radius:10px;padding:clamp(10px,2.4vh,22px);box-shadow:0 10px 40px #000a;text-align:center}
+#dsel h2{margin:0 0 4px;font-size:clamp(16px,3.4vh,24px);letter-spacing:.18em;color:#ffe7ad}
+#dsel .sub{font-size:clamp(9px,1.6vh,12px);letter-spacing:.2em;color:#9a97b8;margin:10px 0 6px}
+#dsel .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#dsel .cd{flex:1 1 220px;max-width:340px;cursor:pointer;border:2px solid #38355a;border-radius:8px;padding:clamp(8px,1.8vh,14px);background:#16152a;text-align:left;transition:.15s}
+#dsel .cd:hover{transform:translateY(-2px)}
+#dsel .cd b{display:block;font-size:clamp(12px,2.2vh,16px);letter-spacing:.08em}
+#dsel .cd small{display:block;margin-top:4px;font:clamp(10px,1.8vh,13px)/1.35 Georgia,serif;color:#b9b6d4}
+#dsel .cd.l1.sel{border-color:#8fe8a0;box-shadow:0 0 14px #8fe8a055;background:#1a2a2a}
+#dsel .cd.l2{border-color:#6b2f1f;background:linear-gradient(#2a1410,#1c0e0c)}
+#dsel .cd.l2 b{color:#ff9a3c}
+#dsel .cd.l2.sel{border-color:#ff7a2a;box-shadow:0 0 16px #ff5a1f88}
+#dsel .df{flex:1 1 150px;max-width:220px;text-align:center}
+#dsel .df.sel{border-color:#ffd34d;box-shadow:0 0 12px #ffd34d55;background:#262232}
+#dsel .go{display:flex;gap:10px;justify-content:center;margin-top:clamp(10px,2vh,18px)}
+#dsel button{font:700 clamp(11px,2vh,14px) Cinzel,Georgia,serif;letter-spacing:.14em;padding:9px 22px;border-radius:6px;border:2px solid #6c63a8;background:#2a2748;color:#fff;cursor:pointer}
+#dsel button.p{background:#b8501d;border-color:#ffb050}
+#dsel button:active{transform:scale(.97)}
+</style>
+<script>
+/* ===== Pilihan Level & Kesulitan Dungeon ===== */
+let LVL = 1, DIFF = 1, dselOn = false;
+const DF = [
+  { n: 'MUDAH', hp: .7, dmg: .6, sp: .9, cnt: .7, c: '#8fe8a0', d: 'Musuh lebih sedikit & lemah, damage diterima -40%' },
+  { n: 'BIASA', hp: 1, dmg: 1, sp: 1, cnt: 1, c: '#ffe7ad', d: 'Pengalaman standar' },
+  { n: 'SULIT', hp: 1.5, dmg: 1.5, sp: 1.15, cnt: 1.3, c: '#ff6b6b', d: 'Musuh lebih banyak, kuat & cepat, damage diterima +50%' }];
+(function () {
+  const el = document.createElement('div'); el.id = 'dsel';
+  el.innerHTML = '<div class="bx"><h2>PILIH DUNGEON</h2>'
+    + '<div class="sub">LEVEL</div><div class="row">'
+    + '<div class="cd l1" data-l="1"><b>LEVEL 1 · Ancient Halls</b><small>Aula kuno dan Torch Dungeon, lalu bos Morvath.</small></div>'
+    + '<div class="cd l2" data-l="2"><b>LEVEL 2 · Lava Depths 🔥</b><small>Ruang berlava: kolam lava melukai yang berdiri di atasnya. Musuh +15% HP.</small></div></div>'
+    + '<div class="sub">KESULITAN</div><div class="row">'
+    + DF.map((d, i) => '<div class="cd df" data-d="' + i + '"><b style="color:' + d.c + '">' + d.n + '</b><small>' + d.d + '</small></div>').join('')
+    + '</div><div class="go"><button id="dsBack">BATAL</button><button class="p" id="dsGo">MASUK ▶</button></div></div>';
+  document.body.appendChild(el);
+  const sync = () => { el.querySelectorAll('[data-l]').forEach(n => n.classList.toggle('sel', +n.dataset.l == LVL)); el.querySelectorAll('[data-d]').forEach(n => n.classList.toggle('sel', +n.dataset.d == DIFF)) };
+  el.addEventListener('click', e => { const c = e.target.closest('.cd'); if (!c) return; if (c.dataset.l) LVL = +c.dataset.l; if (c.dataset.d) DIFF = +c.dataset.d; sync() });
+  const clr = () => { try { Object.keys(K).forEach(k => K[k] = 0); M.d = 0; for (const k in P) delete P[k]; touchJoy.active = false; touchAttack.active = false } catch (e) { } };
+  const close = () => { el.classList.remove('on'); dselOn = false; clr(); playing = true; cv.focus() };
+  window.openDungeonSelect = () => { clr(); playing = false; dselOn = true; sync(); el.classList.add('on') };
+  document.getElementById('dsBack').onclick = () => { p.y = 70; p.vx = p.vy = 0; close() };
+  document.getElementById('dsGo').onclick = () => { close(); enterDungeon(); msg((LVL == 2 ? 'Level 2: Lava Depths' : 'Level 1: Ancient Halls') + ' [' + DF[DIFF].n + '] — Gelombang 1 dimulai!') };
+  document.addEventListener('keydown', e => {
+    if (!dselOn) return; e.stopPropagation(); e.preventDefault();
+    if (e.code == 'Escape') document.getElementById('dsBack').click();
+    else if (e.code == 'Enter' || e.code == 'Space') document.getElementById('dsGo').click();
+    else if (e.code == 'Digit1') { LVL = 1; sync() } else if (e.code == 'Digit2') { LVL = 2; sync() }
+    else if (e.code == 'ArrowLeft' || e.code == 'KeyA') { DIFF = Math.max(0, DIFF - 1); sync() }
+    else if (e.code == 'ArrowRight' || e.code == 'KeyD') { DIFF = Math.min(2, DIFF + 1); sync() }
+  }, true);
+})();
+
+/* ===== Efek kesulitan ===== */
+const _hurtD = hurt; hurt = function (d) { return _hurtD(lobby ? d : d * DF[DIFF].dmg) };
+const _spawnD = spawn; spawn = function () {
+  _spawnD(); if (lobby || room > 1 || !es.length || es[0].k == 'dummy') return;
+  const d = DF[DIFF];
+  if (d.cnt < 1) es = es.slice(0, Math.max(2, Math.round(es.length * d.cnt)));
+  else if (d.cnt > 1) { const n = Math.round(es.length * (d.cnt - 1)); for (let j = 0, a = 0; j < n && a < 300; a++) { const x = 200 + R() * 560, y = 50 + R() * 380; if (!blk(x, y, 9)) { const e = mk(['slime', 'skel', 'mage'][j % 3], x, y); e.sd = es.length * .14; e.st = 1.1 + e.sd; e.sw = e.st; e.sx = 0; es.push(e); j++ } } }
+  es.forEach(e => { e.hp = e.mhp = Math.round(e.hp * d.hp * (LVL == 2 ? 1.15 : 1)); e.sp *= d.sp })
+};
+
+/* ===== Tema Lava (Level 2) ===== */
+let LB = null, LP = [[], []];
+function lavaBuild() {
+  const mkPools = (ws, seed) => { let sd = seed; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, out = [];
+    for (let a = 0; a < 500 && out.length < 5; a++) { const w = 56 + r() * 30 | 0, h = 36 + r() * 18 | 0, x = 150 + r() * (DW - 300 - w) | 0, y = 60 + r() * (DH - 120 - h) | 0;
+      const bad = ws.some(q => x + w + 18 > q[0] && x - 18 < q[0] + q[2] && y + h + 18 > q[1] && y - 18 < q[1] + q[3]) || out.some(q => x + w + 30 > q[0] && x - 30 < q[0] + q[2] && y + h + 30 > q[1] && y - 30 < q[1] + q[3]);
+      if (!bad) out.push([x, y, w, h]) } return out };
+  const mkBg = (srcC, pools, seed) => {
+    const c = document.createElement('canvas'); c.width = DW; c.height = DH; const b = c.getContext('2d'); b.drawImage(srcC, 0, 0);
+    b.globalCompositeOperation = 'multiply'; b.fillStyle = '#d9604a'; b.fillRect(0, 0, DW, DH); b.globalCompositeOperation = 'source-over'; b.fillStyle = 'rgba(40,6,0,.28)'; b.fillRect(0, 0, DW, DH);
+    let sd = seed; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296; b.lineCap = 'round'; b.lineJoin = 'round';
+    for (let i = 0; i < 16; i++) { let x = 40 + r() * (DW - 80), y = 40 + r() * (DH - 80); b.beginPath(); b.moveTo(x, y); for (let k = 0; k < 5; k++) { x += (r() - .5) * 60; y += (r() - .5) * 60; b.lineTo(x, y) } b.strokeStyle = 'rgba(255,90,20,.35)'; b.lineWidth = 3; b.stroke(); b.strokeStyle = 'rgba(255,200,80,.8)'; b.lineWidth = 1; b.stroke() }
+    pools.forEach(([x, y, w, h]) => { b.fillStyle = '#1b0805'; b.fillRect(x - 4, y - 4, w + 8, h + 8); b.fillStyle = '#4a1608'; b.fillRect(x - 2, y - 2, w + 4, h + 4); const q = b.createLinearGradient(0, y, 0, y + h); q.addColorStop(0, '#ff9a2a'); q.addColorStop(1, '#d22a0a'); b.fillStyle = q; b.fillRect(x, y, w, h); b.fillStyle = 'rgba(255,230,120,.55)'; for (let i = 0; i < 5; i++)b.fillRect(x + 4 + r() * (w - 14), y + 4 + r() * (h - 8), 6, 2) });
+    return c };
+  LP = [mkPools(W0, 3), mkPools(W1, 9)]; LB = [mkBg(BG0, LP[0], 5), mkBg(BG1, LP[1], 8)];
+}
+const lavaOn = () => LVL == 2 && !lobby && room <= 2;
+const _drawL = draw; draw = function () {
+  if (lavaOn()) { if (!LB) lavaBuild(); if (room < 2) BG = LB[room] }
+  _drawL();
+  if (!lobby && room <= 2) { try { g.font = '9px monospace'; txt('Level ' + LVL + ' · ' + DF[DIFF].n, W - 10, 58, LVL == 2 ? '#ff9a3c' : DF[DIFF].c, 'right') } catch (e) { } }
+};
+const _envFxL = envFx; envFx = function () {
+  _envFxL(); if (!lavaOn()) return;
+  g.save(); g.globalCompositeOperation = 'lighter';
+  (LP[room] || []).forEach(([x, y, w, h], i) => { const a = .16 + .1 * Math.sin(t * 3 + i * 1.7), q = g.createRadialGradient(x + w / 2, y + h / 2, 4, x + w / 2, y + h / 2, Math.max(w, h) * 1.1); q.addColorStop(0, 'rgba(255,120,40,' + a * 2 + ')'); q.addColorStop(1, 'rgba(255,60,10,0)'); g.fillStyle = q; g.fillRect(x - 40, y - 40, w + 80, h + 80) });
+  g.restore();
+};
+const _updL = upd; upd = function (dt) {
+  _updL(dt); if (!lavaOn() || room > 1 || !p || p.dead > 0) return;
+  const ps = LP[room] || [];
+  if (R() < dt * 14 && ps.length) { const q = ps[R() * ps.length | 0]; dp.push({ k: 'p', x: q[0] + R() * q[2], y: q[1] + R() * q[3], vx: (R() - .5) * 14, vy: -22 - R() * 30, life: .7, max: .7, s: 1.5, c: R() < .5 ? '#ffb050' : '#ff5a1f' }) }
+  if (p.dod > 0) return;
+  if (ps.some(([x, y, w, h]) => p.x + p.r > x && p.x - p.r < x + w && p.y + p.r > y && p.y - p.r < y + h)) { hurt(7); if (p.inv > .45) msg('🔥 Lava! Segera menjauh dari kolam lava!') }
+};
+</script>
+
+<script>
+/* ===== Musuh Lava (Level 2): Lava Slime (dekat), Lava Golem (area), Blash (jarak jauh) ===== */
+/* Room 0 = varian "Ember" (oranye terang), Room 1 = varian "Magma" (obsidian merah, lebih kuat) */
+const EC_O = JSON.parse(JSON.stringify(EC)), SPC_O = JSON.parse(JSON.stringify(SPC)), SPH_O = Object.assign({}, SPH);
+const EC_L = { slime: ['#ff9a2a', '#ffd34d', '#c8300f'], skel: ['#5a3a30', '#ff7a1f', '#ffd34d'], mage: ['#ff6a1f', '#ffd34d', '#ff3a1a'] };
+const SPC_L = { slime: ['255,170,60', '220,70,10'], skel: ['255,160,70', '120,40,10'], mage: ['255,210,90', '230,60,20'] }, SPH_L = { slime: '#ff9a2a', skel: '#ff7a1f', mage: '#ffd34d' };
+let ecLava = false, LZ = [], lzRoom = -1;
+function lavaGlow(x, y, r, a, c) { g.save(); g.globalCompositeOperation = 'lighter'; const q = g.createRadialGradient(x, y, 0, x, y, r); q.addColorStop(0, 'rgba(' + (c || '255,140,40') + ',' + a + ')'); q.addColorStop(1, 'rgba(' + (c || '255,140,40') + ',0)'); g.fillStyle = q; g.fillRect(x - r, y - r, r * 2, r * 2); g.restore() }
+function lavaFlame(x, y, w, h, c1, c2, ph) { const f = Math.sin(t * 14 + ph) * .15 + 1; g.fillStyle = c1; g.beginPath(); g.moveTo(x - w, y); g.quadraticCurveTo(x - w * .6, y - h * .6 * f, x + Math.sin(t * 9 + ph) * w * .4, y - h * f); g.quadraticCurveTo(x + w * .6, y - h * .5, x + w, y); g.closePath(); g.fill(); g.fillStyle = c2; g.beginPath(); g.moveTo(x - w * .5, y); g.quadraticCurveTo(x, y - h * .65 * f, x + w * .5, y); g.closePath(); g.fill() }
+function lavaDraw(e) {
+  const v = room, fl = e.fl > 0, F = c => fl ? '#fff' : c, tt = t + e.ph, dx = p.x - e.x, dy = p.y - e.y, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl;
+  g.save(); g.translate(Math.round(e.x + (e.stun > 0 ? Math.sin(t * 40) * 1.2 : 0)), Math.round(e.y + 7));
+  if (e.k == 'slime') {          /* LAVA SLIME: gumpalan lava, menerkam dari dekat */
+    const pg = e.an > 0 ? Math.min(1, 1 - e.an / .6) : 0, lg = Math.sin(pg * Math.PI) * 6, sq = 1 + Math.sin(tt * 6) * .07 - .16 * Math.sin(pg * Math.PI), w = (v ? 12 : 10) * sq, h = (v ? 14 : 11) / sq;
+    g.translate(ux * lg, uy * lg * .6); lavaGlow(0, -h * .5, 24, .35 + .1 * Math.sin(tt * 5));
+    g.fillStyle = F(v ? '#8f1e08' : '#e8501a'); g.beginPath(); g.moveTo(-w, 0); g.bezierCurveTo(-w * 1.1, -h * 1.5, w * 1.1, -h * 1.5, w, 0); g.quadraticCurveTo(0, 3, -w, 0); g.fill();
+    g.fillStyle = F(v ? '#d83a12' : '#ff9a2a'); g.beginPath(); g.moveTo(-w * .7, -1); g.bezierCurveTo(-w * .8, -h * 1.1, w * .8, -h * 1.1, w * .7, -1); g.fill();
+    if (v) { g.fillStyle = F('#241010'); g.fillRect(-w * .6, -h * .95, 5, 3); g.fillRect(w * .1, -h * .8, 6, 3); g.fillRect(-2, -h * 1.15, 4, 2) } else { g.fillStyle = F('#ffe28a'); g.fillRect(-w * .3, -h * .5, 3, 2); g.fillRect(w * .2, -h * .35, 2, 2) }
+    g.fillStyle = F('#fff2b0'); g.fillRect(-w * .45 + ux, -h * .75 + uy, 3, 3); g.fillRect(w * .15 + ux, -h * .75 + uy, 3, 3); g.fillStyle = F('#3a0a00'); g.fillRect(-w * .45 + 1 + ux * 1.5, -h * .75 + 1 + uy, 1, 2); g.fillRect(w * .15 + 1 + ux * 1.5, -h * .75 + 1 + uy, 1, 2);
+    g.fillStyle = F('#ffb050'); const dr = (tt * 14) % 6; g.fillRect(-w * .8, -2 + dr * .3, 1, 2 + dr * .4); g.fillRect(w * .7, -1 + dr * .2, 1, 2);
+    lavaFlame(0, -h * 1.05, v ? 4 : 3, v ? 9 : 6, F('#ff7a1f'), F('#ffe28a'), e.ph)
+  } else if (e.k == 'skel') {    /* LAVA GOLEM: raksasa batu berapi, seram */
+    const pg = e.wind > 0 ? 1 - e.wind / .6 : 0, ar = pg * 11, gl = .55 + .3 * Math.sin(tt * 4) + pg * .9, bob = -Math.abs(Math.sin(tt * 8)) * 1.5 * (e.wk || 0);
+    const rk = F(v ? '#1a1112' : '#3a2927'), rk2 = F(v ? '#2f1c19' : '#5a3f38'), rk3 = F(v ? '#4f2c24' : '#7e5649'), LA = F('#ff7a1f'), LY = F('#ffd34d'), LR = F(v ? '#e8300f' : '#c8300f');
+    g.translate(0, bob); g.scale(1.25, 1.25);
+    lavaGlow(0, -14, 38 + pg * 18, .3 + .25 * gl, v ? '255,70,20' : '255,130,40');
+    g.fillStyle = rk; g.fillRect(-9, -9, 7, 9); g.fillRect(2, -9, 7, 9); g.fillStyle = rk3; g.fillRect(-10, -2, 9, 3); g.fillRect(1, -2, 9, 3);
+    g.fillStyle = LA; g.fillRect(-6, -7, 1, 5); g.fillRect(5, -6, 1, 4); g.fillStyle = rk2; g.fillRect(-9, -13, 18, 5); g.fillStyle = LA; g.fillRect(-1, -12, 2, 3);
+    g.fillStyle = rk2; g.beginPath(); g.moveTo(-10, -12); g.lineTo(-14, -24); g.lineTo(14, -24); g.lineTo(10, -12); g.closePath(); g.fill(); g.fillStyle = rk3; g.fillRect(-12, -25, 24, 3);
+    g.fillStyle = F(v ? '#ff3a10' : '#ff5a1f'); g.fillRect(-6, -22, 12, 9); g.fillStyle = rk; for (let i = 0; i < 3; i++) g.fillRect(-4 + i * 4, -22, 1.6, 9);
+    g.fillStyle = LY; g.beginPath(); g.arc(0, -17, 2 + gl * 1.5, 0, 7); g.fill(); if (!fl) lavaGlow(0, -17, 12 + pg * 8, .7);
+    g.fillStyle = LA; g.fillRect(-12, -20, 4, 1); g.fillRect(-10, -20, 1, 6); g.fillRect(8, -23, 1, 7); g.fillRect(8, -17, 4, 1);
+    for (const s of [-1, 1]) {
+      g.fillStyle = rk; g.beginPath(); g.arc(s * 14, -23, 6.5, 0, 7); g.fill(); g.fillStyle = rk3;
+      for (let i = 0; i < (v ? 3 : 2); i++) { const a = -1.57 + s * (.2 + i * .5), L2 = v ? 12 : 9; g.beginPath(); g.moveTo(s * 14 + Math.cos(a - .3) * 5, -23 + Math.sin(a - .3) * 5); g.lineTo(s * 14 + Math.cos(a) * L2, -23 + Math.sin(a) * L2); g.lineTo(s * 14 + Math.cos(a + .3) * 5, -23 + Math.sin(a + .3) * 5); g.fill() }
+      g.fillStyle = LA; g.fillRect(s * 14 - 3, -22, 6, 1); if (!fl) lavaFlame(s * 14, -27, 5, v ? 18 : 12, LR, LY, s + e.ph);
+      g.fillStyle = rk; g.fillRect(s * 17 - 3, -21 - ar, 6, 13); g.fillStyle = rk2; g.fillRect(s * 17 - 4, -10 - ar, 8, 7); g.fillStyle = LA; g.fillRect(s * 17 - 4, -8 - ar, 8, 1); g.fillRect(s * 17 - 1, -20 - ar, 1, 8);
+      if (!fl) { lavaFlame(s * 17, -10 - ar, 4 + pg * 4, 9 + pg * 14, LR, LY, s * 3 + e.ph); if (pg > .2) lavaGlow(s * 17, -7 - ar, 14, .6 * pg) }
+      g.fillStyle = rk3; g.beginPath(); g.moveTo(s * 5, -32); g.quadraticCurveTo(s * (v ? 13 : 10), -34, s * (v ? 11 : 9), -(v ? 44 : 40)); g.lineTo(s * 4, -30); g.closePath(); g.fill()
+    }
+    g.fillStyle = rk2; g.fillRect(-6, -33, 12, 9); g.fillStyle = rk; g.fillRect(-7, -31, 14, 3);
+    g.fillStyle = LY; g.fillRect(-5, -30, 4, 2); g.fillRect(1, -30, 4, 2); if (!fl) { lavaGlow(-3, -29, 7, .9, '255,70,20'); lavaGlow(3, -29, 7, .9, '255,70,20') }
+    g.fillStyle = F('#ff6a1f'); g.fillRect(-4, -26, 8, 2 + pg * 3); g.fillStyle = F('#e8dcc0'); for (let i = 0; i < 4; i++) g.fillRect(-4 + i * 2.2, -26, 1, 1.5 + pg);
+    if (!fl) {
+      lavaFlame(0, -33, v ? 7 : 5, v ? 24 : 16, LR, LY, e.ph); lavaFlame(-4, -33, 3, v ? 12 : 8, LA, LY, e.ph + 2); lavaFlame(4, -33, 3, v ? 12 : 8, LA, LY, e.ph + 4);
+      for (let i = 0; i < 3; i++) { const dy = (tt * 30 + i * 13) % 16; g.fillStyle = LA; g.fillRect(-4 + i * 4, -12 + dy * .5, 1, 2) }
+      for (let i = 0; i < 4; i++) { const a2 = (tt * 20 + i * 9) % 34; g.fillStyle = i % 2 ? LY : LA; g.fillRect(Math.sin(tt * 3 + i * 2) * 12, -14 - a2, 1.5, 1.5) }
+    }
+  } else {                       /* BLASH: hantu tengkorak api, seram */
+    const pg = e.wind > 0 ? 1 - e.wind / .7 : 0, hv = -14 + Math.sin(tt * 3) * 2.5, c1 = v ? '#a81006' : '#e8501a', c2 = v ? '#ff7a1f' : '#ff9a2a', bone = F('#d9c8a8'), dk = F('#1a0505');
+    g.translate(0, hv); if (v) g.scale(1.15, 1.15); lavaGlow(0, -4, 32, .35 + .25 * pg, v ? '255,60,20' : '255,120,40');
+    g.fillStyle = F(c1); g.beginPath(); g.moveTo(-9, -5); g.quadraticCurveTo(-14, 6, -11, 14);
+    for (let i = 0; i < 5; i++) { const x = -11 + i * 5.5; g.lineTo(x + 2.7 + Math.sin(tt * 7 + i * 1.3) * 2, 24 + (i % 2) * 6 + Math.sin(tt * 5 + i) * 2); g.lineTo(x + 5.5, 14) }
+    g.quadraticCurveTo(14, 6, 9, -5); g.closePath(); g.fill();
+    g.fillStyle = dk; g.beginPath(); g.moveTo(-5, -3); g.lineTo(5, -3); g.lineTo(3, 16); g.lineTo(-3, 16); g.closePath(); g.fill();
+    g.fillStyle = F(c2); for (let i = 0; i < 3; i++) g.fillRect(-4, 0 + i * 4, 8, 1);
+    lavaFlame(0, -14, v ? 9 : 7, v ? 24 : 17, F(c1), F(c2), e.ph);
+    g.fillStyle = dk; for (const s of [-1, 1]) { g.beginPath(); g.moveTo(s * 5, -14); g.quadraticCurveTo(s * 13, -17, s * 10, -(v ? 33 : 27)); g.lineTo(s * 7, -16); g.closePath(); g.fill() }
+    g.fillStyle = bone; g.beginPath(); g.ellipse(0, -9, 7.5, 8, 0, 0, 7); g.fill(); g.fillRect(-5, -4, 10, 5);
+    g.fillStyle = dk; for (const s of [-1, 1]) { g.save(); g.translate(s * 3.4, -10); g.rotate(s * .35); g.beginPath(); g.ellipse(0, 0, 2.6, 3.4, 0, 0, 7); g.fill(); g.restore() }
+    g.beginPath(); g.moveTo(-1, -7); g.lineTo(1, -7); g.lineTo(0, -4.5); g.fill();
+    if (!fl) { for (const s of [-1, 1]) { lavaGlow(s * 3.4 + ux, -10 + uy, 8, .9, '255,200,60'); g.fillStyle = '#fff2a0'; g.beginPath(); g.arc(s * 3.4 + ux * .8, -10 + uy * .8, 1.4, 0, 7); g.fill() } if (v) { lavaGlow(0, -15, 5, .9, '255,80,30'); g.fillStyle = '#ff5a1f'; g.fillRect(-1, -16, 2, 2) } }
+    g.fillStyle = pg > .2 ? F('#ff7a1f') : dk; g.fillRect(-4.5, -2.5, 9, 2 + pg * 3); g.fillStyle = F('#efe3c8'); for (let i = 0; i < 5; i++) g.fillRect(-4 + i * 2, -2.5, 1.2, 2 + pg);
+    const hx = pg > 0 ? 7 : 12, hy = pg > 0 ? -3 : 3 + Math.sin(tt * 4) * 2;
+    for (const s of [-1, 1]) { const px = s * hx + (pg > 0 ? ux * 3 : 0), py = hy + (pg > 0 ? uy * 2 : 0); g.strokeStyle = bone; g.lineWidth = 1; g.beginPath(); g.moveTo(s * 7, 2); g.lineTo(px, py); g.stroke(); for (let k = -1; k <= 1; k++) { g.beginPath(); g.moveTo(px, py); g.lineTo(px + s * 3 + (pg > 0 ? ux * 2 : 0), py + k * 3 + (pg > 0 ? uy * 2 : 1.5)); g.stroke() } }
+    for (let i = 0; i < 3; i++) { const a = tt * 3 + i * 2.1; g.fillStyle = F(i % 2 ? '#ffd34d' : '#ff6a1f'); g.fillRect(Math.round(Math.cos(a) * 12), Math.round(Math.sin(a) * 5 - 2), 2, 2) }
+    if (pg > 0) { lavaGlow(ux * 14, -2 + uy * 8, 8 + pg * 12, .95, '255,200,80'); g.fillStyle = F('#fff2b0'); g.beginPath(); g.arc(ux * 14, -2 + uy * 8, 1.5 + pg * 4, 0, 7); g.fill() }
+  }
+  g.restore()
+}
+const _drawEnemyL = drawEnemy; drawEnemy = function (e) { if (lavaOn() && room < 2 && (e.k == 'slime' || e.k == 'skel' || e.k == 'mage')) { try { lavaDraw(e); return } catch (x) { } } _drawEnemyL(e) };
+
+/* palet efek ikut tema */
+const _drawLE = draw; draw = function () { const on = lavaOn() && room < 2; if (on != ecLava) { ecLava = on; Object.assign(EC, on ? EC_L : EC_O); Object.keys(SPC_L).forEach(k => { SPC[k] = on ? SPC_L[k] : SPC_O[k]; SPH[k] = on ? SPH_L[k] : SPH_O[k] }) } _drawLE() };
+
+/* statistik: slime cepat & rapuh, golem lambat & tebal, Blash rapuh; varian Magma (room 1) lebih kuat */
+const _spawnLE = spawn; spawn = function () {
+  _spawnLE(); if (!lavaOn() || room > 1) return; const m = room ? 1.2 : 1;
+  es.forEach(e => { if (e.k == 'slime') { e.sp *= 1.2; e.hp = e.mhp = Math.round(e.hp * .9 * m) } else if (e.k == 'skel') { e.sp *= .85; e.r = 12; e.ht = 38; e.hp = e.mhp = Math.round(e.hp * 1.4 * m) } else if (e.k == 'mage') { e.hp = e.mhp = Math.round(e.hp * .9 * m) } })
+};
+
+/* efek area golem, bola api Blash, kolam lava sisa hantaman */
+const _updLE = upd; upd = function (dt) {
+  if (room != lzRoom || !lavaOn()) { LZ = []; lzRoom = room }
+  const sl = lavaOn() && room < 2 ? es.filter(e => e.k == 'skel' && e.wind > 0 && e.sw <= 0).map(e => [e, e.tx, e.ty]) : [];
+  _updLE(dt); if (!lavaOn() || room > 1) return;
+  sl.forEach(([e, x, y]) => { if (e.wind <= 0 && !(e.stun > 0)) { LZ.push({ x, y, r: room ? 56 : 48, life: room ? 4 : 3 }); fx.push({ k: 'ring', x, y, r: room ? 64 : 54, life: .35, max: .35, col: '#ff7a1f' }); for (let i = 0; i < 16; i++) { const a = R() * 6.283, v = 40 + R() * 90; dp.push({ k: 'p', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .6 - 20, life: .5 + R() * .4, max: .9, s: 1.5 + R() * 2, c: i % 2 ? '#ffb050' : '#ff5a1f' }) } shake = Math.max(shake, 5); if (p.dead <= 0 && Math.hypot(p.x - x, p.y - y) < (room ? 48 : 42) + p.r) hurt(16) } });
+  const nw = pr.filter(b => b.own == 'e' && !b.lv);
+  nw.forEach(b => { b.lv = 1; b.rock = 1; b.col = '#ff6a1f'; b.r = 3.5; b.d = Math.round(b.d * 1.1);
+    if (room) { const a = Math.atan2(b.vy, b.vx), s = Math.hypot(b.vx, b.vy); [-.3, .3].forEach(o => pr.push({ ...b, vx: Math.cos(a + o) * s, vy: Math.sin(a + o) * s, d: Math.round(b.d * .75), lv: 1 })) } });
+  pr.forEach(b => { if (b.own == 'e' && b.lv && R() < dt * 40) dp.push({ k: 'p', x: b.x, y: b.y, vx: (R() - .5) * 10, vy: -8 - R() * 10, life: .3, max: .3, s: 1.5, c: R() < .5 ? '#ffd34d' : '#ff5a1f' }) });
+  LZ = LZ.filter(z => (z.life -= dt) > 0);
+  LZ.forEach(z => { if (R() < dt * 16) dp.push({ k: 'p', x: z.x + (R() - .5) * z.r * 1.4, y: z.y + (R() - .5) * z.r, vx: 0, vy: -18 - R() * 20, life: .5, max: .5, s: 1.5, c: '#ffb050' }); if (p && p.dead <= 0 && p.dod <= 0 && Math.hypot(p.x - z.x, (p.y - z.y) * 1.3) < z.r) hurt(5) })
+};
+const _envFxLE = envFx; envFx = function () {
+  _envFxLE(); LZ.forEach(z => { const k = Math.min(1, z.life / .6), pu = .75 + .25 * Math.sin(t * 8); g.save(); g.globalCompositeOperation = 'lighter'; const q = g.createRadialGradient(z.x, z.y, 2, z.x, z.y, z.r); q.addColorStop(0, 'rgba(255,200,80,' + .55 * k * pu + ')'); q.addColorStop(.6, 'rgba(255,90,20,' + .4 * k + ')'); q.addColorStop(1, 'rgba(200,30,0,0)'); g.fillStyle = q; g.save(); g.translate(z.x, z.y); g.scale(1, .75); g.translate(-z.x, -z.y); g.beginPath(); g.arc(z.x, z.y, z.r, 0, 7); g.fill(); g.restore(); g.restore() })
+};
+</script>
+
+<script>
+/* ===== Bos Level 2: MORVATH — 3 bentuk (Titan Batu → Titan Magma → Raja Inferno), tanpa summon ===== */
+const LFORMS = ['TITAN BATU', 'TITAN MAGMA', 'RAJA INFERNO'];
+const _emBL = EM.boss;
+EM.boss = function lavaBossDraw(pp, at, tm) {
+  if (!(lavaOn() && room == 2)) return _emBL(pp, at, tm);
+  const e = BOSS_E || {}, fl = !!MT, F = c => fl ? '#fff' : c, ez = q => 1 - (1 - q) * (1 - q), cl = (v, a, b) => Math.max(a, Math.min(b, v)), dir = Math.cos(e.ca || 0) < 0 ? -1 : 1, pu = .5 + .5 * Math.sin(tm * 3.2);
+  const mk0 = e.s2 == 'morph' && e.mtx ? 1 - e.mt / e.mtx : -1, f = mk0 >= 0 && mk0 < .55 ? Math.max(1, BOSS.ph - 1) : (BOSS.ph || 1);
+  const pal = [['#2b1f22', '#4a3436', '#6e5049'], ['#241416', '#3d2222', '#7a3f2c'], ['#120709', '#241012', '#43201a']][f - 1], D = pal[0], M = pal[1], Lt = pal[2], LA = '#ff7a1f', LY = '#ffd34d', LR = f == 3 ? '#e01808' : '#c8300f';
+  let up = 0, spread = 0, lean = 0, core = 0, sy = 1 + Math.sin(tm * 2) * .01, sx = 1, al = 1; const k = e.atk;
+  if (e.s2 == 'wind' && at) {
+    const q = ez(pp);
+    if (k == 'geyser') up = pp < .8 ? ez(pp / .8) * .8 : .8 * (1 - (pp - .8) / .2);
+    else if (k == 'orbs') { spread = q; core = q * 1.4 } else if (k == 'tide') { up = .4 * q; lean = dir * .08 * q }
+    else if (k == 'meteor') { up = .95 * q; core = q * 1.2 } else if (k == 'ring') { spread = q; core = q * 1.8; sy *= 1 + .03 * q }
+    else if (k == 'beam') { spread = .8 * q; core = q * 2 } else if (k == 'blink') { al = 1 - .85 * q; sy *= 1 - .05 * q }
+  } else if (e.s2 == 'act') { spread = .6; core = 2 } else if (e.s2 == 'rest' && e.atk == 'blink') al = cl(1 - e.tm / .5, .2, 1);
+  let jx = 0, sc = 1; if (mk0 >= 0) { jx = (R() - .5) * 10 * mk0; core += 2.2 * mk0; if (mk0 > .55) sc = 1 + .22 * (1 - (mk0 - .55) / .45) }
+  core += (f - 1) * .4; const gl = .55 + pu * .25 + core * .4;
+  const poly = (pts, c) => { g.fillStyle = F(c); g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1])); g.closePath(); g.fill() };
+  const oct = (x, y, r, c) => poly([0, 1, 2, 3, 4, 5, 6, 7].map(i => [x + Math.cos(i * .7854 + .39) * r, y + Math.sin(i * .7854 + .39) * r * .92]), c);
+  const crack = (pts, w) => { if (fl) return; g.lineCap = g.lineJoin = 'round'; g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1])); g.strokeStyle = LR; g.lineWidth = w + 2; g.stroke(); g.strokeStyle = LA; g.lineWidth = w; g.stroke(); g.strokeStyle = 'rgba(255,220,110,' + (.45 + .5 * pu) + ')'; g.lineWidth = w * .4; g.stroke() };
+  g.save(); g.globalAlpha = al; g.translate(320 + jx, 333); g.rotate(lean); const SS = [.8, .88, .98][f - 1] * sc; g.scale(SS * sx, SS * sy); g.translate(-320, -333);
+  const hv = 30 + Math.sin(tm * 2.2) * 5, by = 292 - hv;
+  if (!fl) {
+    g.save(); g.translate(320, 333); g.scale(1, .3); lavaGlow(0, 0, 110 + f * 20, .55 + .2 * pu, f == 3 ? '255,60,20' : '255,110,30'); g.restore();
+    const rk = (tm * .9) % 1; g.strokeStyle = 'rgba(255,150,50,' + (1 - rk) * .7 + ')'; g.lineWidth = 3; g.beginPath(); g.ellipse(320, 333, 20 + rk * 70, 6 + rk * 20, 0, 0, 7); g.stroke();
+    const jg = g.createLinearGradient(0, by, 0, 333); jg.addColorStop(0, 'rgba(255,235,130,.95)'); jg.addColorStop(.5, 'rgba(255,100,20,.75)'); jg.addColorStop(1, 'rgba(200,30,0,.25)'); g.fillStyle = jg; g.beginPath(); g.moveTo(296, by); g.lineTo(344, by); g.lineTo(378 + Math.sin(tm * 9) * 5, 333); g.lineTo(262 + Math.sin(tm * 8) * 5, 333); g.closePath(); g.fill();
+    for (let i = -3; i <= 3; i++) lavaFlame(320 + i * 16, 333, 9, 30 + (Math.sin(tm * 8 + i * 2) + 1) * 14 + (3 - Math.abs(i)) * 8, LR, LY, i);
+    for (let i = 0; i < 12; i++) { const x = 320 + Math.sin(tm * 2.3 + i * 1.9) * (28 + i * 4), y = 333 - ((tm * 55 + i * 29) % (hv + 50)); g.fillStyle = i % 2 ? LY : LA; g.fillRect(x, y, 2, 3) }
+  }
+  g.save(); g.translate(0, -hv);
+  lavaGlow(320, 230, 190 + f * 25 + (mk0 >= 0 ? 90 * mk0 : 0), .22 + .12 * gl + (mk0 >= 0 ? .3 * mk0 : 0), f == 3 ? '255,60,20' : '255,140,40');
+  if (mk0 > .5 && mk0 < .66) lavaGlow(320, 220, 320, 1 - Math.abs(mk0 - .58) * 12, '255,240,200');
+  if (f == 3 && !fl) for (const s of [-1, 1]) {   /* sayap api */
+    const wv = Math.sin(tm * 3) * 8, tips = [[200, 56 + wv], [238, 108 + wv * .6], [228, 170], [188, 222]]; g.save(); g.globalCompositeOperation = 'lighter';
+    g.fillStyle = 'rgba(255,60,20,.5)'; g.beginPath(); g.moveTo(320 + s * 70, 172); tips.forEach(q => g.lineTo(320 + s * q[0], q[1])); g.lineTo(320 + s * 70, 256); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(255,170,60,.45)'; g.beginPath(); g.moveTo(320 + s * 70, 190); tips.forEach(q => g.lineTo(320 + s * (q[0] * .72 + 20), q[1] * .8 + 40)); g.lineTo(320 + s * 70, 240); g.closePath(); g.fill(); g.restore();
+    tips.forEach((q, i) => lavaFlame(320 + s * q[0], q[1] + 26, 8, 34 + i * 4, LR, LY, i + s))
+  }
+  poly([[240, 168], [400, 168], [380, 268], [260, 268]], M); poly([[250, 172], [390, 172], [386, 194], [254, 194]], Lt);
+  if (f >= 2) { poly([[268, 194], [372, 194], [362, 258], [278, 258]], f == 3 ? '#ff3a10' : '#ff5a1f'); for (let i = 0; i < 5; i++) poly([[280 + i * 20, 194], [287 + i * 20, 194], [285 + i * 20, 258], [278 + i * 20, 258]], D); if (!fl) for (let i = 0; i < 4; i++) { g.fillStyle = LA; g.fillRect(288 + i * 18, 258 + ((tm * 45 + i * 20) % 38), 2, 5) } }
+  else { poly([[262, 200], [378, 200], [366, 258], [274, 258]], D); crack([[320, 224], [290, 205], [274, 208]], 3); crack([[320, 224], [352, 210], [368, 214]], 3); crack([[320, 224], [300, 250], [288, 256]], 3); crack([[320, 224], [342, 248], [352, 258]], 3) }
+  g.save(); g.globalCompositeOperation = 'lighter'; const cr = 22 + pu * 3 + core * 5, cg = g.createRadialGradient(320, 224, 2, 320, 224, cr * 2); cg.addColorStop(0, 'rgba(255,240,170,' + Math.min(1, .9 * gl) + ')'); cg.addColorStop(.4, 'rgba(255,110,30,.6)'); cg.addColorStop(1, 'rgba(200,30,0,0)'); if (!fl) { g.fillStyle = cg; g.beginPath(); g.arc(320, 224, cr * 2, 0, 7); g.fill() } g.restore();
+  oct(320, 224, cr * .6, LR); oct(320, 224, cr * .42, LA); oct(320, 224, cr * .22, LY);
+  poly([[262, 262], [378, 262], [372, 292], [268, 292]], D); oct(320, 277, 8, LA); oct(320, 277, 4, LY);
+  poly([[272, 290], [368, 290], [338, 318], [320, 332], [302, 318]], D); crack([[320, 292], [318, 308], [320, 324]], 3);
+  for (let i = 0; i < 2 + f; i++) { const a = tm * 1.5 + i * 6.283 / (2 + f); oct(320 + Math.cos(a) * 74, 312 + Math.sin(a) * 9, 7 - Math.sin(a) * 1.5, i % 2 ? M : Lt) }
+  if (f == 3) for (const s of [-1, 1]) {   /* lengan kecil tambahan */
+    const ex = 320 + s * (56 + Math.sin(tm * 3) * 3), ey = 252 + Math.cos(tm * 2.5) * 4; g.lineCap = 'round'; g.strokeStyle = F(D); g.lineWidth = 16; g.beginPath(); g.moveTo(320 + s * 34, 214); g.lineTo(ex, ey); g.stroke(); g.strokeStyle = F(M); g.lineWidth = 9; g.stroke();
+    g.strokeStyle = F(LY); g.lineWidth = 2; for (let c = -1; c <= 1; c++) { g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex + s * 14, ey + c * 9 + 6); g.stroke() }
+  }
+  poly([[294, 128], [346, 128], [352, 172], [288, 172]], M); poly([[291, 134], [349, 134], [349, 142], [291, 142]], D);
+  if (f == 1) { poly([[296, 160], [344, 160], [338, 184], [302, 184]], D); g.fillStyle = F(LY); g.fillRect(300, 146, 13, 6); g.fillRect(327, 146, 13, 6); g.fillStyle = F(LA); g.fillRect(308, 170, 24, 3) }
+  else {   /* tengkorak dengan rahang terbuka & taring */
+    poly([[296, 160], [344, 160], [340, 192], [300, 192]], D); poly([[304, 168], [336, 168], [333, 188], [307, 188]], f == 3 ? '#ff3a10' : '#ff6a1f');
+    for (let i = 0; i < 5; i++) { poly([[305 + i * 6.5, 168], [309 + i * 6.5, 168], [307 + i * 6.5, 178]], '#e8dcc0'); poly([[305 + i * 6.5, 188], [309 + i * 6.5, 188], [307 + i * 6.5, 180]], '#e8dcc0') }
+    g.fillStyle = F(f == 3 ? '#fff0c0' : LY); g.fillRect(298, 145, 15, 6); g.fillRect(327, 145, 15, 6); if (!fl) { lavaGlow(305, 148, 14, .9, f == 3 ? '255,40,20' : '255,200,60'); lavaGlow(335, 148, 14, .9, f == 3 ? '255,40,20' : '255,200,60') }
+    if (f == 3) { oct(320, 138, 6, '#2a0505'); if (!fl) { lavaGlow(320, 138, 14, .95, '255,50,30'); g.fillStyle = '#fff'; g.fillRect(318, 136, 4, 4) } }
+  }
+  const hh = f == 1 ? 98 : f == 2 ? 78 : 66; poly([[294, 132], [278 - (f - 1) * 6, hh], [304, 126]], Lt); poly([[346, 132], [362 + (f - 1) * 6, hh], [336, 126]], Lt);
+  if (f == 3) { for (let i = 0; i < 3; i++) { const sx2 = 308 + i * 12; poly([[sx2 - 5, 130], [sx2, 92 - (i == 1 ? 14 : 0)], [sx2 + 5, 130]], Lt) } poly([[286, 134], [266, 104], [298, 128]], D); poly([[354, 134], [374, 104], [342, 128]], D) }
+  if (!fl) { lavaFlame(320, 128, 18 + f * 3, 44 + f * 14, LR, LY, 1); lavaFlame(304, 130, 9, 26 + f * 8, LA, LY, 2); lavaFlame(336, 130, 9, 26 + f * 8, LA, LY, 3) }
+  const U = cl(up, -.3, 1);
+  for (const s of [-1, 1]) {
+    const sx0 = 320 + s * 100, sy0 = 205, fx = 320 + s * (112 - 46 * U + 26 * spread), fy = 300 - 190 * U - 40 * spread;
+    g.lineCap = 'round'; g.strokeStyle = F(D); g.lineWidth = 44; g.beginPath(); g.moveTo(sx0, sy0); g.lineTo(fx, fy - 10); g.stroke(); g.strokeStyle = F(M); g.lineWidth = 30; g.stroke();
+    crack([[sx0 + s * 2, sy0 + 20], [(sx0 + fx) / 2 + s * 4, (sy0 + fy) / 2], [fx - s * 2, fy - 24]], 3);
+    oct(fx, fy, 27, D); oct(fx, fy, 20, M); crack([[fx - 14, fy + 2], [fx, fy + 8], [fx + 14, fy + 1]], 3);
+    if (f == 3) { g.strokeStyle = F(LY); g.lineWidth = 3; for (let c = -1; c <= 1; c++) { g.beginPath(); g.moveTo(fx + s * 14, fy + c * 8); g.lineTo(fx + s * 30, fy + c * 12 + 4); g.stroke() } }
+    if (!fl) { if (f >= 2) lavaFlame(fx, fy - 20, 10, 18 + f * 6, LR, LY, s + 5); for (let i = 0; i < 2; i++) { const dy = (tm * 40 + i * 17 + (s > 0 ? 9 : 0)) % 30; g.fillStyle = LA; g.fillRect(fx - 8 + i * 12, fy + 20 + dy, 2, 4) } }
+  }
+  for (const s of [-1, 1]) {
+    const cx = 320 + s * 92, cy = 182; oct(cx, cy, 42, D); oct(cx, cy, 33, M);
+    [-.35, .1, .55].forEach(a0 => { const a = -1.57 + s * (a0 + .25), bx = cx + Math.cos(a) * 34, by2 = cy + Math.sin(a) * 34, L2 = 30 + (f - 1) * 12; poly([[bx - 7, by2 + 4], [bx + Math.cos(a) * L2, by2 + Math.sin(a) * L2], [bx + 7, by2 + 4]], Lt) });
+    crack([[cx - 22, cy + 6], [cx - 4, cy - 2], [cx + 8, cy + 10], [cx + 24, cy + 2]], 3);
+    if (!fl && f >= 2) lavaFlame(cx, cy - 34, 8, 16 + f * 6, LR, LY, s + 9)
+  }
+  g.restore(); g.restore()
+};
+
+/* ---- AI bos lava: setiap bentuk punya skill sendiri (BUKAN skill Minotaur) ---- */
+let LH = [], LQ = [], LBEAM = null;
+const lcl = (v, a, b) => Math.max(a, Math.min(b, v));
+const lhAdd = (x, y, r, t0, d, pool) => LH.push({ x: lcl(x, 34, DW - 34), y: lcl(y, 34, DH - 34), r, t: t0, mx: t0, d, pool });
+const lfire = (e, a, sp, d) => pr.push({ x: e.x, y: e.y - 18, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, d, r: 3.5, col: '#ff6a1f', own: 'e', life: 4, rock: 1, lv: 1, rot: 0, vr: 0, sd: R() * 50 });
+const lseg = (px, py, x, y, a, len) => { const dx = Math.cos(a), dy = Math.sin(a), q = lcl((px - x) * dx + (py - y) * dy, 0, len); return Math.hypot(px - (x + dx * q), py - (y + dy * q)) };
+function lavaMorph(e, ph) {
+  msg(ph == 2 ? 'Bentuk 2 — TITAN MAGMA! Batu retak, lava menyembur dari tubuhnya!' : 'Bentuk Akhir — RAJA INFERNO bangkit!');
+  SFX.wave(); FLSH = 1; FLSC = '255,110,20'; shake = Math.max(shake, 12); HST = Math.max(HST, .15);
+  fx.push({ k: 'ring', x: e.x, y: e.y, r: 60, w: 5, life: .6, max: .6, col: '#ff8a2a' }, { k: 'gl', x: e.x, y: e.y, r: 130, c: '255,120,30', life: .5, max: .5 });
+  BOSS.hz = []; BOSS.q = []; LH = []; LQ = []; LBEAM = null; pr = pr.filter(b => b.own != 'e');
+  e.s2 = 'morph'; e.mt = e.mtx = ph == 2 ? 1.9 : 2.6; e.atk = null; e.an = 0
+}
+function lavaBossTick(e, dt) {
+  const B = BOSS; e.fl -= dt; e.vx = e.vy = 0; e.stg = 0; e.stun = 0;
+  if (p.dead > 0 || B.dead) { e.an = 0; return }
+  const rt = e.hp / e.mhp, ph = rt > .6 ? 1 : rt > .3 ? 2 : 3;
+  if (ph > B.ph) { B.ph = ph; lavaMorph(e, ph); return }
+  if (B.intro > 0) { B.intro -= dt; return }
+  if (e.s2 == 'morph') {
+    e.mt -= dt; e.an = 0; const k = 1 - e.mt / e.mtx;
+    if (R() < dt * 50) { const a = R() * 6.283; dp.push({ k: 'f', o: 1, x: e.x + Math.cos(a) * 30, y: e.y - 20 + Math.sin(a) * 30, vx: Math.cos(a) * 50, vy: Math.sin(a) * 50 - 20, life: .5, max: .5, s: 3 + R() * 3 }) }
+    if (R() < dt * 5) { shake = Math.max(shake, 4 + k * 5); SFX.boom(14) }
+    if (e.mt <= 0) {
+      SFX.slam(); shake = Math.max(shake, 11); FLSH = .8; FLSC = '255,150,40';
+      fx.push({ k: 'ring', x: e.x, y: e.y, r: 96, w: 5, life: .45, max: .45, col: '#ff8a2a' }, { k: 'ring', x: e.x, y: e.y, r: 60, w: 3, life: .3, max: .3, col: '#ffd34d' });
+      for (let i = 0; i < 26; i++) { const a = R() * 6.283, v = 50 + R() * 130; dp.push({ k: 'p', x: e.x, y: e.y - 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, life: .5 + R() * .5, max: 1, s: 1.5 + R() * 2, c: i % 2 ? '#ffd34d' : '#ff5a1f' }) }
+      if (dist(e, p) < 96) hurt(14); e.s2 = 'rest'; e.tm = .9; e.cd = 1
+    } return
+  }
+  if (!e.s2) e.s2 = 'move';
+  const d = dist(e, p), a = ang(e, p), f = B.ph, spd = e.sp * (1 + (f - 1) * .25); e.cd -= dt;
+  if (e.s2 == 'move') {
+    e.an = 0; e.ca = a; const want = f == 1 ? 115 : f == 2 ? 85 : 95;
+    if (d > want + 10) mv(e, Math.cos(a) * spd * dt, Math.sin(a) * spd * dt); else if (d < want - 28) mv(e, -Math.cos(a) * spd * dt * .8, -Math.sin(a) * spd * dt * .8);
+    if (f >= 2) { e.trT = (e.trT || 0) - dt; if (e.trT <= 0) { e.trT = .45; LZ.push({ x: e.x, y: e.y + 8, r: 20, life: 2.2 }) } }
+    if (e.cd <= 0) {
+      const set = f == 1 ? (d > 150 ? ['geyser', 'orbs', 'tide'] : ['tide', 'geyser', 'orbs']) : f == 2 ? ['meteor', 'ring', 'tide', 'orbs'] : ['beam', 'blink', 'meteor', 'ring', 'beam'];
+      let q = set[R() * set.length | 0]; if (q == e.last) q = set[R() * set.length | 0]; e.last = q;
+      const dur = ({ geyser: .9, orbs: .7, tide: .8, meteor: .9, ring: .9, beam: 1.1, blink: .9 })[q] * (1 - (f - 1) * .06);
+      e.s2 = 'wind'; e.atk = q; e.tmx = e.tm = dur; e.hit = 0; SFX.warn(q == 'orbs' ? 1 : 0);
+      if (q == 'geyser') { for (let i = 0; i < 3; i++) lhAdd(p.x + (i ? (R() - .5) * 150 : 0), p.y + (i ? (R() - .5) * 110 : 0), 34, .9 + i * .25, 18, 1) }
+      else if (q == 'tide') { const lines = f == 2 ? [-.3, .3] : [0]; lines.forEach(o => { for (let i = 0; i < 6; i++) lhAdd(e.x + Math.cos(a + o) * (36 + i * 34), e.y + Math.sin(a + o) * (36 + i * 34), 24, .7 + i * .1, 15, 0) }) }
+      else if (q == 'meteor') { const n = f == 2 ? 5 : 7; for (let i = 0; i < n; i++) lhAdd(p.x + (i ? (R() - .5) * 280 : 0), p.y + (i ? (R() - .5) * 220 : 0), f == 3 ? 36 : 32, .9 + i * .15, 17, 1) }
+      else if (q == 'beam') { const sg = R() < .5 ? 1 : -1; LBEAM = { a0: a - sg * .9, dir: sg, t: 0, warn: dur, life: 1.7, w: 13, len: 440, bx: e.x, by: e.y - 24 } }
+      else if (q == 'blink') { const dx = p.x - e.x, dy = p.y - e.y, dl = Math.hypot(dx, dy) || 1, s2 = freeSpot(lcl(p.x + dx / dl * 90, 40, DW - 40), lcl(p.y + dy / dl * 90, 40, DH - 40)); e.tgt = s2; lhAdd(s2.x, s2.y, 52, dur + .15, 20, 1) }
+    }
+  } else if (e.s2 == 'wind') {
+    e.tm -= dt; e.an = Math.max(.01, .6 * (e.tm / e.tmx)); if (e.atk != 'blink' && e.tm > e.tmx * .35) e.ca = a;
+    if (LBEAM) { LBEAM.bx = e.x; LBEAM.by = e.y - 24 }
+    if (e.tm <= 0) {
+      e.an = 0; const q = e.atk;
+      if (q == 'orbs') { const n = f == 1 ? 3 : f == 2 ? 5 : 7, b0 = Math.atan2(p.y - e.y, p.x - e.x); SFX.eshot(); for (let i = 0; i < n; i++) lfire(e, b0 + (i - (n - 1) / 2) * .24, 95 + f * 15, 11 + f * 2); e.s2 = 'rest'; e.tm = .6 }
+      else if (q == 'ring') {
+        const rings = f == 3 ? 3 : 2, g0 = Math.atan2(p.y - e.y, p.x - e.x);
+        const ring = (off, gap) => { SFX.boom(16); fx.push({ k: 'ring', x: e.x, y: e.y - 18, r: 30, w: 3, life: .3, max: .3, col: '#ff8a2a' }); for (let i = 0; i < 18; i++) { const an = i / 18 * 6.283 + off; let dd = Math.abs(((an - gap + 9.425) % 6.283) - 3.1416); if (Math.abs(((an - gap) % 6.283 + 6.283 + 3.1416) % 6.283 - 3.1416) < .4) continue; lfire(e, an, 85, 13) } };
+        ring(0, g0); for (let r = 1; r < rings; r++) LQ.push({ t: r * .55, f: () => { if (es.includes(e) && p.dead <= 0) ring(r * .17, g0 + r * 1.1) } }); e.s2 = 'rest'; e.tm = .7 + rings * .3
+      }
+      else if (q == 'beam') { e.s2 = 'act'; e.tm = LBEAM ? LBEAM.life : 1.5; SFX.boom(30) }
+      else if (q == 'blink') { if (e.tgt) { fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, life: .3, max: .3, col: '#ff8a2a' }); e.x = e.tgt.x; e.y = e.tgt.y; fx.push({ k: 'ring', x: e.x, y: e.y, r: 40, w: 3, life: .3, max: .3, col: '#ffd34d' }); SFX.dodge() } e.s2 = 'rest'; e.tm = .5 }
+      else { e.s2 = 'rest'; e.tm = q == 'meteor' ? 1.1 : .8 }
+    }
+  } else if (e.s2 == 'act') {
+    e.tm -= dt; e.an = .01; if (LBEAM) e.ca = LBEAM.a0 + LBEAM.dir * 1.2 * Math.max(0, LBEAM.t - LBEAM.warn); if (e.tm <= 0) { e.an = 0; e.s2 = 'rest'; e.tm = .9 }
+  } else { e.an = 0; e.tm -= dt; if (e.tm <= 0) { e.s2 = 'move'; e.cd = Math.max(.55, 1.6 - f * .3) } }
+}
+const _bossTickL = bossTick; bossTick = function (e, dt) { if (lavaOn() && room == 2) return lavaBossTick(e, dt); return _bossTickL(e, dt) };
+const _updBF = upd; upd = function (dt) {
+  _updBF(dt);
+  if (!lavaOn() || room != 2 || !BOSS.on || p.dead > 0 || BOSS.dead) { if (LH.length || LQ.length || LBEAM) { LH = []; LQ = []; LBEAM = null } return }
+  if (HST > 0) return; const e = es.find(x => x.k == 'boss');
+  LQ = LQ.filter(o => { o.t -= dt; if (o.t <= 0) { o.f(); return false } return true });
+  LH = LH.filter(h => {
+    h.t -= dt; if (h.t > 0) return true;
+    SFX.boom(h.r); shake = Math.max(shake, 4); fx.push({ k: 'ring', x: h.x, y: h.y, r: h.r, w: 3, life: .3, max: .3, col: '#ff8a2a' }, { k: 'gl', x: h.x, y: h.y, r: h.r * 2, c: '255,140,40', life: .3, max: .3 });
+    for (let i = 0; i < 16; i++) { const an = R() * 6.283, v = 30 + R() * 80; dp.push({ k: i % 3 ? 'p' : 'f', o: 1, x: h.x + Math.cos(an) * h.r * .5, y: h.y + Math.sin(an) * h.r * .3, vx: Math.cos(an) * v * .5, vy: -40 - R() * 80, life: .5 + R() * .4, max: .9, s: 2 + R() * 2.5, c: i % 2 ? '#ffd34d' : '#ff5a1f' }) }
+    if (p.dead <= 0 && Math.hypot(p.x - h.x, p.y - h.y) < h.r + p.r) hurt(h.d); if (h.pool) LZ.push({ x: h.x, y: h.y, r: h.r * .9, life: 3 }); return false
+  });
+  LZ = LZ.filter(z => (z.life -= dt) > 0); LZ.forEach(z => { if (R() < dt * 16) dp.push({ k: 'p', x: z.x + (R() - .5) * z.r * 1.4, y: z.y + (R() - .5) * z.r, vx: 0, vy: -18 - R() * 20, life: .5, max: .5, s: 1.5, c: '#ffb050' }); if (p.dead <= 0 && p.dod <= 0 && Math.hypot(p.x - z.x, (p.y - z.y) * 1.3) < z.r) hurt(5) });
+  if (LBEAM) {
+    const bm = LBEAM; bm.t += dt; if (e) { bm.bx = e.x; bm.by = e.y - 24 }
+    if (bm.t >= bm.warn) { const an = bm.a0 + bm.dir * 1.2 * (bm.t - bm.warn); if (lseg(p.x, p.y, bm.bx, bm.by, an, bm.len) < bm.w / 2 + p.r) hurt(14); if (R() < dt * 40) { const q = R() * bm.len; dp.push({ k: 'p', x: bm.bx + Math.cos(an) * q, y: bm.by + Math.sin(an) * q, vx: (R() - .5) * 30, vy: -20 - R() * 30, life: .4, max: .4, s: 2, c: '#ffd34d' }) } shake = Math.max(shake, 1.5) }
+    if (bm.t >= bm.warn + bm.life) LBEAM = null
+  }
+  if (e && BOSS.ph == 3 && !e.dying && e.s2 != 'morph' && dist(e, p) < 48 && p.inv <= 0) hurt(7)
+};
+const _envFxBM = envFx; envFx = function () {
+  _envFxBM(); if (!lavaOn() || room != 2) return;
+  LH.forEach(h => { const k = 1 - h.t / h.mx; g.save(); g.fillStyle = 'rgba(255,120,20,' + (.1 + .22 * k) + ')'; g.beginPath(); g.arc(h.x, h.y, h.r, 0, 7); g.fill(); g.strokeStyle = 'rgba(255,170,60,' + (.5 + .4 * k) + ')'; g.lineWidth = 1.5; g.stroke(); g.fillStyle = 'rgba(255,90,20,.35)'; g.beginPath(); g.arc(h.x, h.y, h.r * k, 0, 7); g.fill(); g.restore() });
+  if (LBEAM) {
+    const bm = LBEAM, warn = bm.t < bm.warn, an = warn ? bm.a0 : bm.a0 + bm.dir * 1.2 * (bm.t - bm.warn); g.save(); g.translate(bm.bx, bm.by); g.rotate(an);
+    if (warn) { g.strokeStyle = 'rgba(255,150,40,' + (.45 + .3 * Math.sin(t * 20)) + ')'; g.setLineDash([6, 5]); g.lineWidth = 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(bm.len, 0); g.stroke(); g.setLineDash([]) }
+    else { g.globalCompositeOperation = 'lighter'; [[bm.w * 2.4, 'rgba(255,70,10,.35)'], [bm.w * 1.4, 'rgba(255,150,40,.6)'], [bm.w * .6, 'rgba(255,245,200,.95)']].forEach(([w, c]) => { g.fillStyle = c; g.fillRect(0, -w / 2, bm.len, w) }) }
+    g.restore()
+  }
+};
+</script>
+
+<script>
+/* ===== Tembakan Blash: bola api (bukan panah) ===== */
+const _drawRockF = drawRock; drawRock = function (b) {
+  if (!b.lv) return _drawRockF(b);
+  const a = Math.atan2(b.vy, b.vx), f = 1 + Math.sin(t * 30 + b.x) * .12;
+  g.save(); g.translate(b.x, b.y); g.rotate(a); lavaGlow(0, 0, 18, .75);
+  g.fillStyle = '#ff5a1f'; g.beginPath(); g.moveTo(0, -4.5 * f); g.quadraticCurveTo(-10, -3.5, -22 * f, 0); g.quadraticCurveTo(-10, 3.5, 0, 4.5 * f); g.closePath(); g.fill();
+  g.fillStyle = '#ffb050'; g.beginPath(); g.moveTo(0, -3); g.quadraticCurveTo(-7, -2, -14 * f, 0); g.quadraticCurveTo(-7, 2, 0, 3); g.closePath(); g.fill();
+  g.fillStyle = '#ff7a1f'; g.beginPath(); g.arc(0, 0, 5 * f, 0, 7); g.fill(); g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(0, 0, 3.2, 0, 7); g.fill(); g.fillStyle = '#fff2b0'; g.beginPath(); g.arc(.5, 0, 1.6, 0, 7); g.fill();
+  g.restore()
+};
+const _rockTrailF = rockTrail; rockTrail = function (b) { if (!b.lv) return _rockTrailF(b); if (R() < .7) dp.push({ k: 'f', x: b.x, y: b.y, vx: (R() - .5) * 14, vy: (R() - .5) * 14 - 8, life: .25 + R() * .2, max: .45, s: 2 + R() * 2 }) };
+const _rockBreakF = rockBreak; rockBreak = function (b) {
+  if (!b.lv) return _rockBreakF(b);
+  fx.push({ k: 'ring', x: b.x, y: b.y, r: 14, life: .25, max: .25, col: '#ff7a1f' });
+  for (let i = 0; i < 12; i++) { const a = R() * 6.283, v = 30 + R() * 90; dp.push({ k: 'p', x: b.x, y: b.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 15, life: .35 + R() * .3, max: .65, s: 1.5 + R() * 1.5, c: i % 2 ? '#ffd34d' : '#ff5a1f' }) }
+};
+</script>
+
+<script>
+/* ===== Efek oranye: ledakan Golem & lemparan Blash ===== */
+const _flameO = flame; flame = function (q, k) {
+  if (!q.o) return _flameO(q, k);
+  const a = 1 - k, r = q.s * (1.3 - a * .7), c1 = a < .25 ? '255,245,190' : a < .55 ? '255,170,60' : '220,70,15'; g.save(); g.globalAlpha = 1; g.globalCompositeOperation = 'lighter';
+  const gr = g.createRadialGradient(q.x, q.y, 0, q.x, q.y, r * 2); gr.addColorStop(0, 'rgba(' + c1 + ',' + k * .9 + ')'); gr.addColorStop(.5, 'rgba(255,110,30,' + k * .45 + ')'); gr.addColorStop(1, 'rgba(160,30,0,0)'); g.fillStyle = gr; g.beginPath(); g.arc(q.x, q.y, r * 2, 0, 7); g.fill(); g.restore()
+};
+const _pfireO = pfire; pfire = function (x, y, r) {
+  if (!lavaOn()) return _pfireO(x, y, r); r *= 1.4;
+  puff(x, y, Math.round(r / 8) + 2, '90,40,15', 1.2); fx.push({ k: 'pf', x, y, r, life: .6, max: .6, pc: ['255,245,200', '255,150,50', '200,50,10'] }); shake = Math.max(shake, 3);
+  for (let i = 0; i < 14 + r * .6; i++) { const a = R() * 6.283, d = R() * r * .6, v = 20 + R() * 70; dp.push({ k: 'f', o: 1, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d * .7, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .6 - 15, life: .45 + R() * .45, max: .9, s: 3 + R() * r * .18 }) }
+  for (let i = 0; i < 12; i++) { const a = R() * 6.283, v = 30 + R() * 90; dp.push({ k: 'p', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 25, life: .5 + R() * .5, max: 1, s: 1.5 + R() * 1.5, c: i % 2 ? '#ffd34d' : '#ff7a1f' }) }
+};
+/* jejak api Blash & warna cincin/muzzle jadi oranye */
+const _rockTrailO = rockTrail; rockTrail = function (b) { if (!b.lv) return _rockTrailO(b); if (R() < .7) dp.push({ k: 'f', o: 1, x: b.x, y: b.y, vx: (R() - .5) * 14, vy: (R() - .5) * 14 - 8, life: .25 + R() * .2, max: .45, s: 2 + R() * 2 }) };
+const _updO = upd; upd = function (dt) { _updO(dt); if (lavaOn()) fx.forEach(f => { if (f.k == 'ring' && f.col == '#f55') f.col = '#ff8a2a'; else if (f.k == 'muzz' && f.col == '#e6c98e') f.col = '#ff8a2a' }) };
+</script>
+
+<script>
+/* ===== Efek BURN: setiap hit dari musuh membakar player (ringan, tidak membunuh) ===== */
+const _hurtBn = hurt; hurt = function (d) {
+  const h0 = p ? p.hp : 0; _hurtBn(d);
+  if (p && lavaOn() && p.hp < h0 && p.dead <= 0) { if (!(p.burn > 0)) msg('🔥 Kau terbakar!'); p.burn = 3; p.bt = .5 }
+};
+const _updBn = upd; upd = function (dt) {
+  _updBn(dt); if (!p) return;
+  if (!lavaOn() || p.dead > 0) { p.burn = 0; return }
+  if (p.burn > 0) {
+    p.burn -= dt; p.bt = (p.bt || 0) - dt;
+    if (p.bt <= 0) { p.bt = .5; const n = Math.max(1, Math.round(2 * DF[DIFF].dmg)); p.hp = Math.max(1, p.hp - n); dn(p.x, p.y - 12, n, 0, '#ff9a2a') }
+    if (R() < dt * 22) dp.push({ k: 'f', o: 1, x: p.x + (R() - .5) * 8, y: p.y - 2 - R() * 8, vx: (R() - .5) * 10, vy: -14 - R() * 16, life: .35, max: .35, s: 2 + R() * 1.5 })
+  }
+};
+const _envFxBn = envFx; envFx = function () { _envFxBn(); if (p && p.burn > 0 && lavaOn()) lavaGlow(p.x, p.y - 6, 22, .3 + .15 * Math.sin(t * 14)) };
+const _drawBn = draw; draw = function () { _drawBn(); if (p && p.burn > 0 && lavaOn()) { try { g.font = '9px monospace'; txt('🔥 TERBAKAR', W - 10, 72, '#ff9a2a', 'right') } catch (e) { } } };
+</script>
+
+<script>
+/* ===== Suara tembakan Blash/bos lava: bola api ===== */
+const _eshotFB = SFX.eshot; SFX.eshot = function () { if (lavaOn()) SFX.fireball(); else _eshotFB() };
+</script>
+
+<script>
+/* ===== Arena Bos Level 2: Aula Obsidian Magma (satu tema dengan Morvath, berubah tiap bentuk) ===== */
+let LBB = null, LCR = null, RUN = null;
+function buildLavaBossBG() {
+  const c = document.createElement('canvas'); c.width = DW; c.height = DH; const b = c.getContext('2d'); LBB = c;
+  let sd = 21; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, TAU = Math.PI * 2, cx = DW / 2, cy = DY;
+  const px = (x, y, w, h, col) => { b.fillStyle = col; b.fillRect(Math.round(x), Math.round(y), w, h) };
+  /* 1. lantai obsidian berubin */
+  for (let y = 0; y < DH; y += 40) for (let x = 0; x < DW; x += 40) {
+    const v = r(); px(x, y, 40, 40, v < .33 ? '#1b1114' : v < .66 ? '#20141a' : '#171014'); px(x, y, 40, 1, 'rgba(255,120,60,.10)'); px(x, y, 1, 40, 'rgba(255,120,60,.07)'); px(x, y + 39, 40, 1, 'rgba(0,0,0,.5)'); px(x + 39, y, 1, 40, 'rgba(0,0,0,.5)');
+    for (let i = 0; i < 3; i++) if (r() < .5) px(x + r() * 36, y + r() * 36, 2, 1, '#34202a')
+  }
+  /* 2. retakan lava memancar dari pusat */
+  LCR = [];
+  for (let i = 0; i < 22; i++) { let a = i / 22 * TAU + r() * .2, rad = 70 + r() * 30; const pts = [[cx + Math.cos(a) * rad, cy + Math.sin(a) * rad * .95]], len = 4 + (r() * 5 | 0); for (let k = 0; k < len; k++) { a += (r() - .5) * .7; rad += 28 + r() * 30; pts.push([cx + Math.cos(a) * rad, cy + Math.sin(a) * rad * .9]) } LCR.push(pts) }
+  b.lineCap = b.lineJoin = 'round';
+  [[5, '#0c0506'], [3, '#c8300f'], [2, '#ff7a1f'], [.9, '#ffd34d']].forEach(([w, col]) => { b.strokeStyle = col; b.lineWidth = w; LCR.forEach(pts => { b.beginPath(); pts.forEach((q, i) => i ? b.lineTo(q[0], q[1]) : b.moveTo(q[0], q[1])); b.stroke() }) });
+  /* 3. panggung ritual: cakram, cincin lava, bintang & rune */
+  const dk = b.createRadialGradient(cx, cy, 20, cx, cy, 196); dk.addColorStop(0, '#0e0709'); dk.addColorStop(1, '#1a0f13'); b.fillStyle = dk; b.beginPath(); b.arc(cx, cy, 192, 0, TAU); b.fill();
+  [[190, 5, '#0a0507'], [186, 2.5, '#ff7a1f'], [150, 4, '#0a0507'], [150, 1.5, '#c8300f'], [96, 4, '#0a0507'], [96, 1.5, '#ff7a1f'], [44, 5, '#0a0507'], [44, 2, '#ff9a2a']].forEach(([rd, w, col]) => { b.strokeStyle = col; b.lineWidth = w; b.beginPath(); b.arc(cx, cy, rd, 0, TAU); b.stroke() });
+  b.strokeStyle = '#ff7a1f'; b.lineWidth = 1.5; for (const pts of [8]) { b.beginPath(); for (let i = 0; i <= 8; i++) { const a = i * 3 / 8 * TAU * 1 - Math.PI / 2, rd = 92; i ? b.lineTo(cx + Math.cos(a) * rd, cy + Math.sin(a) * rd) : b.moveTo(cx + Math.cos(a) * rd, cy + Math.sin(a) * rd) } b.stroke() }
+  b.strokeStyle = '#c8300f'; b.lineWidth = 1; for (let i = 0; i < 24; i++) { const a = i / 24 * TAU; b.beginPath(); b.moveTo(cx + Math.cos(a) * 154, cy + Math.sin(a) * 154); b.lineTo(cx + Math.cos(a) * 182, cy + Math.sin(a) * 182); b.stroke() }
+  RUN = [];
+  for (let i = 0; i < 12; i++) {
+    const a = i / 12 * TAU - Math.PI / 2, x = cx + Math.cos(a) * 168, y = cy + Math.sin(a) * 168; RUN.push([x, y]); b.save(); b.translate(x, y); b.rotate(a + Math.PI / 2); b.strokeStyle = '#ff7a1f'; b.lineWidth = 1.6; b.beginPath();
+    const sg = [[[-4, -7], [-4, 7]], [[-4, -7], [4, -2]], [[4, -2], [-4, 2]], [[-4, 2], [4, 7]], [[4, -7], [4, 7]], [[-4, 0], [4, 0]], [[-4, 7], [4, 3]], [[0, -7], [0, 7]]]; sg.forEach((q, k) => { if (((i * 5 + k * 3) % 7) < 4) { b.moveTo(q[0][0], q[0][1]); b.lineTo(q[1][0], q[1][1]) } }); b.stroke(); b.restore()
+  }
+  b.strokeStyle = '#ff9a2a'; b.lineWidth = 2; b.beginPath(); for (let i = 0; i < 6; i++) { const a = i / 6 * TAU - Math.PI / 2; i ? b.lineTo(cx + Math.cos(a) * 30, cy + Math.sin(a) * 30) : b.moveTo(cx + Math.cos(a) * 30, cy + Math.sin(a) * 30) } b.closePath(); b.stroke(); b.fillStyle = '#ff7a1f'; b.beginPath(); b.arc(cx, cy, 6, 0, TAU); b.fill(); b.fillStyle = '#ffd34d'; b.beginPath(); b.arc(cx, cy, 3, 0, TAU); b.fill();
+  /* batu pecahan & bara di lantai */
+  for (let i = 0; i < 40; i++) { const x = 30 + r() * (DW - 60), y = 30 + r() * (DH - 60); if (Math.hypot(x - cx, y - cy) < 200) continue; px(x, y, 3 + r() * 4, 2 + r() * 3, '#0d0709'); if (r() < .3) px(x + 1, y, 1, 1, '#ff7a1f') }
+  /* 4. dinding obsidian dengan lava merembes */
+  const wc = '#0e0709'; px(0, 0, DW, 14, wc); px(0, DH - 14, DW, 14, wc); px(0, 0, 14, DH, wc); px(DW - 14, 0, 14, DH, wc);
+  for (let x = 0; x < DW; x += 20) { px(x, 0, 1, 14, '#6a1d0a'); px(x, DH - 14, 1, 14, '#6a1d0a') } for (let y = 0; y < DH; y += 20) { px(0, y, 14, 1, '#6a1d0a'); px(DW - 14, y, 14, 1, '#6a1d0a') }
+  px(0, 13, DW, 1, '#ff5a1f'); px(0, DH - 14, DW, 1, '#ff5a1f'); px(13, 0, 1, DH, '#ff5a1f'); px(DW - 14, 0, 1, DH, '#ff5a1f');
+  b.save(); b.globalCompositeOperation = 'lighter';
+  [[0, 14, 0, 48], [0, DH - 14, 0, DH - 48], [14, 0, 48, 0], [DW - 14, 0, DW - 48, 0]].forEach(([x0, y0, x1, y1], i) => { const q = b.createLinearGradient(x0, y0, x1, y1); q.addColorStop(0, 'rgba(255,90,20,.35)'); q.addColorStop(1, 'rgba(255,90,20,0)'); b.fillStyle = q; if (i < 2) b.fillRect(0, Math.min(y0, y1), DW, 34); else b.fillRect(Math.min(x0, x1), 0, 34, DH) });
+  b.restore();
+  /* obor lava di dinding & kuali di sudut */
+  TO2.forEach(([x, y]) => { px(x - 3, y - 2, 6, 9, '#0a0507'); px(x - 2, y - 1, 4, 2, '#ff7a1f') });
+  BR2.forEach(([x, y]) => {
+    const sx = x < cx ? 1 : -1, sy = y < cy ? 1 : -1; b.fillStyle = '#0c0608'; for (let i = 0; i < 3; i++) { b.beginPath(); b.moveTo(x + sx * (14 + i * 9), y + sy * 22); b.lineTo(x + sx * (22 + i * 9), y + sy * (22 - 22 - i * 5 - 8)); b.lineTo(x + sx * (30 + i * 9), y + sy * 22); b.fill() }
+    b.fillStyle = 'rgba(0,0,0,.5)'; b.beginPath(); b.ellipse(x + 3, y + 8, 16, 8, 0, 0, TAU); b.fill(); px(x - 12, y - 4, 24, 14, '#0c0608'); px(x - 10, y - 6, 20, 4, '#2a171a'); b.fillStyle = '#ff7a1f'; b.beginPath(); b.ellipse(x, y - 6, 9, 3, 0, 0, TAU); b.fill(); px(x - 12, y + 6, 24, 3, '#4a2a26')
+  });
+  /* 6. vignet & cahaya */
+  const v = b.createRadialGradient(cx, cy, 220, cx, cy, 470); v.addColorStop(0, 'rgba(8,2,2,0)'); v.addColorStop(1, 'rgba(8,2,2,.7)'); b.fillStyle = v; b.fillRect(0, 0, DW, DH);
+  b.save(); b.globalCompositeOperation = 'lighter'; const pool = (x, y, rd, col) => { const q = b.createRadialGradient(x, y, 0, x, y, rd); q.addColorStop(0, col); q.addColorStop(1, 'rgba(0,0,0,0)'); b.fillStyle = q; b.fillRect(x - rd, y - rd, rd * 2, rd * 2) };
+  BR2.forEach(([x, y]) => pool(x, y, 130, 'rgba(255,120,40,.25)')); TO2.forEach(([x, y]) => pool(x, y, 55, 'rgba(255,120,40,.09)')); pool(cx, cy, 210, 'rgba(255,60,20,.13)'); b.restore();
+}
+const _drawBR = draw; draw = function () { if (lavaOn() && room == 2) { if (!LBB) buildLavaBossBG(); BG = LBB } _drawBR() };
+const _envFxBR = envFx; envFx = function () {
+  _envFxBR(); if (!lavaOn() || room != 2 || !LCR) return;
+  const ph = BOSS.ph || 1, pu = .5 + .5 * Math.sin(t * (1.6 + ph * .9)), cx = DW / 2, cy = DY, col = ph == 1 ? '255,140,50' : ph == 2 ? '255,95,30' : '255,45,20';
+  g.save(); g.globalCompositeOperation = 'lighter'; g.lineCap = g.lineJoin = 'round';
+  g.strokeStyle = 'rgba(' + col + ',' + (.08 + .1 * ph * pu) + ')'; g.lineWidth = 4; LCR.forEach(pts => { g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1])); g.stroke() });
+  g.strokeStyle = 'rgba(' + col + ',' + (.14 + .12 * ph * pu) + ')'; g.lineWidth = 6; g.beginPath(); g.arc(cx, cy, 186, 0, 7); g.stroke();
+  RUN.forEach((q, i) => { const w = .5 + .5 * Math.sin(t * (2 + ph) - i * .52), gr = g.createRadialGradient(q[0], q[1], 0, q[0], q[1], 16); gr.addColorStop(0, 'rgba(' + col + ',' + (.25 + .5 * w) + ')'); gr.addColorStop(1, 'rgba(' + col + ',0)'); g.fillStyle = gr; g.fillRect(q[0] - 16, q[1] - 16, 32, 32) });
+  g.fillStyle = 'rgba(' + col + ',' + (.05 + .05 * ph * pu) + ')'; g.fillRect(14, 14, DW - 28, 30); g.fillRect(14, DH - 44, DW - 28, 30);
+  if (ph == 3) { g.fillStyle = 'rgba(255,40,20,' + (.03 + .04 * pu) + ')'; g.fillRect(0, 0, DW, DH) }
+  const n = 14 + ph * 8; for (let i = 0; i < n; i++) { const sp = 14 + (i % 5) * 5, k = (t * sp + i * 53) % DH, x = (i * 97.3 + Math.sin(t * .7 + i) * 20 + i * 13) % DW, y = DH - k; g.fillStyle = 'rgba(255,' + (140 + (i % 3) * 40) + ',60,' + (Math.min(1, y / DH * 1.4) * .7).toFixed(2) + ')'; g.fillRect(Math.round(x), Math.round(y), 2, 2) }
+  g.restore();
+  BR2.forEach(([x, y], i) => { lavaFlame(x, y - 6, 9, 24 + ph * 9, '#c8300f', '#ffd34d', i); lavaFlame(x - 5, y - 6, 5, 14 + ph * 4, '#ff7a1f', '#ffe28a', i + 2) });
+  TO2.forEach(([x, y], i) => lavaFlame(x, y, 3, 7 + ph * 2, '#ff7a1f', '#ffd34d', i))
+};
+</script>
+
+<script>
+/* ===== Level 2: ruangan lega tanpa pilar + desain baru Ember Hall & Magma Dungeon ===== */
+const LWALLS = [WB(), WB(), WB()], LBR1 = BR1.slice(2);
+const lwApply = () => { if (lavaOn()) { walls = LWALLS[room]; if (room == 1) BR = LBR1 } };
+const _updLW = upd; upd = function (dt) { lwApply(); _updLW(dt); lwApply() };
+const _toRoomLW = toRoom; toRoom = function (n) { _toRoomLW(n); lwApply() };
+const _toBossLW = toBoss; toBoss = function () { _toBossLW(); lwApply() };
+const _enterLW = enterDungeon; enterDungeon = function () { _enterLW(); lwApply() };
+
+function lavaPoolsN(n) {
+  let sd = n ? 9 : 3; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, out = [];
+  for (let a = 0; a < 600 && out.length < (n ? 6 : 5); a++) { const w = 56 + r() * 34 | 0, h = 36 + r() * 20 | 0, x = 150 + r() * (DW - 300 - w) | 0, y = 48 + r() * (DH - 96 - h) | 0; if (!out.some(q => x + w + 40 > q[0] && x - 40 < q[0] + q[2] && y + h + 40 > q[1] && y - 40 < q[1] + q[3])) out.push([x, y, w, h]) }
+  return out
+}
+function buildLavaRoom(n, pools) {
+  const c = document.createElement('canvas'); c.width = DW; c.height = DH; const b = c.getContext('2d');
+  let sd = n ? 77 : 33; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, TAU = Math.PI * 2, cx = DW / 2, cy = DY;
+  const px = (x, y, w, h, col) => { b.fillStyle = col; b.fillRect(Math.round(x), Math.round(y), w, h) };
+  const tone = n ? ['#150d10', '#1a1015', '#120b0e'] : ['#1f1417', '#25171b', '#1a1013'];
+  for (let y = 0; y < DH; y += 40) for (let x = 0; x < DW; x += 40) {
+    const v = r(); px(x, y, 40, 40, tone[v * 3 | 0]); px(x, y, 40, 1, 'rgba(255,120,60,.10)'); px(x, y, 1, 40, 'rgba(255,120,60,.07)'); px(x, y + 39, 40, 1, 'rgba(0,0,0,.5)'); px(x + 39, y, 1, 40, 'rgba(0,0,0,.5)');
+    for (let i = 0; i < 3; i++) if (r() < .5) px(x + r() * 36, y + r() * 36, 2, 1, '#34202a')
+  }
+  /* retakan lava */
+  const cr = []; for (let i = 0; i < (n ? 26 : 18); i++) { let x = 60 + r() * (DW - 120), y = 40 + r() * (DH - 80), a = r() * TAU; const pts = [[x, y]], len = 4 + (r() * 4 | 0); for (let k = 0; k < len; k++) { a += (r() - .5) * 1.1; x += Math.cos(a) * (24 + r() * 26); y += Math.sin(a) * (24 + r() * 26); pts.push([x, y]) } cr.push(pts) }
+  b.lineCap = b.lineJoin = 'round'; [[5, '#0c0506'], [3, n ? '#e8300f' : '#c8300f'], [2, '#ff7a1f'], [.9, '#ffd34d']].forEach(([w, col]) => { b.strokeStyle = col; b.lineWidth = w; cr.forEach(pts => { b.beginPath(); pts.forEach((q, i) => i ? b.lineTo(q[0], q[1]) : b.moveTo(q[0], q[1])); b.stroke() }) });
+  /* motif lantai */
+  const ring = (x, y, rd, w, col) => { b.strokeStyle = col; b.lineWidth = w; b.beginPath(); b.arc(x, y, rd, 0, TAU); b.stroke() };
+  const star = (x, y, rd, k, col, w) => { b.strokeStyle = col; b.lineWidth = w; b.beginPath(); for (let i = 0; i <= k; i++) { const a = i * 3 / k * TAU - Math.PI / 2; i ? b.lineTo(x + Math.cos(a) * rd, y + Math.sin(a) * rd) : b.moveTo(x + Math.cos(a) * rd, y + Math.sin(a) * rd) } b.stroke() };
+  if (!n) {   /* Ember Hall: medali matahari di tengah + 4 segel sudut */
+    const dk = b.createRadialGradient(cx, cy, 10, cx, cy, 104); dk.addColorStop(0, '#0e0709'); dk.addColorStop(1, '#1a0f13'); b.fillStyle = dk; b.beginPath(); b.arc(cx, cy, 102, 0, TAU); b.fill();
+    ring(cx, cy, 100, 5, '#0a0507'); ring(cx, cy, 98, 2.2, '#ff7a1f'); ring(cx, cy, 68, 4, '#0a0507'); ring(cx, cy, 68, 1.5, '#c8300f');
+    b.strokeStyle = '#ff9a2a'; b.lineWidth = 2; for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, r0 = 18, r1 = i % 2 ? 48 : 62; b.beginPath(); b.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); b.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); b.stroke() }
+    b.fillStyle = '#ff7a1f'; b.beginPath(); b.arc(cx, cy, 12, 0, TAU); b.fill(); b.fillStyle = '#ffd34d'; b.beginPath(); b.arc(cx, cy, 6, 0, TAU); b.fill();
+    [[190, 110], [DW - 190, 110], [190, DH - 110], [DW - 190, DH - 110]].forEach(([x, y]) => { ring(x, y, 28, 4, '#0a0507'); ring(x, y, 28, 1.5, '#8f2a0c'); star(x, y, 18, 6, '#ff7a1f', 1.4) })
+  } else {    /* Magma Dungeon: bintang segel besar + kisi ventilasi lava */
+    ring(cx, cy, 132, 5, '#0a0507'); ring(cx, cy, 130, 2, '#e8300f'); ring(cx, cy, 90, 4, '#0a0507'); ring(cx, cy, 90, 1.5, '#ff7a1f'); star(cx, cy, 124, 8, '#ff7a1f', 1.8); star(cx, cy, 84, 5, '#c8300f', 1.4);
+    b.fillStyle = '#ffd34d'; b.beginPath(); b.arc(cx, cy, 5, 0, TAU); b.fill();
+    b.save(); b.globalCompositeOperation = 'lighter';
+    [[170, 100], [310, 100], [DW - 310, 100], [DW - 170, 100], [170, DH - 100], [310, DH - 100], [DW - 310, DH - 100], [DW - 170, DH - 100]].forEach(([x, y]) => { const q = b.createRadialGradient(x, y, 0, x, y, 24); q.addColorStop(0, 'rgba(255,110,30,.35)'); q.addColorStop(1, 'rgba(255,110,30,0)'); b.fillStyle = q; b.fillRect(x - 24, y - 24, 48, 48) }); b.restore();
+    [[170, 100], [310, 100], [DW - 310, 100], [DW - 170, 100], [170, DH - 100], [310, DH - 100], [DW - 310, DH - 100], [DW - 170, DH - 100]].forEach(([x, y]) => { px(x - 8, y - 8, 16, 16, '#08040a'); for (let i = 0; i < 4; i++) px(x - 6 + i * 4, y - 6, 2, 12, '#ff7a1f') })
+  }
+  /* kolam lava berbahaya (hitbox = kotak) */
+  pools.forEach(([x, y, w, h]) => { const ch = 6; b.fillStyle = '#1b0805'; b.beginPath(); b.moveTo(x - 4 + ch, y - 4); b.lineTo(x + w + 4 - ch, y - 4); b.lineTo(x + w + 4, y - 4 + ch); b.lineTo(x + w + 4, y + h + 4 - ch); b.lineTo(x + w + 4 - ch, y + h + 4); b.lineTo(x - 4 + ch, y + h + 4); b.lineTo(x - 4, y + h + 4 - ch); b.lineTo(x - 4, y - 4 + ch); b.closePath(); b.fill();
+    const q = b.createLinearGradient(0, y, 0, y + h); q.addColorStop(0, '#ff9a2a'); q.addColorStop(1, '#d22a0a'); b.fillStyle = q; b.fillRect(x, y, w, h); b.fillStyle = 'rgba(255,230,120,.55)'; for (let i = 0; i < 5; i++) b.fillRect(x + 4 + r() * (w - 14), y + 4 + r() * (h - 8), 6, 2); b.strokeStyle = '#4a1608'; b.lineWidth = 2; b.strokeRect(x - 1, y - 1, w + 2, h + 2) });
+  /* dinding obsidian + duri */
+  const wc = '#0e0709'; px(0, 0, DW, 14, wc); px(0, DH - 14, DW, 14, wc); px(0, 0, 14, DH, wc); px(DW - 14, 0, 14, DH, wc);
+  for (let x = 0; x < DW; x += 20) { px(x, 0, 1, 14, '#6a1d0a'); px(x, DH - 14, 1, 14, '#6a1d0a') } for (let y = 0; y < DH; y += 20) { px(0, y, 14, 1, '#6a1d0a'); px(DW - 14, y, 14, 1, '#6a1d0a') }
+  px(0, 13, DW, 1, '#ff5a1f'); px(0, DH - 14, DW, 1, '#ff5a1f'); px(13, 0, 1, DH, '#ff5a1f'); px(DW - 14, 0, 1, DH, '#ff5a1f');
+  b.fillStyle = '#0a0507'; for (let x = 20; x < DW - 20; x += 26) { b.beginPath(); b.moveTo(x - 6, 14); b.lineTo(x, 14 + (n ? 12 : 8)); b.lineTo(x + 6, 14); b.fill(); b.beginPath(); b.moveTo(x - 6, DH - 14); b.lineTo(x, DH - 14 - (n ? 12 : 8)); b.lineTo(x + 6, DH - 14); b.fill() }
+  b.save(); b.globalCompositeOperation = 'lighter';
+  [[0, 14, 0, 48], [0, DH - 14, 0, DH - 48], [14, 0, 48, 0], [DW - 14, 0, DW - 48, 0]].forEach(([x0, y0, x1, y1], i) => { const q = b.createLinearGradient(x0, y0, x1, y1); q.addColorStop(0, 'rgba(255,90,20,.3)'); q.addColorStop(1, 'rgba(255,90,20,0)'); b.fillStyle = q; if (i < 2) b.fillRect(0, Math.min(y0, y1), DW, 34); else b.fillRect(Math.min(x0, x1), 0, 34, DH) }); b.restore();
+  /* obor, kuali & tengkorak */
+  (n ? TO1 : TO0).forEach(([x, y]) => { px(x - 3, y - 2, 6, 9, '#0a0507'); px(x - 2, y - 1, 4, 2, '#ff7a1f') });
+  const brs = n ? LBR1 : BR0;
+  brs.forEach(([x, y]) => { b.fillStyle = 'rgba(0,0,0,.5)'; b.beginPath(); b.ellipse(x + 3, y + 8, 16, 8, 0, 0, TAU); b.fill(); px(x - 12, y - 4, 24, 14, '#0c0608'); px(x - 10, y - 6, 20, 4, '#2a171a'); b.fillStyle = '#ff7a1f'; b.beginPath(); b.ellipse(x, y - 6, 9, 3, 0, 0, TAU); b.fill(); px(x - 12, y + 6, 24, 3, '#4a2a26') });
+  const skull = (x, y) => { px(x - 4, y - 3, 8, 6, '#cfc2a4'); px(x - 3, y + 3, 6, 2, '#a89878'); px(x - 3, y - 1, 2, 2, '#1a0a0a'); px(x + 1, y - 1, 2, 2, '#1a0a0a'); px(x - 1, y + 1, 2, 1, '#1a0a0a') };
+  brs.forEach(([x, y], i) => { const sx = x < cx ? 1 : -1, sy = y < cy ? 1 : -1; skull(x + sx * 26, y + sy * 20); px(x + sx * 34, y + sy * 24, 6, 2, '#cfc2a4'); px(x + sx * 14, y + sy * 26, 5, 2, '#a89878'); if (i % 2) skull(x + sx * 40, y + sy * 12) });
+  for (let i = 0; i < 40; i++) { const x = 40 + r() * (DW - 80), y = 30 + r() * (DH - 60); px(x, y, 3 + r() * 4, 2 + r() * 3, '#0d0709'); if (r() < .3) px(x + 1, y, 1, 1, '#ff7a1f') }
+  /* vignet & cahaya */
+  const v = b.createRadialGradient(cx, cy, 200, cx, cy, 470); v.addColorStop(0, 'rgba(8,2,2,0)'); v.addColorStop(1, 'rgba(8,2,2,' + (n ? .75 : .62) + ')'); b.fillStyle = v; b.fillRect(0, 0, DW, DH);
+  b.save(); b.globalCompositeOperation = 'lighter'; const pool = (x, y, rd, col) => { const q = b.createRadialGradient(x, y, 0, x, y, rd); q.addColorStop(0, col); q.addColorStop(1, 'rgba(0,0,0,0)'); b.fillStyle = q; b.fillRect(x - rd, y - rd, rd * 2, rd * 2) };
+  brs.forEach(([x, y]) => pool(x, y, 120, 'rgba(255,120,40,.22)')); pools.forEach(([x, y, w, h]) => pool(x + w / 2, y + h / 2, 70, 'rgba(255,100,20,.2)')); pool(cx, cy, 170, n ? 'rgba(255,50,20,.1)' : 'rgba(255,120,40,.1)'); b.restore();
+  return c
+}
+let LRB = false;
+const _drawLR = draw; draw = function () {
+  if (lavaOn() && room < 2 && !LRB) { LRB = true; LP = [lavaPoolsN(0), lavaPoolsN(1)]; LB = [buildLavaRoom(0, LP[0]), buildLavaRoom(1, LP[1])] }
+  lwApply(); _drawLR()
+};
+</script>
 </body>
 
 </html>
