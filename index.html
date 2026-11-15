@@ -2001,7 +2001,7 @@
     let touchAiming = false;
     const touchAttack = { active: false, pointerId: null };
     // ===== Kamera: zoom dekat & mengikuti player (ubah CAM_Z untuk atur jarak; 1 = tanpa zoom) =====
-    const CAM_Z = 1.4, CAM_SM = 7; let camX = 0, camY = 0, camInit = false;
+    let CAM_Z = 1.4; const CAM_SM = 7; let camX = 0, camY = 0, camInit = false;
     // ===== Ukuran ruangan dungeon (diperluas dari 640x400) & jumlah musuh tambahan =====
     const DW = 800, DH = 480, OX = 80, OY = 40, DY = DH / 2, EXTRA_ENEMIES = 4, HALF_EXTRA = 5; let WW = 1218, WH = 400;
     function camUpd(dt) {
@@ -2257,9 +2257,29 @@
       sk('Whirlwind', 8, .8, (a, m) => { skSpin(2, .7); for (let i = 0; i < 5; i++)skLater(i * .14, () => { melee(50, 2.6, 14 * m, 130, { hn: 0, sd: 1, lg: 20 }); fx.push({ k: 'ring', x: p.x, y: p.y, r: 58, life: .3, max: .3, col: '#9fd0ff' }) }) }),
       sk('Heaven Split', 14, .6, (a, m) => { skDash(a, 380, .18); skLater(.22, () => { melee(66, 6.28, 50 * m, 200, { hn: 2, sd: 1, lg: 0 }); for (let i = 0; i < 3; i++)fx.push({ k: 'ring', x: p.x, y: p.y, r: 30 + i * 20, life: .35 + i * .1, max: .35 + i * .1, col: '#cfe6ff' }); for (let i = 0; i < 14; i++) { const q = R() * 6.283, v = 60 + R() * 120; dp.push({ k: 'sh', x: p.x, y: p.y, vx: Math.cos(q) * v, vy: Math.sin(q) * v * .75, rot: q, vr: (R() - .5) * 12, life: .6, max: .6, s: 1.6 + R() * 2, c: '190,200,230' }) } fx.push({ k: 'pil', x: p.x, y: p.y, w: 36, h: 160, c: '150,210,255', life: .55, max: .55 }); shake = Math.max(shake, 8); SFX.boom() }) })
     ], [
-      sk('Triple Thrust', 4, .45, (a, m) => { const T = (d) => melee(58, .45, d * m, 150, { hn: 2, sd: 1, lg: 100 }); T(12); skLater(.13, () => T(12)); skLater(.26, () => T(22)) }),
-      sk('Spear Fan', 8, .6, (a, m) => { const b = p.face; for (let i = 0; i < 5; i++)skLater(i * .08, () => { p.face = b + (i - 2) * .38; melee(74, .42, 15 * m, 150, { hn: 2, sd: 1, lg: 50 }) }) }),
-      sk('Dragon Charge', 13, .6, (a, m) => { skDash(a, 430, .3); for (let i = 0; i < 5; i++)skLater(i * .06, () => { skLine(50, 12, 12 * m); for (let j = 0; j < 6; j++)dp.push({ k: 'gf', x: p.x, y: p.y, vx: (R() - .5) * 70, vy: (R() - .5) * 50, life: .4 + R() * .3, max: .7, s: 5 + R() * 6 }) }); skLater(.32, () => { melee(78, .5, 36 * m, 220, { hn: 2, sd: 1, lg: 0 }); bang(p.x + Math.cos(a) * 50, p.y + Math.sin(a) * 50, 34, 1); for (let i = 0; i < 18; i++) { const q = a + (R() - .5) * 1.8, v = 80 + R() * 150; dp.push({ k: 'gf', x: p.x + Math.cos(a) * 50, y: p.y + Math.sin(a) * 50, vx: Math.cos(q) * v, vy: Math.sin(q) * v, life: .5, max: .5, s: 5 + R() * 7 }) } shake = Math.max(shake, 7) }) })
+      sk('Aegis Rush', 5, .5, (a, m) => {
+        SG.bash = .5; skDash(a, 340, .16);
+        skLater(.13, () => { const q = p.face; melee(54, 1.5, 18 * m, 300, { hn: 1, sd: 1, lg: 50 }); es.forEach(e => { if (e.sw <= 0 && dist(p, e) < 74 + e.r) e.stg += 26 }); sgFlash(p.x + Math.cos(q) * 30, p.y + Math.sin(q) * 30, 16); shake = Math.max(shake, 6) });
+        skLater(.25, () => melee(66, .4, 14 * m, 170, { hn: 0, sd: 1, lg: 90 }));
+        skLater(.37, () => melee(76, .42, 22 * m, 230, { hn: 2, sd: 1, lg: 110 }))
+      }),
+      sk('Bulwark Counter', 10, .95, (a, m) => {
+        SG.g = SG.gm = .7; SG.hits = 0; p.vx *= .25; p.vy *= .25;
+        fx.push({ k: 'ring', x: p.x, y: p.y, r: 30, w: 3, life: .7, max: .7, col: '#ffe08a' }, { k: 'rune', x: p.x, y: p.y + 4, life: .7, max: .7, sc: 1.6, w: 2 });
+        skLater(.7, () => {
+          const n = SG.hits, b = p.face, c = n > 0 ? Math.min(5, 2 + n) : 1, dm = (13 + 7 * Math.min(n, 4)) * m; SG.g = 0; SG.hits = 0; SG.bash = .3;
+          for (let i = 0; i < c; i++) { p.face = b + (i - (c - 1) / 2) * .36; melee(80, .42, dm, 190, { hn: 2, sd: 1, lg: i ? 0 : 70 }) } p.face = b;
+          if (n > 0) { ultSweep(60, 8 * n * m, 230); sgFlash(p.x, p.y, 18); shake = Math.max(shake, 7); fx.push({ k: 'ring', x: p.x, y: p.y, r: 66, w: 4, life: .4, max: .4, col: '#ff5a5a' }) }
+        })
+      }),
+      sk('Wyrmfang Charge', 13, .75, (a, m) => {
+        SG.bash = .75; skDash(a, 460, .32); p.inv = Math.max(p.inv, .36);
+        for (let i = 0; i < 6; i++)skLater(i * .055, () => { skLine(54, 14, 9 * m, 180); for (let j = 0; j < 6; j++)dp.push({ k: 'gf', x: p.x, y: p.y, vx: (R() - .5) * 70, vy: (R() - .5) * 50, life: .4 + R() * .3, max: .7, s: 5 + R() * 6 }) });
+        skLater(.34, () => {
+          melee(86, 1.1, 26 * m, 260, { hn: 2, sd: 1, lg: 0 }); sgFlash(p.x + Math.cos(a) * 40, p.y + Math.sin(a) * 40, 14); shake = Math.max(shake, 8);
+          for (let j = 1; j <= 4; j++)skLater(j * .07, () => spRain(p.x + Math.cos(a) * (36 + j * 34), p.y + Math.sin(a) * (36 + j * 34), 14 * m, 28))
+        })
+      })
     ], [
       sk('Rapid Fire', 4, .55, (a, m) => { for (let i = 0; i < 7; i++)skLater(i * .07, () => { shootS(p.face + (R() - .5) * .12, 8 * m, 400, '#8bd17c'); p.vx -= Math.cos(p.face) * 35; p.vy -= Math.sin(p.face) * 35 }) }),
       sk('Backflip Volley', 8, .5, (a, m) => { skDash(a + Math.PI, 340, .22); skLater(.1, () => { for (let i = -2; i <= 2; i++)shootS(p.face + i * .16, 9 * m, 380, '#8bd17c') }); skLater(.24, () => { shootS(p.face, 26 * m, 460, '#ffe08a'); const b = pr[pr.length - 1]; b.pierce = 1; b.big = 1 }) }),
@@ -2281,6 +2301,44 @@
         skLater(L.length * .17, () => { skSpin(1, .25); melee(36, 6.28, 34 * m, 190, { hn: 2, sd: 1, lg: 0 }) })
       })
     ]];
+    /* ===== REVAMP SPEAR: Crimson Dragon Aegis (perisai tema naga merah, dipegang tangan satunya) ===== */
+    const SG = { g: 0, gm: 0, hits: 0, bash: 0, fl: 0 };
+    function sgSpark(x, y, n) { for (let i = 0; i < n; i++) { const q = R() * 6.283, v = 50 + R() * 110; dp.push({ k: 'p', x, y, vx: Math.cos(q) * v, vy: Math.sin(q) * v, life: .25 + R() * .2, max: .45, s: 1 + R() * 2, c: i % 2 ? '#ffe08a' : '#fff' }) } }
+    function sgFlash(x, y, n) { sgSpark(x, y, n); fx.push({ k: 'ring', x, y, r: 30, w: 4, life: .3, max: .3, col: '#ffe08a' }, { k: 'gl', x, y, r: 40, c: '255,200,120', life: .25, max: .25 }); SFX.hit(1) }
+    const _hurtSG = hurt;
+    hurt = function (d) {
+      if (SG.g > 0 && p.dead <= 0) { SG.hits = Math.min(6, SG.hits + 1); SG.fl = .22; sgFlash(p.x + Math.cos(p.face) * 14, p.y - 6 + Math.sin(p.face) * 14, 8); dn(p.x, p.y - 22, 'BLOCK', 0, '#ffe08a'); shake = Math.max(shake, 3); HST = Math.max(HST, .04); return }
+      return _hurtSG(d)
+    };
+    const _updSG = upd;
+    upd = function (dt) { SG.g = Math.max(0, SG.g - dt); SG.bash = Math.max(0, SG.bash - dt); SG.fl = Math.max(0, SG.fl - dt); if (p && p.dead > 0) { SG.g = 0; SG.hits = 0 } _updSG(dt) };
+    function drawShield(x, y, sc, gk, fl) {
+      g.save(); g.translate(Math.round(x), Math.round(y)); g.scale(sc, sc);
+      const sh = () => { g.beginPath(); g.moveTo(-7, -8); g.quadraticCurveTo(0, -10.5, 7, -8); g.lineTo(7, 1); g.quadraticCurveTo(6, 8, 0, 12.5); g.quadraticCurveTo(-6, 8, -7, 1); g.closePath() };
+      if (gk > 0 || fl > 0) { g.save(); g.globalCompositeOperation = 'lighter'; const q = g.createRadialGradient(0, 0, 2, 0, 0, 26); q.addColorStop(0, 'rgba(255,205,130,' + ((gk > 0 ? .3 : 0) + fl * 1.2 + .1 * Math.sin(t * 20)) + ')'); q.addColorStop(1, 'rgba(255,60,80,0)'); g.fillStyle = q; g.fillRect(-28, -28, 56, 56); g.restore() }
+      g.save(); g.scale(1.22, 1.16); sh(); g.fillStyle = HT || '#0f0e14'; g.fill(); g.restore();
+      sh(); g.fillStyle = HT || '#8f1a30'; g.fill();
+      g.save(); sh(); g.clip();
+      g.fillStyle = HT || '#c42a48'; g.fillRect(-8, -11, 8, 26); g.fillStyle = HT || '#6b1224'; g.fillRect(4, -11, 4, 26);
+      if (!HT) { g.fillStyle = 'rgba(255,130,150,.35)'; for (let yy = -6; yy < 11; yy += 4) for (let xx = -6 + ((yy / 4) & 1 ? 2 : 0); xx < 7; xx += 4) g.fillRect(xx, yy, 2, 1) }
+      g.fillStyle = HT || '#d9aa3c'; g.beginPath(); g.moveTo(0, -6); g.lineTo(3, -1); g.lineTo(0, 4); g.lineTo(-3, -1); g.closePath(); g.fill(); g.fillRect(-.5, 4, 1, 5);
+      g.fillStyle = HT || '#ffe08a'; g.beginPath(); g.moveTo(0, -6); g.lineTo(-3, -1); g.lineTo(0, 1); g.closePath(); g.fill();
+      g.restore();
+      sh(); g.lineWidth = 1.6; g.strokeStyle = HT || '#aeb4c2'; g.stroke();
+      if (!HT) { g.save(); sh(); g.clip(); g.strokeStyle = '#eef1f7'; g.lineWidth = 1; g.beginPath(); g.moveTo(-7, 1); g.lineTo(-7, -8); g.quadraticCurveTo(0, -10.5, 7, -8); g.stroke(); g.restore() }
+      g.fillStyle = HT || '#d9aa3c';[-1, 1].forEach(d => { g.beginPath(); g.moveTo(d * 6, -8); g.lineTo(d * 9.5, -12.5); g.lineTo(d * 3.5, -9); g.closePath(); g.fill() });
+      g.restore()
+    }
+    const _wposeSG = wpose;
+    wpose = function () {
+      const o = _wposeSG(); if (wi != 1) return o;
+      const hs = HSd, f = p.face, cf = Math.cos(f), sf = Math.sin(f), s = hs >= 0 ? -1 : 1, bl = p.dod > 0 ? 1 : p.wb, bob = Math.abs(Math.sin(p.wph)) * 1.5 * bl + Math.sin(p.idt) * .5,
+        k = p.swing > 0 ? 1 : p.al, Cx = p.x + o.lx, Cy = p.y - 8 - bob + o.ly, H = HSH || { ox: p.x, oy: p.y - 12, st: 0 }, gk = SG.g > 0 ? 1 : 0, bk = Math.min(1, SG.bash / .25), fw = Math.max(gk, bk);
+      const rx = H.ox + s * 10, ry = H.oy + 12 - Math.round(s * H.st * 1.5), bx = Cx + s * 8 + cf * 3, by = Cy + 3 + sf * 3, fx0 = p.x + cf * (9 + bk * 9), fy0 = p.y - 7 + sf * (9 + bk * 9);
+      const hx = lp(lp(rx, bx, k), fx0, fw), hy = lp(lp(ry, by, k), fy0, fw), cx = hx + s * (fw > 0 ? 0 : 3.5), cy = hy + 1, sc = 1 + gk * .3 + bk * .15, old = o.fn;
+      o.gr.push({ x: hx, y: hy, s }); o.fn = () => { if (old) old(); drawShield(cx, cy, sc, gk, SG.fl) };
+      return o
+    };
     // ===== EFEK TEBAL =====
     const WCL = ['110,175,255', '255,70,70', '150,255,120', '200,120,255', '255,120,100'], WCOL = ['#bfe4ff', '#ff8a8a', '#b6f08a', '#e6b8ff', '#ff9a8a']; let FLSH = 0, FLSC = '255,255,255', HST = 0;
     function skCast(i) { FLSH = i == 2 ? .9 : .5; FLSC = WCL[wi]; shake = Math.max(shake, i == 2 ? 6 : 3); fx.push({ k: 'ring', x: p.x, y: p.y, r: i == 2 ? 38 : 26, w: wi == 2 || wi == 3 ? 3.5 : 1, life: .45, max: .45, col: 'rgb(' + WCL[wi] + ')' }); HST = Math.max(HST, i == 2 ? .07 : .04) }
@@ -2404,6 +2462,8 @@
           })
         }
       }];
+    /* ultimate tombak: pembuka dengan perisai di depan */
+    { const _u1 = UL[1].f; UL[1].f = (a, m) => { SG.bash = .6; _u1(a, m) } }
     function castUlt() {
       if (ULT < ULT_MAX || ULTT > 0 || p.dead > 0) return; const U = UL[wi]; ULT = 0; ULTT = U.dur + .5; ULTF = 1.4; ULTN = U.n; ULTC = WCL[wi];
       p.skb = p.cdA = U.dur; p.inv = Math.max(p.inv, U.dur + .5); p.combo = 0; p.hold = 0; SFX.ult(wi); FLSH = 1; FLSC = WCL[wi]; shake = Math.max(shake, 10); HST = Math.max(HST, .15);
@@ -2646,7 +2706,7 @@
     }
     const WS = [
       { S: .34, ax: 32, ay: 78, sr: 'crispEdges', svg: '<path fill="#0f0e14" d="M25 9 L32 1 L39 9 V65 H25 Z"/><path fill="#aeb4c2" d="M26 10 L32 3 V64 H26 Z"/><path fill="#eef1f7" d="M32 3 L38 10 V64 H32 Z"/><path fill="#7b8094" d="M26 10 H28 V64 H26 Z"/><path fill="#8f1a30" d="M30.5 14 H33.5 V56 H30.5 Z"/><path fill="#d0394f" d="M32 14 H33.5 V56 H32 Z"/><path fill="#0f0e14" d="M12 62 H52 V71 H12 Z"/><path fill="#8d91a1" d="M14 64 H50 V69 H14 Z"/><path fill="#d9dce5" d="M14 64 H50 V66 H14 Z"/><path fill="#c42a48" d="M29.5 65 H34.5 V69 H29.5 Z"/><path fill="#23232e" d="M14 69 H22 V70 H14 Z M42 69 H50 V70 H42 Z"/><path fill="#0f0e14" d="M27 70 H37 V88 H27 Z"/><path fill="#1f1e28" d="M29 71 H35 V87 H29 Z"/><path fill="#9a1f35" d="M29 73 H35 V75 H29 Z M29 79 H35 V81 H29 Z"/><path fill="#0f0e14" d="M25 86 H39 V95 H25 Z"/><path fill="#aeb4c2" d="M27 87 H37 V94 H27 Z"/><path fill="#c42a48" d="M30.5 88.5 H33.5 V92 H30.5 Z"/>' },
-      { S: .4, ax: 32, ay: 68, sr: 'crispEdges', svg: '<path fill="#0f0e14" d="M29 32 H35 V99 H29 Z"/><path fill="#2a2128" d="M30 33 H34 V98 H30 Z"/><path fill="#5d3a46" d="M31 34 H32 V97 H31 Z"/><path fill="#9a1f35" d="M30 56 H34 V60 H30 Z M30 76 H34 V80 H30 Z"/><path fill="#8d91a1" d="M30 94 H34 V99 H30 Z"/><path fill="#0f0e14" d="M32 0 L42 21 L36 25 V37 H28 V25 L22 21 Z"/><path fill="#0f0e14" d="M15 21 L29 28 V35 L15 31 Z M49 21 L35 28 V35 L49 31 Z"/><path fill="#8d94a8" d="M32 3 L24 21 L29 25 V34 H32 Z"/><path fill="#e6e9f1" d="M32 3 L40 21 L35 25 V34 H32 Z"/><path fill="#c42a48" d="M30.5 12 H33.5 V19 H30.5 Z"/><path fill="#ff6b86" d="M32 12 H33.5 V15 H32 Z"/><path fill="#aeb4c2" d="M17 23 L29 29 V33 L17 29 Z M47 23 L35 29 V33 L47 29 Z"/><path fill="#6b7083" d="M28.5 33 H35.5 V37 H28.5 Z"/>' },
+      { S: .4, ax: 32, ay: 68, sr: 'crispEdges', svg: '<path fill=\"#0f0e14\" d=\"M29 36 H35 V99 H29 Z\"/><path fill=\"#3a1520\" d=\"M30 37 H34 V98 H30 Z\"/><path fill=\"#7a2c40\" d=\"M31 38 H32 V97 H31 Z\"/><path fill=\"#1d1216\" d=\"M30 62 H34 V78 H30 Z\"/><path fill=\"#4a2a30\" d=\"M30 64 H34 V65 H30 Z M30 68 H34 V69 H30 Z M30 72 H34 V73 H30 Z M30 76 H34 V77 H30 Z\"/><path fill=\"#d9aa3c\" d=\"M29 60 H35 V62 H29 Z M29 78 H35 V80 H29 Z\"/><path fill=\"#9a741f\" d=\"M29 61 H35 V62 H29 Z M29 79 H35 V80 H29 Z\"/><path fill=\"#0f0e14\" d=\"M28.5 92 H35.5 V99 H28.5 Z\"/><path fill=\"#d9aa3c\" d=\"M29.5 93 H34.5 V98 H29.5 Z\"/><path fill=\"#9a741f\" d=\"M33 93 H34.5 V98 H33 Z\"/><path fill=\"#0f0e14\" d=\"M28 40 L23 53 L27 60 L29 54 L30 62 L32 53 L34 62 L35 54 L37 60 L41 53 L36 40 Z\"/><path fill=\"#b01f3a\" d=\"M29 41 L25 52 L27.5 57 L29.5 51 L30.5 59 L32 50 L33.5 59 L34.5 51 L36.5 57 L39 52 L35 41 Z\"/><path fill=\"#ff6b86\" d=\"M30 42 L28 49 L30 47 Z M33 42 L33 48 L35 46 Z\"/><g><path fill=\"#0f0e14\" d=\"M11 17 L16 27 L22 32 L29 34 V40 L20 38 L12 32 L8 23 Z\"/><path fill=\"#aeb4c2\" d=\"M12 20 L16 28 L22 32 L29 35 V38 L21 36 L13 31 L10 24 Z\"/><path fill=\"#eef1f7\" d=\"M11 18 L12 20 L14 26 L13 22 Z\"/></g><g transform=\"translate(64,0) scale(-1,1)\"><path fill=\"#0f0e14\" d=\"M11 17 L16 27 L22 32 L29 34 V40 L20 38 L12 32 L8 23 Z\"/><path fill=\"#aeb4c2\" d=\"M12 20 L16 28 L22 32 L29 35 V38 L21 36 L13 31 L10 24 Z\"/><path fill=\"#eef1f7\" d=\"M11 18 L12 20 L14 26 L13 22 Z\"/></g><path fill=\"#0f0e14\" d=\"M32 0 L42 17 L39 25 L37 31 V41 H27 V31 L25 25 L22 17 Z\"/><path fill=\"#8d94a8\" d=\"M32 3 L25 17 L27.5 25 L29.5 31 V39 H32 Z\"/><path fill=\"#e6e9f1\" d=\"M32 3 L39 17 L36.5 25 L34.5 31 V39 H32 Z\"/><path fill=\"#c42a48\" d=\"M31 10 H33 V30 H31 Z\"/><path fill=\"#ff6b86\" d=\"M32 10 H33 V20 H32 Z\"/><path fill=\"#0f0e14\" d=\"M26.5 36 H37.5 V42 H26.5 Z\"/><path fill=\"#d9aa3c\" d=\"M27.5 37 H36.5 V41 H27.5 Z\"/><path fill=\"#ffe08a\" d=\"M28 37 H31 V38 H28 Z\"/><path fill=\"#9a741f\" d=\"M27.5 40 H36.5 V41 H27.5 Z\"/>' },
       { S: .26, ax: 33, ay: 51, sr: 'geometricPrecision', svg: '<g transform="translate(64,0) scale(-1,1)"><path fill="none" stroke="#0f0e14" stroke-width="9" d="M31 7 Q5 48 31 94"/><path fill="none" stroke="#5a2234" stroke-width="6" d="M31 7 Q5 48 31 94"/><path fill="none" stroke="#d0405c" stroke-width="3" d="M30 9 Q10 49 30 92"/><path fill="#0f0e14" d="M25 41 H36 V61 H25 Z"/><path fill="#1f1e28" d="M27 43 H34 V59 H27 Z"/><path fill="#c42a48" d="M27 46 H34 V48 H27 Z M27 55 H34 V57 H27 Z"/><path fill="#aeb4c2" d="M28 4 H34 V10 H28 Z M28 91 H34 V97 H28 Z"/></g>' },
       { S: .3, ax: 32.5, ay: 62, sr: 'crispEdges', svg: '<path fill="#0f0e14" d="M29 28 H36 V99 H29 Z"/><path fill="#2a2128" d="M30.5 29 H34.5 V98 H30.5 Z"/><path fill="#5d3a46" d="M31.5 30 H32.5 V97 H31.5 Z"/><path fill="#9a1f35" d="M30.5 58 H34.5 V62 H30.5 Z M30.5 66 H34.5 V70 H30.5 Z"/><path fill="#8d91a1" d="M30 95 H35 V99 H30 Z"/><path fill="#0f0e14" d="M18 2 L27 9 L30 28 H35 L38 9 L47 2 L44 15 L38 29 H27 L21 15 Z"/><path fill="#aeb4c2" d="M20 4 L26 11 L29 26 L27 27 L22 15 Z M45 4 L39 11 L36 26 L38 27 L43 15 Z"/><path fill="#0f0e14" d="M32.5 0 L39 14 L32.5 29 L26 14 Z"/><path fill="#d0306e" d="M32.5 2 L37.5 14 L32.5 27 L27.5 14 Z"/><path fill="#ff7aa8" d="M32.5 2 L37.5 14 H32.5 Z"/><path fill="#7a1450" d="M32.5 14 H37.5 L32.5 27 Z"/><path fill="#8d91a1" d="M27 28 H38 V32 H27 Z"/><path fill="#d9dce5" d="M27 28 H38 V29.5 H27 Z"/>' },
       { S: .3, ax: 32, ay: 63, sr: 'crispEdges', svg: '<path fill="#0f0e14" d="M32 1 L39 14 V50 H25 V14 Z"/><path fill="#9aa1b4" d="M32 3 L27 14 V49 H32 Z"/><path fill="#eef1f7" d="M32 3 L37 14 V49 H32 Z"/><path fill="#8f1a30" d="M31 14 H33 V46 H31 Z"/><path fill="#0f0e14" d="M21 48 H43 V55 H21 Z"/><path fill="#8d91a1" d="M23 49.5 H41 V53.5 H23 Z"/><path fill="#c42a48" d="M30.5 50 H33.5 V53 H30.5 Z"/><path fill="#0f0e14" d="M28 54 H36 V72 H28 Z"/><path fill="#1f1e28" d="M29.5 55 H34.5 V71 H29.5 Z"/><path fill="#9a1f35" d="M29.5 58 H34.5 V60 H29.5 Z M29.5 65 H34.5 V67 H29.5 Z"/><path fill="#0f0e14" d="M27 70 H37 V77 H27 Z"/><path fill="#aeb4c2" d="M28.5 71 H35.5 V76 H28.5 Z"/>' }];
@@ -6681,6 +6741,7 @@
       const ENT = { on: 0, t: 0, played: 0, sfx: 0, cl: 0, lo: -1 };
       const T_WALK0 = .6, T_WALK1 = 2.5, T_CLOSE = 1.9, T_END = 3.0, Y0 = 393, Y1 = 322;
       const SX = 274, SY = 330, SW = 92, SH = 70;
+      const ZB = CAM_Z, Z0 = 3.4;   // zoom dasar & zoom awal sinematik pintu (dekat ke pintu, lalu menjauh)
       const bak = document.createElement('canvas'); bak.width = SW; bak.height = SH; bak.getContext('2d').drawImage(BGL, SX, SY, SW, SH, 0, 0, SW, SH);
 
       /* pintu lobby dilukis langsung ke latar (di bawah player); o: 0 tertutup .. 1 terbuka penuh (sekaligus intensitas cahaya) */
@@ -6701,18 +6762,18 @@
 
       window.entryStart = function () {
         if (ENT.played || !lobby || !p) return; ENT.played = ENT.on = 1; ENT.t = 0; ENT.sfx = ENT.cl = 0; ENT.lo = -1;
-        p.x = 320; p.y = Y0; p.vx = p.vy = 0; p.face = -Math.PI / 2; camInit = false; paintDoor(0);
+        p.x = 320; p.y = Y0; p.vx = p.vy = 0; p.face = -Math.PI / 2; camInit = false; CAM_Z = Z0; paintDoor(0);
       };
       function finish() {
-        ENT.on = 0; paintDoor(0); p.x = 320; p.y = Y1; p.vx = p.vy = 0; p.wb = 0; for (const k in P) delete P[k]; M.d = 0;
+        ENT.on = 0; CAM_Z = ZB; camInit = false; paintDoor(0); p.x = 320; p.y = Y1; p.vx = p.vy = 0; p.wb = 0; for (const k in P) delete P[k]; M.d = 0;
         try { msg('Kau tiba di Lobby — Zona Aman. Tidak ada musuh yang menyerang di sini.') } catch (e) { }
       }
       function step(dt) {
         const skip = P.Space || P.Enter; ENT.t += dt; t += dt; shake = Math.max(0, shake - 20 * dt); camUpd(dt); if (typeof psStep === 'function') psStep(dt);
         for (const k in P) delete P[k]; M.d = 0;
         if (skip && ENT.t > T_WALK0 + .3) ENT.t = T_END;
-        const T = ENT.t;
-        if (!ENT.sfx) { ENT.sfx = 1; try { SFX.door() } catch (e) { } }
+        const T = ENT.t; CAM_Z = ZB + (Z0 - ZB) * (1 - E((T - .3) / 2.4));
+        if (!ENT.sfx) { ENT.sfx = 1; shake = Math.max(shake, 4); try { SFX.door() } catch (e) { } }
         if (T >= T_CLOSE && !ENT.cl) { ENT.cl = 1; try { SFX.door() } catch (e) { } }
         const o = T < T_WALK0 ? E(T / .6) : T < T_CLOSE ? 1 : 1 - E((T - T_CLOSE) / .7), oq = Math.round(o * 28) / 28;
         if (oq !== ENT.lo) { ENT.lo = oq; paintDoor(oq) }
