@@ -799,32 +799,33 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* TOP BAR */
+    /* TOP BAR (tengah atas, supaya tidak menutupi HP/ULT di kiri & info gelombang di kanan) */
     #mobileTopBar {
       position: absolute;
       top: max(8px, env(safe-area-inset-top));
-      left: max(10px, env(safe-area-inset-left));
-      right: max(10px, env(safe-area-inset-right));
+      left: 0;
+      right: 0;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      justify-content: center;
       pointer-events: none;
       z-index: 35;
     }
 
-    .top-left-actions,
-    .top-right-actions {
+    .top-center-actions {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       align-items: center;
       gap: 8px;
-      pointer-events: auto;
+      max-width: min(64vw, 540px);
+      pointer-events: none;
     }
 
     .mob-btn {
       pointer-events: auto;
       border-radius: 50%;
       border: 1px solid rgba(216, 184, 120, .45);
-      background: rgba(14, 13, 22, .65);
+      background: rgba(14, 13, 22, .72);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
       color: #f8dfaa;
@@ -848,44 +849,73 @@
     }
 
     .icon-btn {
-      width: 36px;
-      height: 36px;
-      font-size: 15px;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
     }
 
     .text-btn {
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 11px;
+      border-radius: 10px;
+      padding: 4px 12px;
+      font-size: 12px;
       letter-spacing: 1px;
-      height: 32px;
+      height: 40px;
     }
 
     .badge {
       background: #c93b3b;
       color: #fff;
       border-radius: 10px;
-      padding: 1px 5px;
-      font-size: 10px;
+      padding: 1px 6px;
+      font-size: 11px;
       margin-left: 4px;
       font-weight: bold;
     }
 
+    /* Tombol AUTO-LOCK */
+    #mobBtnLock {
+      gap: 6px;
+      padding: 0 12px 0 9px;
+      border-radius: 20px;
+      letter-spacing: .5px;
+      border-color: rgba(255, 122, 107, .75);
+      color: #ffb1a6;
+      background: rgba(70, 20, 22, .72);
+    }
+
+    #mobBtnLock svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    #mobBtnLock:not(.on) {
+      border-color: rgba(216, 184, 120, .4);
+      color: #bdb29c;
+      background: rgba(14, 13, 22, .72);
+    }
+
+    /* Pilih senjata: kolom di kiri, di bawah HUD */
     #mobWeaponStrip {
+      position: absolute;
+      left: max(8px, env(safe-area-inset-left));
+      top: calc(max(8px, env(safe-area-inset-top)) + 70px);
       display: flex;
+      flex-direction: column;
       gap: 4px;
-      background: rgba(10, 9, 16, .6);
-      padding: 2px 4px;
-      border-radius: 16px;
-      border: 1px solid rgba(216, 184, 120, .25);
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(10, 9, 16, .72);
+      border: 1px solid rgba(216, 184, 120, .3);
+      pointer-events: auto;
+      z-index: 35;
     }
 
     .mob-wpn-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      font-size: 11px;
-      font-weight: bold;
+      position: relative;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 10px;
       border: 1px solid transparent;
       background: transparent;
       color: #9e927e;
@@ -893,15 +923,32 @@
       align-items: center;
       justify-content: center;
       pointer-events: auto;
+      touch-action: none;
+    }
+
+    .mob-wpn-btn svg {
+      width: 24px;
+      height: 24px;
+      pointer-events: none;
+    }
+
+    .mob-wpn-btn i {
+      position: absolute;
+      left: 4px;
+      top: 2px;
+      font: 700 9px/1 -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-style: normal;
+      opacity: .75;
+      pointer-events: none;
     }
 
     .mob-wpn-btn.active {
-      background: rgba(216, 184, 120, .35);
+      background: rgba(216, 184, 120, .28);
       color: #ffd34d;
       border-color: #d8b878;
     }
 
-    /* JOYSTICK */
+    /* JOYSTICK (lebih besar) */
     #joyZone {
       position: absolute;
       left: 0;
@@ -914,14 +961,14 @@
 
     #joyBase {
       position: absolute;
-      width: 120px;
-      height: 120px;
-      left: max(32px, env(safe-area-inset-left));
-      bottom: max(32px, env(safe-area-inset-bottom));
+      width: 140px;
+      height: 140px;
+      left: max(64px, env(safe-area-inset-left));
+      bottom: max(30px, env(safe-area-inset-bottom));
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(216, 184, 120, .08) 0%, rgba(12, 11, 18, .55) 70%);
-      border: 2px solid rgba(216, 184, 120, .3);
-      box-shadow: 0 0 15px rgba(0, 0, 0, .6), inset 0 0 15px rgba(216, 184, 120, .05);
+      background: radial-gradient(circle, rgba(216, 184, 120, .1) 0%, rgba(12, 11, 18, .58) 70%);
+      border: 2px solid rgba(216, 184, 120, .38);
+      box-shadow: 0 0 15px rgba(0, 0, 0, .6), inset 0 0 15px rgba(216, 184, 120, .06);
       pointer-events: none;
       transform: translate(0, 0);
       transition: opacity .2s;
@@ -931,69 +978,139 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 48px;
-      height: 48px;
-      margin: -24px 0 0 -24px;
+      width: 62px;
+      height: 62px;
+      margin: -31px 0 0 -31px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #f8dfaa, #9b7943);
-      border: 2px solid rgba(255, 255, 255, .4);
+      border: 2px solid rgba(255, 255, 255, .45);
       box-shadow: 0 4px 10px rgba(0, 0, 0, .6);
       pointer-events: none;
       transform: translate(0, 0);
     }
 
-    /* ACTION CLUSTER */
+    /* ACTION CLUSTER: tombol serang di tengah, skill melengkung di atas-kiri */
     #actionCluster {
       position: absolute;
-      right: max(16px, env(safe-area-inset-right));
-      bottom: max(16px, env(safe-area-inset-bottom));
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(12px, env(safe-area-inset-bottom));
       width: 250px;
-      height: 250px;
+      height: 216px;
+      pointer-events: none;
+      transform-origin: 100% 100%;
+    }
+
+    @media (max-height: 340px) {
+      #actionCluster {
+        transform: scale(.88);
+      }
+
+      .mob-wpn-btn {
+        width: 34px;
+        height: 34px;
+      }
+    }
+
+    @media (min-height: 430px) {
+      #actionCluster {
+        transform: scale(1.12);
+      }
+    }
+
+    .act {
+      position: absolute;
+      flex-direction: column;
+      gap: 1px;
+      padding: 0;
+      --ac: #d8b878;
+      --is: 26px;
+      color: var(--ac);
+      border: 2px solid var(--ac);
+      background: radial-gradient(circle at 35% 30%, rgba(72, 62, 50, .92), rgba(14, 13, 20, .95));
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .65);
+    }
+
+    .act .ico {
+      display: block;
+      width: var(--is);
+      height: var(--is);
       pointer-events: none;
     }
 
-    /* MAIN ATTACK BUTTON */
-    .main-atk-btn {
+    .act .ico svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .act .nm {
+      font: 800 9.5px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      letter-spacing: .3px;
+      color: #f8e9c8;
+      text-shadow: 0 1px 2px #000;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .act.cd {
+      filter: saturate(.35) brightness(.8);
+    }
+
+    /* overlay cooldown + angka detik */
+    .sk-cd {
       position: absolute;
-      right: 14px;
-      bottom: 14px;
-      width: 76px;
-      height: 76px;
-      border-radius: 50%;
-      border: 2px solid #d8b878;
-      background: radial-gradient(circle at 35% 35%, rgba(65, 55, 40, .9), rgba(15, 14, 20, .95));
-      box-shadow: 0 4px 18px rgba(0, 0, 0, .7), 0 0 15px rgba(216, 184, 120, .2);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 0%;
+      background: rgba(0, 0, 0, .72);
+      transition: height .08s linear;
+      pointer-events: none;
+    }
+
+    .sk-num {
+      position: absolute;
+      inset: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
+      font: 800 22px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #fff;
+      text-shadow: 0 1px 4px #000;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* SERANG (utama) */
+    .main-atk-btn {
+      --ac: #ffd98a;
+      --is: 42px;
+      right: 10px;
+      bottom: 10px;
+      width: 96px;
+      height: 96px;
+      border-width: 3px;
+      background: radial-gradient(circle at 35% 30%, rgba(95, 78, 50, .95), rgba(16, 14, 20, .96));
+      box-shadow: 0 4px 18px rgba(0, 0, 0, .7), 0 0 18px rgba(216, 184, 120, .28);
       z-index: 40;
     }
 
-    .main-atk-btn .icon {
-      font-size: 24px;
-      line-height: 1;
-    }
-
-    .main-atk-btn .lbl {
-      font-size: 9px;
-      letter-spacing: 1px;
-      color: #f8dfaa;
-      margin-top: 2px;
+    .main-atk-btn .nm {
+      font-size: 10.5px;
     }
 
     .charge-svg {
       position: absolute;
-      inset: -4px;
-      width: 84px;
-      height: 84px;
+      inset: -6px;
+      width: 108px;
+      height: 108px;
       transform: rotate(-90deg);
       pointer-events: none;
     }
 
     .charge-bg {
       fill: none;
-      stroke: rgba(216, 184, 120, .15);
+      stroke: rgba(216, 184, 120, .18);
       stroke-width: 3;
     }
 
@@ -1001,104 +1118,67 @@
       fill: none;
       stroke: #ffda73;
       stroke-width: 3.5;
+      stroke-linecap: round;
       stroke-dasharray: 233;
       stroke-dashoffset: 233;
       transition: stroke-dashoffset .05s linear;
     }
 
-    /* DODGE BUTTON */
+    /* HINDAR */
     #mobBtnDodge {
-      position: absolute;
-      right: 104px;
-      bottom: 8px;
-      width: 52px;
-      height: 52px;
-      background: radial-gradient(circle at 35% 35%, rgba(50, 70, 85, .85), rgba(12, 18, 25, .95));
-      border: 1.5px solid #78b8d8;
-      flex-direction: column;
+      --ac: #7fd0f5;
+      --is: 26px;
+      right: 133px;
+      bottom: 7px;
+      width: 58px;
+      height: 58px;
     }
 
-    #mobBtnDodge .icon {
-      font-size: 16px;
-    }
-
-    #mobBtnDodge .lbl {
-      font-size: 8px;
-      color: #afe2f8;
-      letter-spacing: 0.5px;
-    }
-
-    /* SKILLS ARC */
+    /* 3 SKILL SENJATA */
     .skill-btn {
-      position: absolute;
-      width: 48px;
-      height: 48px;
-      border: 1.5px solid #8e7bb8;
-      background: radial-gradient(circle at 35% 35%, rgba(60, 45, 75, .85), rgba(15, 12, 22, .95));
+      --is: 30px;
+      width: 66px;
+      height: 66px;
       overflow: hidden;
+      border-width: 2.5px;
     }
 
-    .skill-btn .lbl {
-      font-size: 10px;
-      color: #dfd2f5;
-      font-weight: bold;
-      z-index: 2;
-      text-align: center;
-      max-width: 44px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .skill-btn:not(.cd) {
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .65), 0 0 12px color-mix(in srgb, var(--ac) 45%, transparent);
     }
 
-    .sk-cd {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, .75);
-      height: 0%;
-      bottom: 0;
-      transition: height .08s linear;
-      pointer-events: none;
+    .skill-btn .nm {
+      font-size: 9.5px;
     }
 
     #mobBtnSkill1 {
-      right: 108px;
-      bottom: 70px;
+      right: 119px;
+      bottom: 75px;
     }
 
     #mobBtnSkill2 {
-      right: 78px;
-      bottom: 122px;
+      right: 85px;
+      bottom: 139px;
     }
 
     #mobBtnSkill3 {
-      right: 18px;
-      bottom: 120px;
+      right: 15px;
+      bottom: 135px;
     }
 
-    /* ULT, FOCUS, POTION */
+    /* ULT, FOKUS, POTION */
     #mobBtnUlt {
-      position: absolute;
-      right: 130px;
-      bottom: 132px;
-      width: 46px;
-      height: 46px;
-      border: 1.5px solid #a855f7;
-      background: radial-gradient(circle at 35% 35%, rgba(70, 30, 100, .85), rgba(18, 10, 28, .95));
-    }
-
-    #mobBtnUlt .lbl {
-      font-size: 10px;
-      font-weight: bold;
-      color: #d8b4fe;
+      --ac: #b57bff;
+      --is: 24px;
+      right: 181px;
+      bottom: 141px;
+      width: 54px;
+      height: 54px;
     }
 
     #mobBtnUlt.ready {
-      border-color: #ffd34d;
+      --ac: #ffd34d;
       animation: ultGlow 1s ease-in-out infinite alternate;
-    }
-
-    #mobBtnUlt.ready .lbl {
-      color: #ffe08a;
     }
 
     @keyframes ultGlow {
@@ -1112,40 +1192,34 @@
     }
 
     #mobBtnFocus {
-      position: absolute;
-      right: 172px;
-      bottom: 82px;
-      width: 40px;
-      height: 40px;
-      border: 1.5px solid #eab308;
-      background: rgba(45, 35, 15, .8);
-    }
-
-    #mobBtnFocus .lbl {
-      font-size: 8px;
-      color: #fef08a;
+      --ac: #f5d142;
+      --is: 22px;
+      right: 188px;
+      bottom: 80px;
+      width: 48px;
+      height: 48px;
+      overflow: hidden;
     }
 
     #mobBtnPotion {
-      position: absolute;
-      right: 172px;
-      bottom: 22px;
-      width: 42px;
-      height: 42px;
-      border: 1.5px solid #ec4899;
-      background: rgba(45, 15, 30, .8);
-      flex-direction: column;
+      --ac: #ff6fa8;
+      --is: 22px;
+      right: 198px;
+      bottom: 20px;
+      width: 48px;
+      height: 48px;
     }
 
-    #mobBtnPotion .icon {
-      font-size: 14px;
+    .act .nm.sm {
+      font-size: 8px;
     }
 
     #mobBtnPotion .badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
+      top: -5px;
+      right: -5px;
       margin: 0;
+      pointer-events: none;
     }
 
     /* INTERACT BUTTON */
@@ -2034,24 +2108,26 @@
   <!-- MOBILE CONTROLS OVERLAY -->
   <div id="mobileControls" class="hidden">
     <div id="mobileTopBar">
-      <div class="top-left-actions">
+      <div class="top-center-actions">
         <button class="mob-btn icon-btn" id="mobBtnPause" title="Jeda / Menu">⏸</button>
         <button class="mob-btn icon-btn" id="mobBtnAudio" title="Suara">♪</button>
         <button class="mob-btn icon-btn" id="mobBtnFullscreen" title="Layar Penuh">⛶</button>
+        <button class="mob-btn text-btn on" id="mobBtnLock" title="Kunci musuh otomatis"><span class="ico"
+            id="mobLockIco" style="width:22px;height:22px;display:block"></span><span
+            id="mobLockTxt">AUTO</span></button>
         <button class="mob-btn text-btn hidden" id="mobBtnLobby" title="Kembali ke Lobby">LOBBY</button>
-      </div>
-      <div class="top-right-actions">
         <button class="mob-btn text-btn hidden" id="mobBtnStat" title="Alokasi Poin Status">
           <span>STAT</span><span id="mobStatBadge" class="badge">0</span>
         </button>
-        <div id="mobWeaponStrip">
-          <button class="mob-wpn-btn active" data-wpn="0">1</button>
-          <button class="mob-wpn-btn" data-wpn="1">2</button>
-          <button class="mob-wpn-btn" data-wpn="2">3</button>
-          <button class="mob-wpn-btn" data-wpn="3">4</button>
-          <button class="mob-wpn-btn" data-wpn="4">5</button>
-        </div>
       </div>
+    </div>
+
+    <div id="mobWeaponStrip">
+      <button class="mob-wpn-btn active" data-wpn="0"></button>
+      <button class="mob-wpn-btn" data-wpn="1"></button>
+      <button class="mob-wpn-btn" data-wpn="2"></button>
+      <button class="mob-wpn-btn" data-wpn="3"></button>
+      <button class="mob-wpn-btn" data-wpn="4"></button>
     </div>
 
     <div id="joyZone">
@@ -2061,38 +2137,50 @@
     </div>
 
     <div id="actionCluster">
-      <button class="mob-btn round-btn" id="mobBtnPotion" title="Potion (R)">
-        <span class="icon">🧪</span>
+      <button class="mob-btn act" id="mobBtnPotion" title="Potion (R)">
+        <span class="ico" data-ic="flask"></span>
+        <span class="nm sm">POTION</span>
         <span id="mobPotCount" class="badge">0</span>
       </button>
-      <button class="mob-btn round-btn" id="mobBtnFocus" title="Focus (E)">
-        <span class="lbl">FOCUS</span>
+      <button class="mob-btn act" id="mobBtnFocus" title="Battle Focus (E): damage +50% selama 5 detik">
+        <span class="ico" data-ic="eye"></span>
+        <span class="nm sm">FOKUS</span>
+        <div class="sk-cd" id="mobFocusCd"></div>
+        <b class="sk-num" id="mobFocusNum" style="font-size:18px"></b>
       </button>
-      <button class="mob-btn round-btn" id="mobBtnUlt" title="Ultimate (Q)">
-        <span class="lbl">ULT</span>
+      <button class="mob-btn act" id="mobBtnUlt" title="Ultimate (Q)">
+        <span class="ico" data-ic="star"></span>
+        <span class="nm sm" id="mobUltTxt">ULT</span>
       </button>
 
-      <button class="mob-btn skill-btn" id="mobBtnSkill1" data-sk="0">
-        <span class="lbl" id="mobSk1Lbl">Z</span>
+      <button class="mob-btn act skill-btn" id="mobBtnSkill1" data-sk="0">
+        <span class="ico" id="mobSk1Ico"></span>
+        <span class="nm" id="mobSk1Lbl">Z</span>
         <div class="sk-cd" id="mobSk1Cd"></div>
+        <b class="sk-num" id="mobSk1Num"></b>
       </button>
-      <button class="mob-btn skill-btn" id="mobBtnSkill2" data-sk="1">
-        <span class="lbl" id="mobSk2Lbl">X</span>
+      <button class="mob-btn act skill-btn" id="mobBtnSkill2" data-sk="1">
+        <span class="ico" id="mobSk2Ico"></span>
+        <span class="nm" id="mobSk2Lbl">X</span>
         <div class="sk-cd" id="mobSk2Cd"></div>
+        <b class="sk-num" id="mobSk2Num"></b>
       </button>
-      <button class="mob-btn skill-btn" id="mobBtnSkill3" data-sk="2">
-        <span class="lbl" id="mobSk3Lbl">C</span>
+      <button class="mob-btn act skill-btn" id="mobBtnSkill3" data-sk="2">
+        <span class="ico" id="mobSk3Ico"></span>
+        <span class="nm" id="mobSk3Lbl">C</span>
         <div class="sk-cd" id="mobSk3Cd"></div>
+        <b class="sk-num" id="mobSk3Num"></b>
       </button>
 
-      <button class="mob-btn round-btn" id="mobBtnDodge" title="Dodge (Space)">
-        <span class="icon">⚡</span>
-        <span class="lbl">DODGE</span>
+      <button class="mob-btn act" id="mobBtnDodge" title="Hindar / Guling (Space)">
+        <span class="ico" data-ic="bolt"></span>
+        <span class="nm sm">HINDAR</span>
       </button>
 
-      <button class="mob-btn main-atk-btn" id="mobBtnAttack" title="Attack / Aim">
-        <span class="icon">⚔</span>
-        <span class="lbl">ATK</span>
+      <button class="mob-btn act main-atk-btn" id="mobBtnAttack"
+        title="Serang. Tahan untuk charge, geser untuk bidik manual">
+        <span class="ico" id="mobAtkIco"></span>
+        <span class="nm">SERANG</span>
         <svg class="charge-svg" viewBox="0 0 84 84">
           <circle class="charge-bg" cx="42" cy="42" r="37"></circle>
           <circle class="charge-fill" id="mobChargeCircle" cx="42" cy="42" r="37"></circle>
@@ -3031,7 +3119,8 @@
       if (p.stT <= 0) p.st = Math.min(100, p.st + 35 * dt);
       for (let i = 0; i < 5; i++)if (P['Digit' + (i + 1)]) { if (wi != i) SFX.sw(); wi = i; p.combo = 0 }
       [['Digit6', 'VIT'], ['Digit7', 'STR'], ['Digit8', 'DEF'], ['Digit9', 'AGI'], ['Digit0', 'INT']].forEach(([k, s]) => { if (P[k] && pts > 0) { SFX.point(); A[s]++; pts--; if (s == 'VIT') p.hp += 8 } });
-      if (!touchAiming && touchJoy.active && (Math.abs(touchJoy.x) > 0.1 || Math.abs(touchJoy.y) > 0.1)) { p.face = Math.atan2(touchJoy.y, touchJoy.x) }
+      if (window.mobAim && window.mobAim(touchAiming)) { /* HP: auto-lock musuh terdekat / arah joystick */ }
+      else if (!touchAiming && touchJoy.active && (Math.abs(touchJoy.x) > 0.1 || Math.abs(touchJoy.y) > 0.1)) { p.face = Math.atan2(touchJoy.y, touchJoy.x) }
       else { p.face = Math.atan2(M.y - p.y, M.x - p.x) }
       if (p.spn > 0) { p.spn -= dt; p.fa += p.spv * dt; p.face = p.fa } { const c = Math.cos(p.face); if (c > .2) HSt = 1; else if (c < -.2) HSt = -1; HSd += (HSt - HSd) * Math.min(1, dt * 18) }
       let ix = (K.KeyD ? 1 : 0) - (K.KeyA ? 1 : 0), iy = (K.KeyS ? 1 : 0) - (K.KeyW ? 1 : 0);
@@ -3932,10 +4021,10 @@
       if (p.combo > 1) txt('Combo x' + p.combo, W - 10, 32, '#ffd34d', 'right');
       if (!isMobile) txt('[L] Kontrol   [F] Layar penuh   [M] Suara ' + (SFX.isOn() ? 'ON' : 'OFF'), W / 2, 12, '#667', 'center');
       if (pts > 0) txt('Poin atribut: ' + pts + (isMobile ? ' (Lihat tombol STAT)' : '  [6]VIT [7]STR [8]DEF [9]AGI [0]INT'), 10, 60, '#ffd34d');
-      txt('VIT ' + A.VIT + ' STR ' + A.STR + ' DEF ' + A.DEF + ' AGI ' + A.AGI + ' INT ' + A.INT, 10, H - 34, '#aab');
-      WP.forEach((w, i) => txt((i + 1) + ' ' + w.n, 10 + i * 72, H - 18, i == wi ? '#ffd34d' : '#889'));
-      txt('Potion: ' + p.pot + '/5 [R]', 10, H - 6, '#e08aa0');
-      [0, 1, 2].map(i => [['Z', 'X', 'C'][i], SK[wi][i].n, p.sc[i], SK[wi][i].cd]).concat([['E', 'Focus', p.ec, 12]]).forEach(([k, n, c, m], i) => { const x = W - 266 + i * 66, y = H - 30; g.fillStyle = '#000a'; g.fillRect(x, y, 62, 24); g.fillStyle = '#4a4780'; g.fillRect(x, y, c > 0 ? 62 * (1 - c / m) : 62, 24); g.font = '8px monospace'; txt(k + ' ' + n.slice(0, 9), x + 3, y + 15) });
+      if (!isMobile) txt('VIT ' + A.VIT + ' STR ' + A.STR + ' DEF ' + A.DEF + ' AGI ' + A.AGI + ' INT ' + A.INT, 10, H - 34, '#aab');
+      if (!isMobile) WP.forEach((w, i) => txt((i + 1) + ' ' + w.n, 10 + i * 72, H - 18, i == wi ? '#ffd34d' : '#889'));
+      if (!isMobile) txt('Potion: ' + p.pot + '/5 [R]', 10, H - 6, '#e08aa0');
+      if (!isMobile) [0, 1, 2].map(i => [['Z', 'X', 'C'][i], SK[wi][i].n, p.sc[i], SK[wi][i].cd]).concat([['E', 'Focus', p.ec, 12]]).forEach(([k, n, c, m], i) => { const x = W - 266 + i * 66, y = H - 30; g.fillStyle = '#000a'; g.fillRect(x, y, 62, 24); g.fillStyle = '#4a4780'; g.fillRect(x, y, c > 0 ? 62 * (1 - c / m) : 62, 24); g.font = '8px monospace'; txt(k + ' ' + n.slice(0, 9), x + 3, y + 15) });
       if (msgT > 0) { g.globalAlpha = Math.min(1, msgT); g.font = 'bold 11px monospace'; txt(msgS, W / 2, 60, '#fff', 'center'); g.globalAlpha = 1 }
       if (lobby) lobbyHud();
       if (guide) {
@@ -5332,8 +5421,8 @@
             const rect = joyZone.getBoundingClientRect();
             const touchX = e.clientX - rect.left;
             const touchY = e.clientY - rect.top;
-            joyBase.style.left = (touchX - 60) + 'px';
-            joyBase.style.bottom = (rect.height - touchY - 60) + 'px';
+            joyBase.style.left = (touchX - 70) + 'px';
+            joyBase.style.bottom = (rect.height - touchY - 70) + 'px';
             touchJoy.startX = e.clientX;
             touchJoy.startY = e.clientY;
             joyStick.style.transform = 'translate(0px, 0px)';
@@ -5344,7 +5433,7 @@
             const dx = e.clientX - touchJoy.startX;
             const dy = e.clientY - touchJoy.startY;
             const dist = Math.hypot(dx, dy);
-            const maxR = 48;
+            const maxR = 56;
             const angle = Math.atan2(dy, dx);
             const stickDist = Math.min(dist, maxR);
             joyStick.style.transform = `translate(${Math.cos(angle) * stickDist}px, ${Math.sin(angle) * stickDist}px)`;
@@ -5368,8 +5457,8 @@
             touchJoy.y = 0;
             touchJoy.sprint = false;
             joyStick.style.transform = 'translate(0px, 0px)';
-            joyBase.style.left = 'max(32px, env(safe-area-inset-left))';
-            joyBase.style.bottom = 'max(32px, env(safe-area-inset-bottom))';
+            joyBase.style.left = 'max(64px, env(safe-area-inset-left))';
+            joyBase.style.bottom = 'max(30px, env(safe-area-inset-bottom))';
           };
           window.addEventListener('pointerup', resetJoy);
           window.addEventListener('pointercancel', resetJoy);
@@ -5510,7 +5599,6 @@
             const q = SK[wi][i];
             const cdEl = document.getElementById('mobSk' + (i + 1) + 'Cd');
             const lblEl = document.getElementById('mobSk' + (i + 1) + 'Lbl');
-            if (lblEl && q) lblEl.textContent = q.n.slice(0, 4);
             if (cdEl && q) cdEl.style.height = (pObj.sc[i] > 0 ? (pObj.sc[i] / q.cd) * 100 : 0) + '%';
           }
         }
@@ -7145,7 +7233,7 @@
         {
           t: 'Serangan Dasar', s: 'Ayunkan senjatamu! Tiga serangan beruntun membentuk combo, dan hit ketiga paling kuat.', max: 3,
           k: () => mob() ? kb('ATK', 'tombol serang') : kb('Klik kiri', 'mouse'),
-          n: () => mob() ? 'Tahan & geser tombol ATK untuk membidik, lepas untuk menyerang.' : 'Arahkan serangan dengan kursor mouse.',
+          n: () => mob() ? 'Serangan otomatis mengunci musuh terdekat. Geser tombol SERANG untuk membidik manual.' : 'Arahkan serangan dengan kursor mouse.',
           u: k => { if (k.mu && k.hold <= .6 && k.cdA <= .06 && p.cdA > 0) T.v++ }
         },
         {
@@ -8637,6 +8725,187 @@
       document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.gfx-btn'); if (b) window.setGfx(b.getAttribute('data-gfx')) });
       apply(false);
     })();
+  </script>
+  <script>
+    /* ===== MOBILE+: ikon skill, tombol besar, AUTO-LOCK musuh (khusus HP/tablet sentuh) ===== */
+    (function () {
+      'use strict';
+      var TOUCH = false;
+      try { TOUCH = matchMedia('(hover: none) and (pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) } catch (e) { }
+
+      function S(b) { return '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + b + '</svg>' }
+      var IC = {
+        /* senjata */
+        sword: S('<g transform="rotate(45 16 16)"><path d="M16 2l3 4v14h-6V6z" fill="currentColor"/><path d="M9 20h14"/><path d="M16 20v6"/><circle cx="16" cy="28.5" r="1.6" fill="currentColor"/></g>'),
+        spear: S('<g transform="rotate(45 16 16)"><path d="M16 1l4 8-4 5-4-5z" fill="currentColor"/><path d="M16 14v17"/><path d="M13 24l3 3 3-3"/></g>'),
+        bow: S('<path d="M9 4c13 4 13 20 0 24"/><path d="M9 4v24"/><path d="M4 16h21"/><path d="M21 12l4 4-4 4"/>'),
+        staff: S('<path d="M7 28L19 14"/><circle cx="22" cy="10" r="4"/><path d="M22 2v2M29 10h-2M27 5l-1 1M17 5l1 1"/>'),
+        daggers: S('<g transform="rotate(45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g><g transform="rotate(-45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g>'),
+        /* skill */
+        cross: S('<path d="M6 7l20 18M26 7L6 25"/><path d="M16 2v3M2 16h3M27 16h3"/>'),
+        spin: S('<path d="M16 5a11 11 0 1 1-10 6.5"/><path d="M6 5v7h7"/>'),
+        split: S('<path d="M16 3v19"/><path d="M11 22h10"/><path d="M16 22v6"/><path d="M7 8l5 3M25 8l-5 3M5 15h5M22 15h5"/>'),
+        rush: S('<path d="M4 16h17"/><path d="M15 9l7 7-7 7"/><path d="M27 7v18"/>'),
+        shield: S('<path d="M16 3l10 4v8c0 7-4.5 11-10 14C10.5 26 6 22 6 15V7z"/>'),
+        lance: S('<path d="M8 24L26 6"/><path d="M22 4l7 1-1 7z" fill="currentColor"/><path d="M3 16h7M2 22h6M6 28h6"/>'),
+        rapid: S('<path d="M3 8h17M16 5l4 3-4 3"/><path d="M3 16h22M21 13l4 3-4 3"/><path d="M3 24h17M16 21l4 3-4 3"/>'),
+        backflip: S('<path d="M6 25c0-11 11-15 19-8"/><path d="M22 10l4 7-8 1"/>'),
+        rain: S('<path d="M8 3v14M5 14l3 4 3-4"/><path d="M16 8v16M13 21l3 4 3-4"/><path d="M24 3v14M21 14l3 4 3-4"/>'),
+        burst: S('<circle cx="16" cy="16" r="5"/><path d="M16 3v5M16 24v5M3 16h5M24 16h5M7 7l3 3M22 22l3 3M25 7l-3 3M10 22l-3 3"/>'),
+        nova: S('<path d="M16 3l3.5 9.5L29 16l-9.5 3.5L16 29l-3.5-9.5L3 16l9.5-3.5z"/>'),
+        meteor: S('<circle cx="22" cy="22" r="5" fill="currentColor"/><path d="M18 18L5 5M21 15L12 6M15 21L6 12"/>'),
+        dash: S('<path d="M3 10h8M2 16h9M3 22h8"/><path d="M14 16h14"/><path d="M23 10l6 6-6 6"/>'),
+        blades: S('<g transform="rotate(45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g><g transform="rotate(-45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g>'),
+        flurry: S('<path d="M5 25L15 6M12 27L22 8M19 28l9-16"/>'),
+        /* aksi lain */
+        bolt: S('<path d="M18 3L7 18h8l-2 11 12-16h-8z" fill="currentColor"/>'),
+        eye: S('<circle cx="16" cy="16" r="9"/><circle cx="16" cy="16" r="2.5" fill="currentColor"/><path d="M16 3v5M16 24v5M3 16h5M24 16h5"/>'),
+        flask: S('<path d="M12 4h8M13 4v8L6 25a2.5 2.5 0 0 0 2.2 3.5h15.6A2.5 2.5 0 0 0 26 25L19 12V4"/><path d="M9 21h14"/>'),
+        star: S('<path d="M16 2l4 10 10 4-10 4-4 10-4-10L2 16l10-4z" fill="currentColor"/>'),
+        lock: S('<circle cx="16" cy="16" r="9"/><path d="M16 3v6M16 23v6M3 16h6M23 16h6"/><circle cx="16" cy="16" r="2" fill="currentColor"/>')
+      };
+      /* nama skill (Inggris) -> [ikon, nama pendek Indonesia] */
+      var SKM = {
+        'Cross Slash': ['cross', 'Tebas'], 'Whirlwind': ['spin', 'Putar'], 'Heaven Split': ['split', 'Belah'],
+        'Aegis Rush': ['rush', 'Seruduk'], 'Bulwark Counter': ['shield', 'Tangkis'], 'Wyrmfang Charge': ['lance', 'Terjang'],
+        'Rapid Fire': ['rapid', 'Panah'], 'Backflip Volley': ['backflip', 'Salto'], 'Arrow Rain': ['rain', 'Hujan'],
+        'Arcane Burst': ['burst', 'Ledak'], 'Blink Nova': ['nova', 'Nova'], 'Meteor Storm': ['meteor', 'Meteor'],
+        'Shadow Dash': ['dash', 'Selinap'], 'Blade Burst': ['blades', 'Sabet'], 'Phantom Flurry': ['flurry', 'Badai']
+      };
+      var WCOL = ['#8fc8ff', '#ffd479', '#8fe08a', '#c6a0ff', '#ff93a8'];   /* warna cincin skill per senjata */
+      var WICO = ['sword', 'spear', 'bow', 'staff', 'daggers'];
+
+      function $(id) { return document.getElementById(id) }
+
+      /* ---------- pasang ikon statis ---------- */
+      Array.prototype.forEach.call(document.querySelectorAll('[data-ic]'), function (n) { n.innerHTML = IC[n.getAttribute('data-ic')] || '' });
+      Array.prototype.forEach.call(document.querySelectorAll('.mob-wpn-btn'), function (b, i) { b.innerHTML = '<i>' + (i + 1) + '</i>' + IC[WICO[i]] });
+      $('mobLockIco').innerHTML = IC.lock;
+
+      var lastW = -1;
+      function skin(w) {
+        lastW = w; var set = SK[w]; if (!set) return;
+        for (var i = 0; i < 3; i++) {
+          var q = set[i], m = SKM[q.n] || ['burst', q.n.slice(0, 7)], b = $('mobBtnSkill' + (i + 1));
+          $('mobSk' + (i + 1) + 'Ico').innerHTML = IC[m[0]];
+          $('mobSk' + (i + 1) + 'Lbl').textContent = m[1];
+          b.style.setProperty('--ac', WCOL[w]);
+          b.title = q.n + ' · cooldown ' + q.cd + ' dtk';
+        }
+        $('mobAtkIco').innerHTML = IC[WICO[w]];
+      }
+
+      /* ---------- cooldown: overlay + angka detik ---------- */
+      var cache = {};
+      function setTxt(id, v) { if (cache[id] !== v) { cache[id] = v; $(id).textContent = v } }
+      function cdUI(btn, cdId, numId, rem, max) {
+        var on = rem > 0;
+        btn.classList.toggle('cd', on);
+        $(cdId).style.height = on ? Math.min(100, rem / max * 100) + '%' : '0%';
+        setTxt(numId, on ? (rem >= 1 ? String(Math.ceil(rem)) : rem.toFixed(1)) : '');
+      }
+
+      /* ---------- AUTO-LOCK ---------- */
+      var LK = { on: true, t: null, pin: 0 }, RANGE = 250;
+      try { if (localStorage.getItem('eoa_lock') === '0') LK.on = false } catch (e) { }
+      function lockUI() {
+        var b = $('mobBtnLock'); b.classList.toggle('on', LK.on);
+        $('mobLockTxt').textContent = LK.on ? 'AUTO' : 'MANUAL';
+        b.title = LK.on ? 'Auto-lock aktif: serangan mengarah ke musuh terdekat' : 'Manual: geser tombol SERANG untuk membidik';
+      }
+      lockUI();
+      $('mobBtnLock').addEventListener('pointerdown', function (e) {
+        e.preventDefault(); LK.on = !LK.on; LK.t = null; lockUI();
+        try { localStorage.setItem('eoa_lock', LK.on ? '1' : '0') } catch (x) { }
+        try { dn(p.x, p.y - 26, LK.on ? 'AUTO-LOCK' : 'BIDIK MANUAL', 0, LK.on ? '#ffb1a6' : '#ddd') } catch (x) { }
+      });
+
+      function valid(e) { return !!e && es.indexOf(e) >= 0 && !(e.sw > 0) && !e.dying && (e.k === 'dummy' || e.hp > 0) }
+      function inView(e) {
+        var vw = W / CAM_Z, vh = H / CAM_Z;
+        return e.x > camX + 6 && e.x < camX + vw - 6 && e.y > camY + 6 && e.y < camY + vh - 6;
+      }
+      function pick() {
+        var best = null, bd = 1e9, i, e, d;
+        for (i = 0; i < es.length; i++) {
+          e = es[i]; if (!valid(e) || !inView(e)) continue;
+          d = Math.hypot(e.x - p.x, e.y - p.y); if (d < bd) { bd = d; best = e }
+        }
+        if (best && bd > RANGE) best = null;
+        var c = LK.t;   /* target lama dipertahankan agar tidak berpindah-pindah (histeresis) */
+        if (valid(c) && inView(c)) {
+          var dc = Math.hypot(c.x - p.x, c.y - p.y);
+          if (dc <= RANGE + 40 && (t < LK.pin || !best || dc <= bd * 1.3 + 26)) best = c;
+        }
+        LK.t = best; return best;
+      }
+
+      /* dipanggil dari upd(): true = arah serangan sudah diatur di sini */
+      window.mobAim = function (manual) {
+        if (!TOUCH || manual || !p) return false;
+        var tg = LK.on ? pick() : null;
+        if (tg) { p.face = Math.atan2(tg.y - p.y, tg.x - p.x); M.x = tg.x; M.y = tg.y }
+        else {
+          LK.t = null;
+          if (touchJoy.active && (Math.abs(touchJoy.x) > .1 || Math.abs(touchJoy.y) > .1)) p.face = Math.atan2(touchJoy.y, touchJoy.x);
+          M.x = p.x + Math.cos(p.face) * 120; M.y = p.y + Math.sin(p.face) * 120;
+        }
+        return true;
+      };
+
+      /* ketuk musuh di layar = pindah kunci ke musuh itu (bertahan 4 detik) */
+      cv.addEventListener('pointerdown', function (ev) {
+        if (!TOUCH || !LK.on || ev.pointerType === 'mouse' || !isMobile || !p) return;
+        var r = cv.getBoundingClientRect();
+        var wx = camX + ((ev.clientX - r.left) * W / r.width) / CAM_Z, wy = camY + ((ev.clientY - r.top) * H / r.height) / CAM_Z;
+        var best = null, bd = 26, i, e, d;
+        for (i = 0; i < es.length; i++) {
+          e = es[i]; if (!valid(e)) continue;
+          d = Math.hypot(e.x - wx, e.y - 4 - wy) - (e.r || 8); if (d < bd) { bd = d; best = e }
+        }
+        if (best) {
+          LK.t = best; LK.pin = t + 4; ev.preventDefault();
+          fx.push({ k: 'ring', x: best.x, y: best.y, r: 14, life: .25, max: .25, col: '#ffd34d' });
+        }
+      }, { passive: false });
+
+      /* ---------- penanda target di kanvas ---------- */
+      var _draw = draw;
+      draw = function () {
+        _draw();
+        try {
+          if (!TOUCH || !LK.on || !isMobile || !p || p.dead > 0) return;
+          var e = LK.t; if (!valid(e)) return;
+          var sx = (e.x - camX) * CAM_Z, sy = (e.y - (e.ht || 12) * .5 - camY) * CAM_Z;
+          var px = (p.x - camX) * CAM_Z, py = (p.y - camY) * CAM_Z;
+          var R0 = Math.max(10, e.r || 8) * CAM_Z * .9 + 5 + Math.sin(t * 7) * 1.5;
+          g.save();
+          g.strokeStyle = 'rgba(255,211,77,.35)'; g.lineWidth = 1.5; g.setLineDash([4, 6]);
+          g.beginPath(); g.moveTo(px, py); g.lineTo(sx, sy); g.stroke(); g.setLineDash([]);
+          g.translate(sx, sy); g.rotate(t * 1.3); g.strokeStyle = '#ff6b5b'; g.lineWidth = 2.5; g.lineCap = 'round';
+          for (var k = 0; k < 4; k++) { g.beginPath(); g.arc(0, 0, R0, k * Math.PI / 2 + .15, k * Math.PI / 2 + Math.PI / 2 - .55); g.stroke() }
+          g.rotate(-t * 1.3); g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(0, 0, 2, 0, 7); g.fill();
+          g.restore();
+        } catch (x) { }
+      };
+
+      /* ---------- update tiap frame (setelah updateMobileUI bawaan) ---------- */
+      var _u = window.updateMobileUI;
+      window.updateMobileUI = function () {
+        if (_u) _u();
+        try {
+          if (!isMobile || !p) return;
+          if (wi !== lastW) skin(wi);
+          var set = SK[wi];
+          for (var i = 0; i < 3; i++) cdUI($('mobBtnSkill' + (i + 1)), 'mobSk' + (i + 1) + 'Cd', 'mobSk' + (i + 1) + 'Num', p.sc[i], set[i].cd);
+          cdUI($('mobBtnFocus'), 'mobFocusCd', 'mobFocusNum', p.ec, 12);
+          $('mobBtnPotion').classList.toggle('cd', p.pot <= 0);
+          setTxt('mobUltTxt', ULT >= ULT_MAX ? 'SIAP!' : Math.floor(ULT / ULT_MAX * 100) + '%');
+        } catch (x) { }
+      };
+      skin(0);
+    })();
+
   </script>
 </body>
 
