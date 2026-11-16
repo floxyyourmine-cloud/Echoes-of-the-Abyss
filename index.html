@@ -1857,6 +1857,46 @@
       background: rgba(90, 66, 30, .55);
       box-shadow: 0 0 12px rgba(255, 220, 140, .25);
     }
+
+    /* GRAPHICS (pengaturan grafik) */
+    .gfx-opts {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .gfx-btn {
+      flex: 1;
+      padding: 10px 4px;
+      cursor: pointer;
+      background: rgba(20, 16, 26, .7);
+      border: 1px solid rgba(205, 185, 143, .35);
+      color: #cdb98f;
+      font-family: var(--f-title);
+      font-size: 10px;
+      letter-spacing: 1px;
+      transition: all .18s;
+    }
+
+    .gfx-btn:hover {
+      color: #fff;
+      border-color: rgba(255, 233, 176, .7);
+    }
+
+    .gfx-btn.on {
+      color: #ffe9b0;
+      border-color: #ffe9b0;
+      background: rgba(90, 66, 30, .55);
+      box-shadow: 0 0 12px rgba(255, 220, 140, .25);
+    }
+
+    /* mode HP: matikan blur CSS yang berat di GPU mobile */
+    body.gfx-hp *,
+    body.gfx-hp *::before,
+    body.gfx-hp *::after {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
   </style>
 </head>
 
@@ -1925,6 +1965,15 @@
         <div class="lang-opts">
           <button type="button" class="lang-btn" data-lang="id">BAHASA INDONESIA</button>
           <button type="button" class="lang-btn" data-lang="en">ENGLISH</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="sr-top"><span>GRAPHICS</span><output id="gfxOut">AUTO</output></div>
+        <div class="gfx-opts">
+          <button type="button" class="gfx-btn" data-gfx="auto">AUTO</button>
+          <button type="button" class="gfx-btn" data-gfx="pc">PC / LAPTOP</button>
+          <button type="button" class="gfx-btn" data-gfx="hp">HP / MOBILE</button>
         </div>
       </div>
 
@@ -2173,7 +2222,8 @@
     })();
   </script>
   <script>
-    const MW = 640, MH = 400; let W = 640, H = 400; const cv = document.getElementById('c'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+    var GFX = { hp: false, lvl: 0, capDp: 1e9 };
+    const MW = 640, MH = 400; let W = 640, H = 400; const cv = document.getElementById('c'), g = cv.getContext('2d', { alpha: false }); g.imageSmoothingEnabled = false;
     function resizeGameCanvas() {
       const aspect = window.innerWidth / (window.innerHeight || 1);
       if (aspect >= 1.6) { H = 400; W = Math.round(H * aspect) }
@@ -3846,7 +3896,7 @@
         g.globalAlpha = k * .5; drawHero(q.x, q.y, 1, q.ph); g.globalAlpha = 1
       });
       dp.forEach(q => {
-        const k = q.life / q.max; if (q.k == 'f') flame(q, k); else if (q.k == 's') smoke(q, k); else if (q.k == 'sh') shardFx(q, k); else if (q.k == 'gf') gflame(q, k); else if (q.k == 'l') { const L = q.len * (.4 + k * .6); if (q.w) { g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = k * .45; g.strokeStyle = q.cc; g.lineWidth = q.w * 2.4; g.lineCap = 'round'; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x - Math.cos(q.a) * L, q.y - Math.sin(q.a) * L); g.stroke(); g.restore() } g.globalAlpha = k * .9; g.strokeStyle = q.w ? '#fff' : '#ffd0da'; g.lineWidth = q.w ? q.w * .55 : 1.5; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x - Math.cos(q.a) * L, q.y - Math.sin(q.a) * L); g.stroke(); g.lineWidth = 1 }
+        const k = q.life / q.max; if (GFX.hp && q.k != 'l' && (q.x < camX - 30 || q.y < camY - 30 || q.x > camX + W / CAM_Z + 30 || q.y > camY + H / CAM_Z + 30)) return; if (q.k == 'f') flame(q, k); else if (q.k == 's') smoke(q, k); else if (q.k == 'sh') shardFx(q, k); else if (q.k == 'gf') gflame(q, k); else if (q.k == 'l') { const L = q.len * (.4 + k * .6); if (q.w) { g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = k * .45; g.strokeStyle = q.cc; g.lineWidth = q.w * 2.4; g.lineCap = 'round'; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x - Math.cos(q.a) * L, q.y - Math.sin(q.a) * L); g.stroke(); g.restore() } g.globalAlpha = k * .9; g.strokeStyle = q.w ? '#fff' : '#ffd0da'; g.lineWidth = q.w ? q.w * .55 : 1.5; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x - Math.cos(q.a) * L, q.y - Math.sin(q.a) * L); g.stroke(); g.lineWidth = 1 }
         else { g.globalAlpha = k; g.fillStyle = q.c; const z = Math.ceil(q.s); g.fillRect(Math.round(q.x), Math.round(q.y), z, z) }
       }); g.globalAlpha = 1;
       if ((p.dead <= 0 || Math.floor(t * 10) % 2) && !ULTH) {
@@ -3946,8 +3996,8 @@
     }
     function envFx() {
       g.save(); g.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 3; i++) { const ux = WW / 2 + Math.sin(t * .15 + i * 2.1) * WW * .36, uy = WH / 2 + Math.cos(t * .12 + i * 1.7) * WH * .3, q = g.createRadialGradient(ux, uy, 0, ux, uy, 130); q.addColorStop(0, 'rgba(70,50,140,.07)'); q.addColorStop(1, 'rgba(70,50,140,0)'); g.fillStyle = q; g.fillRect(ux - 130, uy - 130, 260, 260) }
-      TO.forEach(([x, y], i) => { const f = 1 + Math.sin(t * 11 + i * 3) * .08 + Math.sin(t * 19 + i) * .05, rd = 100 * f, q = g.createRadialGradient(x, y, 0, x, y, rd); q.addColorStop(0, 'rgba(255,150,60,.3)'); q.addColorStop(1, 'rgba(255,150,60,0)'); g.fillStyle = q; g.fillRect(x - rd, y - rd, rd * 2, rd * 2) });
+      for (let i = 0; i < 3; i++) { const ux = WW / 2 + Math.sin(t * .15 + i * 2.1) * WW * .36, uy = WH / 2 + Math.cos(t * .12 + i * 1.7) * WH * .3; if (GFX.hp) glowBlit(ux, uy, 130, '70,50,140', .07); else { let q = g.createRadialGradient(ux, uy, 0, ux, uy, 130); q.addColorStop(0, 'rgba(70,50,140,.07)'); q.addColorStop(1, 'rgba(70,50,140,0)'); g.fillStyle = q; g.fillRect(ux - 130, uy - 130, 260, 260) } }
+      TO.forEach(([x, y], i) => { const f = 1 + Math.sin(t * 11 + i * 3) * .08 + Math.sin(t * 19 + i) * .05, rd = 100 * f; if (GFX.hp) glowBlit(x, y, rd, '255,150,60', .3); else { let q = g.createRadialGradient(x, y, 0, x, y, rd); q.addColorStop(0, 'rgba(255,150,60,.3)'); q.addColorStop(1, 'rgba(255,150,60,0)'); g.fillStyle = q; g.fillRect(x - rd, y - rd, rd * 2, rd * 2) } });
       g.restore();
       if (!room && !lobby) { g.save(); g.translate(60, DY); g.strokeStyle = 'rgba(79,208,255,.55)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 0, 17, 0, 7); g.stroke(); g.rotate(t * .6); g.fillStyle = 'rgba(120,220,255,.8)'; for (let i = 0; i < 6; i++) { g.rotate(1.0472); g.fillRect(16, -1, 3, 2) } g.restore() }
       TO.forEach(([x, y], i) => { const h = Math.round(3 + (Math.sin(t * 13 + i * 2) * .5 + Math.sin(t * 23 + i) * .5) * 1.5), ox = Math.round(x), oy = Math.round(y); g.fillStyle = '#e8561f'; g.fillRect(ox - 2, oy - 3 - h, 4, h + 2); g.fillStyle = '#ff9a3c'; g.fillRect(ox - 1, oy - 2 - h, 2, h + 1); g.fillStyle = '#ffe28a'; g.fillRect(ox, oy - 4, 1, 2) });
@@ -8539,6 +8589,53 @@
         if (!inGame && !playing && menu && !menu.classList.contains('hidden')) { try { cards.forEach(preview) } catch (e) { } }
         requestAnimationFrame(loop)
       })(last);
+    })();
+  </script>
+  <script>
+    /* ===== GRAFIK: PC/Laptop vs HP — HP memakai sprite cahaya ter-cache, batas partikel, culling & adaptif ===== */
+    (function () {
+      var KEY = 'eoa_gfx', mode = 'auto'; try { var s = localStorage.getItem(KEY); if (s === 'pc' || s === 'hp') mode = s } catch (e) { }
+      function isPhone() { try { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (matchMedia('(hover: none) and (pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 900) } catch (e) { return false } }
+      /* sprite cahaya radial ter-cache: menggantikan createRadialGradient per partikel */
+      var SPR = {};
+      function spr(kind, rgb) {
+        var key = kind + rgb, c = SPR[key]; if (c) return c;
+        c = SPR[key] = document.createElement('canvas'); c.width = c.height = 64; var x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+        if (kind == 'f') { gr.addColorStop(0, 'rgba(' + rgb + ',.9)'); gr.addColorStop(.5, 'rgba(' + rgb + ',.45)'); gr.addColorStop(1, 'rgba(' + rgb + ',0)') }
+        else if (kind == 'g') { gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(.35, 'rgba(' + rgb + ',.6)'); gr.addColorStop(1, 'rgba(' + rgb + ',0)') }
+        else { gr.addColorStop(0, 'rgba(' + rgb + ',1)'); gr.addColorStop(1, 'rgba(' + rgb + ',0)') }
+        x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c
+      }
+      function blit(c, x, y, r, a) { var sm = g.imageSmoothingEnabled; g.imageSmoothingEnabled = true; g.globalAlpha = a; g.drawImage(c, x - r, y - r, r * 2, r * 2); g.globalAlpha = 1; g.imageSmoothingEnabled = sm }
+      window.glowBlit = function (x, y, r, rgb, a) { blit(spr('s', rgb), x, y, r, a) };
+      var _flame = flame, _gflame = gflame, _smoke = smoke, _glFx = glFx, smk = 0;
+      flame = function (q, k) { if (!GFX.hp) return _flame(q, k); var a = 1 - k, r = q.s * (1.3 - a * .7), c1 = a < .25 ? '255,235,255' : a < .55 ? '210,120,255' : '130,50,210'; g.save(); g.globalCompositeOperation = 'lighter'; blit(spr('f', c1), q.x, q.y, r * 2, k); g.restore() };
+      gflame = function (q, k) { if (!GFX.hp) return _gflame(q, k); var a = 1 - k, r = q.s * (1.3 - a * .7), c1 = a < .25 ? '255,225,215' : a < .55 ? '255,90,70' : '200,25,25'; g.save(); g.globalCompositeOperation = 'lighter'; blit(spr('f', c1), q.x, q.y, r * 2, k); g.restore() };
+      smoke = function (q, k) { if (!GFX.hp) return _smoke(q, k); if (GFX.lvl > 0 && (++smk & 1)) return; blit(spr('s', q.c || '80,76,92'), q.x, q.y, q.s, k * .4) };
+      glFx = function (f, k) { if (!GFX.hp) return _glFx(f, k); g.save(); g.globalCompositeOperation = 'lighter'; blit(spr('g', f.c), f.x, f.y, f.r, k); g.restore() };
+      /* batas frame ~60fps untuk HP 90/120Hz agar baterai & suhu aman */
+      var raf0 = window.requestAnimationFrame.bind(window), lastBy = new WeakMap();
+      window.requestAnimationFrame = function (cb) { return raf0(function w(ts) { if (GFX.hp) { var l = lastBy.get(cb) || 0; if (ts - l < 15.5) { raf0(w); return } lastBy.set(cb, ts) } cb(ts) }) };
+      /* penyesuaian otomatis: jika masih berat, kurangi partikel & asap ambient (tampilan utama tetap sama) */
+      var _upd = upd, lastN = 0, ema = 16.7, slow = 0, fast = 0;
+      upd = function (dt) {
+        _upd(dt); var n = performance.now(), d = n - lastN; lastN = n; if (d > 250 || d <= 0) return;
+        if (GFX.hp) {
+          ema += (d - ema) * .05; GFX.capDp = GFX.lvl ? 130 : 220; if (dp.length > GFX.capDp) dp.splice(0, dp.length - GFX.capDp);
+          if (ema > 23) { slow++; fast = 0 } else if (ema < 18) { fast++; slow = 0 } else slow = fast = 0;
+          if (slow > 90 && GFX.lvl < 1) { GFX.lvl = 1; slow = 0 } else if (fast > 600 && GFX.lvl > 0) { GFX.lvl = 0; fast = 0 }
+        } else { GFX.capDp = 1e9; GFX.lvl = 0 }
+      };
+      function apply(save) {
+        GFX.hp = mode === 'hp' || (mode === 'auto' && isPhone()); GFX.lvl = 0; ema = 16.7; slow = fast = 0;
+        document.body.classList.toggle('gfx-hp', GFX.hp);
+        var bs = document.querySelectorAll('.gfx-btn'); for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-gfx') === mode);
+        var o = document.getElementById('gfxOut'); if (o) o.textContent = mode === 'auto' ? 'AUTO · ' + (GFX.hp ? 'HP' : 'PC') : mode === 'hp' ? 'HP / MOBILE' : 'PC / LAPTOP';
+        if (save) try { localStorage.setItem(KEY, mode) } catch (e) { }
+      }
+      window.setGfx = function (m) { mode = m === 'pc' || m === 'hp' ? m : 'auto'; apply(true) };
+      document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.gfx-btn'); if (b) window.setGfx(b.getAttribute('data-gfx')) });
+      apply(false);
     })();
   </script>
 </body>
