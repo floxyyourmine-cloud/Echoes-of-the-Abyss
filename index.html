@@ -1041,6 +1041,7 @@
       width: 100%;
       height: 100%;
       display: block;
+      filter: drop-shadow(0 0 3px color-mix(in srgb, var(--ac) 60%, transparent));
     }
 
     .act .nm {
@@ -1136,7 +1137,7 @@
 
     /* 3 SKILL SENJATA */
     .skill-btn {
-      --is: 30px;
+      --is: 36px;
       width: 66px;
       height: 66px;
       overflow: hidden;
@@ -1148,7 +1149,8 @@
     }
 
     .skill-btn .nm {
-      font-size: 9.5px;
+      font-size: 8.5px;
+      margin-top: -2px;
     }
 
     #mobBtnSkill1 {
@@ -1972,6 +1974,230 @@
       -webkit-backdrop-filter: none !important;
     }
   </style>
+
+  <style id="mobPolish">
+    /* ===== ANALOG ===== */
+    #joyBase {
+      opacity: .66;
+      background:
+        radial-gradient(circle, rgba(216, 184, 120, .05) 0%, rgba(12, 11, 18, .50) 58%, rgba(12, 11, 18, .66) 100%);
+      border: 2px solid rgba(216, 184, 120, .46);
+      box-shadow:
+        0 0 0 5px rgba(12, 11, 18, .30),
+        0 8px 22px rgba(0, 0, 0, .62),
+        inset 0 0 24px rgba(216, 184, 120, .10),
+        inset 0 0 0 1px rgba(255, 236, 190, .08);
+      transition: opacity .18s, border-color .15s, box-shadow .15s;
+    }
+
+    /* cincin tanda (tick) di tepi dalam */
+    #joyBase::before {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 50%;
+      background: repeating-conic-gradient(from -1.2deg, rgba(255, 226, 160, .55) 0 2.4deg, transparent 2.4deg 15deg);
+      -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+      mask: radial-gradient(closest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+      pointer-events: none;
+    }
+
+    /* cincin dalam: zona mati */
+    #joyBase::after {
+      content: "";
+      position: absolute;
+      inset: 30px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(216, 184, 120, .30);
+      pointer-events: none;
+    }
+
+    .joy-arrows {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      fill: rgba(255, 226, 160, .55);
+      pointer-events: none;
+    }
+
+    /* penunjuk arah gerak di tepi cincin */
+    #joyDir {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      transform: rotate(var(--a, 0rad));
+      opacity: 0;
+      transition: opacity .12s;
+      pointer-events: none;
+    }
+
+    #joyDir::before {
+      content: "";
+      position: absolute;
+      right: -9px;
+      top: 50%;
+      margin-top: -9px;
+      border-left: 13px solid #ffd34d;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      filter: drop-shadow(0 0 5px rgba(255, 211, 77, .9));
+    }
+
+    #joyStick {
+      width: 64px;
+      height: 64px;
+      margin: -32px 0 0 -32px;
+      background: radial-gradient(circle at 34% 26%, #fff6d8 0%, #f2d08c 20%, #bb9250 60%, #6c4f27 100%);
+      border: 2px solid rgba(255, 255, 255, .55);
+      box-shadow:
+        0 7px 13px rgba(0, 0, 0, .68),
+        0 0 14px rgba(255, 211, 77, .22),
+        inset 0 -7px 11px rgba(60, 34, 8, .48),
+        inset 0 3px 6px rgba(255, 255, 255, .55);
+      transition: box-shadow .15s, filter .15s;
+    }
+
+    #joyStick::after {
+      content: "";
+      position: absolute;
+      inset: 15px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(80, 52, 18, .45);
+      background: radial-gradient(circle at 40% 32%, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 70%);
+    }
+
+    #joyBase.on {
+      opacity: 1;
+      border-color: rgba(255, 211, 77, .85);
+      box-shadow:
+        0 0 0 5px rgba(12, 11, 18, .30),
+        0 8px 22px rgba(0, 0, 0, .62),
+        0 0 24px rgba(255, 211, 77, .35),
+        inset 0 0 26px rgba(255, 211, 77, .18);
+    }
+
+    #joyBase.on #joyDir {
+      opacity: 1;
+    }
+
+    /* lari (sprint): dorong stik sampai ujung */
+    #joyBase.sprint {
+      border-color: rgba(255, 140, 66, .95);
+      box-shadow:
+        0 0 0 5px rgba(12, 11, 18, .30),
+        0 8px 22px rgba(0, 0, 0, .62),
+        0 0 30px rgba(255, 120, 50, .5),
+        inset 0 0 28px rgba(255, 120, 50, .25);
+    }
+
+    #joyBase.sprint #joyStick {
+      filter: hue-rotate(-14deg) saturate(1.25);
+      box-shadow:
+        0 7px 13px rgba(0, 0, 0, .68),
+        0 0 20px rgba(255, 120, 50, .7),
+        inset 0 -7px 11px rgba(60, 34, 8, .48),
+        inset 0 3px 6px rgba(255, 255, 255, .55);
+    }
+
+    #joyBase.sprint #joyDir::before {
+      border-left-color: #ff8c42;
+      filter: drop-shadow(0 0 6px rgba(255, 120, 50, .95));
+    }
+
+    /* ===== TOMBOL SERANG (BASIC ATTACK) ===== */
+    .main-atk-btn {
+      --is: 46px;
+      width: 100px;
+      height: 100px;
+      border-width: 3px;
+      overflow: visible;
+      background:
+        radial-gradient(circle at 50% 36%, color-mix(in srgb, var(--ac) 34%, #2b2418) 0%, rgba(30, 24, 18, .96) 50%, rgba(10, 9, 15, .98) 100%);
+      box-shadow:
+        0 7px 20px rgba(0, 0, 0, .78),
+        0 0 24px color-mix(in srgb, var(--ac) 40%, transparent),
+        inset 0 0 0 5px rgba(10, 9, 15, .55),
+        inset 0 0 0 6px color-mix(in srgb, var(--ac) 50%, transparent),
+        inset 0 -12px 18px rgba(0, 0, 0, .45);
+      transition: transform .06s ease, box-shadow .15s, border-color .15s;
+    }
+
+    /* cincin tanda di dalam */
+    .main-atk-btn::before {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      background: repeating-conic-gradient(from -1deg, color-mix(in srgb, var(--ac) 75%, #fff) 0 2deg, transparent 2deg 12deg);
+      -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+      mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+      opacity: .5;
+      pointer-events: none;
+    }
+
+    .main-atk-btn .ico {
+      filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ac) 70%, transparent));
+      margin-top: -2px;
+    }
+
+    .main-atk-btn .nm {
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      margin-top: -1px;
+    }
+
+    .main-atk-btn:active {
+      transform: scale(.93);
+      background:
+        radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--ac) 58%, #2b2418) 0%, rgba(40, 30, 20, .96) 55%, rgba(10, 9, 15, .98) 100%);
+      box-shadow:
+        0 3px 10px rgba(0, 0, 0, .78),
+        0 0 34px color-mix(in srgb, var(--ac) 65%, transparent),
+        inset 0 0 0 5px rgba(10, 9, 15, .5),
+        inset 0 0 0 6px color-mix(in srgb, var(--ac) 80%, transparent),
+        inset 0 -8px 14px rgba(0, 0, 0, .35);
+    }
+
+    /* cincin charge */
+    .charge-svg {
+      inset: -15px;
+      width: 124px;
+      height: 124px;
+      overflow: visible;
+    }
+
+    .charge-bg {
+      stroke: rgba(255, 255, 255, .12);
+      stroke-width: 3.2;
+    }
+
+    .charge-fill {
+      stroke: color-mix(in srgb, var(--ac) 62%, #fff);
+      stroke-width: 4;
+      filter: drop-shadow(0 0 4px var(--ac));
+    }
+
+    /* charge penuh: berdenyut */
+    .main-atk-btn.charged {
+      animation: atkCharged .45s ease-in-out infinite alternate;
+    }
+
+    .main-atk-btn.charged .charge-fill {
+      stroke: #fff;
+      filter: drop-shadow(0 0 7px var(--ac)) drop-shadow(0 0 12px var(--ac));
+    }
+
+    @keyframes atkCharged {
+      0% {
+        box-shadow: 0 7px 20px rgba(0, 0, 0, .78), 0 0 18px color-mix(in srgb, var(--ac) 50%, transparent), inset 0 0 0 5px rgba(10, 9, 15, .55), inset 0 0 0 6px var(--ac);
+      }
+
+      100% {
+        box-shadow: 0 7px 20px rgba(0, 0, 0, .78), 0 0 40px var(--ac), inset 0 0 0 5px rgba(10, 9, 15, .4), inset 0 0 0 6px #fff;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -2132,6 +2358,10 @@
 
     <div id="joyZone">
       <div id="joyBase">
+        <svg class="joy-arrows" viewBox="0 0 140 140" aria-hidden="true">
+          <path d="M70 11l8 9H62zM70 129l8-9H62zM11 70l9-8v16zM129 70l-9-8v16z" />
+        </svg>
+        <div id="joyDir"></div>
         <div id="joyStick"></div>
       </div>
     </div>
@@ -8825,7 +9055,8 @@
       var TOUCH = false;
       try { TOUCH = matchMedia('(hover: none) and (pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) } catch (e) { }
 
-      function S(b) { return '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + b + '</svg>' }
+      function S(b) { return '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + b + '</svg>' }
+      var F = 'fill="currentColor" fill-opacity=".28"', FS = 'fill="currentColor"';
       var IC = {
         /* senjata */
         sword: S('<g transform="rotate(45 16 16)"><path d="M16 2l3 4v14h-6V6z" fill="currentColor"/><path d="M9 20h14"/><path d="M16 20v6"/><circle cx="16" cy="28.5" r="1.6" fill="currentColor"/></g>'),
@@ -8833,22 +9064,37 @@
         bow: S('<path d="M9 4c13 4 13 20 0 24"/><path d="M9 4v24"/><path d="M4 16h21"/><path d="M21 12l4 4-4 4"/>'),
         staff: S('<path d="M7 28L19 14"/><circle cx="22" cy="10" r="4"/><path d="M22 2v2M29 10h-2M27 5l-1 1M17 5l1 1"/>'),
         daggers: S('<g transform="rotate(45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g><g transform="rotate(-45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g>'),
-        /* skill */
-        cross: S('<path d="M6 7l20 18M26 7L6 25"/><path d="M16 2v3M2 16h3M27 16h3"/>'),
-        spin: S('<path d="M16 5a11 11 0 1 1-10 6.5"/><path d="M6 5v7h7"/>'),
-        split: S('<path d="M16 3v19"/><path d="M11 22h10"/><path d="M16 22v6"/><path d="M7 8l5 3M25 8l-5 3M5 15h5M22 15h5"/>'),
-        rush: S('<path d="M4 16h17"/><path d="M15 9l7 7-7 7"/><path d="M27 7v18"/>'),
-        shield: S('<path d="M16 3l10 4v8c0 7-4.5 11-10 14C10.5 26 6 22 6 15V7z"/>'),
-        lance: S('<path d="M8 24L26 6"/><path d="M22 4l7 1-1 7z" fill="currentColor"/><path d="M3 16h7M2 22h6M6 28h6"/>'),
-        rapid: S('<path d="M3 8h17M16 5l4 3-4 3"/><path d="M3 16h22M21 13l4 3-4 3"/><path d="M3 24h17M16 21l4 3-4 3"/>'),
-        backflip: S('<path d="M6 25c0-11 11-15 19-8"/><path d="M22 10l4 7-8 1"/>'),
-        rain: S('<path d="M8 3v14M5 14l3 4 3-4"/><path d="M16 8v16M13 21l3 4 3-4"/><path d="M24 3v14M21 14l3 4 3-4"/>'),
-        burst: S('<circle cx="16" cy="16" r="5"/><path d="M16 3v5M16 24v5M3 16h5M24 16h5M7 7l3 3M22 22l3 3M25 7l-3 3M10 22l-3 3"/>'),
-        nova: S('<path d="M16 3l3.5 9.5L29 16l-9.5 3.5L16 29l-3.5-9.5L3 16l9.5-3.5z"/>'),
-        meteor: S('<circle cx="22" cy="22" r="5" fill="currentColor"/><path d="M18 18L5 5M21 15L12 6M15 21L6 12"/>'),
-        dash: S('<path d="M3 10h8M2 16h9M3 22h8"/><path d="M14 16h14"/><path d="M23 10l6 6-6 6"/>'),
-        blades: S('<g transform="rotate(45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g><g transform="rotate(-45 16 16)"><path d="M16 3l2.5 3.500V16h-5V6.500z" fill="currentColor"/><path d="M12 16h8M16 16v6"/></g>'),
-        flurry: S('<path d="M5 25L15 6M12 27L22 8M19 28l9-16"/>'),
+        /* skill: bentuk meniru efek nyata skill di dalam game */
+        /* Cross Slash: 2 tebasan menyilang + tebasan penutup besar */
+        cross: S('<path d="M5 7Q16 10 27 25" stroke-width="3"/><path d="M27 7Q16 10 5 25" stroke-width="3"/><path d="M5 27Q16 29 27 27" stroke-width="1.6" opacity=".8"/><circle cx="16" cy="16" r="2" ' + FS + ' stroke="none"/><path d="M16 2v3M3 16h3M26 16h3" stroke-width="1.6"/>'),
+        /* Whirlwind: pedang berputar 2x, cincin biru */
+        spin: S('<path d="M16 3a13 13 0 0 1 13 13" stroke-width="2.400"/><path d="M29 16a13 13 0 0 1-13 13" stroke-width="2.400"/><path d="M16 29A13 13 0 0 1 3 16" opacity=".6"/><path d="M3 16A13 13 0 0 1 16 3" opacity=".6"/><path d="M25 6l5 2-2 5z" ' + FS + ' stroke="none"/><path d="M7 26l-5-2 2-5z" ' + FS + ' stroke="none"/><g transform="rotate(45 16 16)"><path d="M16 8l2 3v9h-4v-9z" ' + FS + ' stroke="none"/><path d="M12.500 20h7M16 20v4" stroke-width="1.800"/></g>'),
+        /* Heaven Split: tebas ke bawah, tiang cahaya + cincin ledakan + pecahan */
+        split: S('<path d="M12 2h8l-1 17h-6z" ' + F + '/><path d="M16 4v15" stroke-width="2.6"/><ellipse cx="16" cy="24" rx="5" ry="2.2"/><ellipse cx="16" cy="24" rx="10" ry="4.2" opacity=".75"/><ellipse cx="16" cy="24" rx="14" ry="6" opacity=".45"/><path d="M5 14l3 3M27 14l-3 3M9 9l2 3M23 9l-2 3" stroke-width="1.8"/>'),
+        /* Aegis Rush: perisai naga menyeruduk dengan garis kecepatan */
+        rush: S('<path d="M3 11h6M2 16h7M3 21h6" stroke-width="1.8" opacity=".8"/><path d="M13 5h11a3 3 0 0 1 3 3v8c0 6-5 9-9.500 11C13 25 10 22 10 16V8a3 3 0 0 1 3-3z" ' + F + '/><path d="M18.500 9v13M14 13h9" stroke-width="1.8"/><circle cx="18.500" cy="14.500" r="2" ' + FS + ' stroke="none"/><path d="M28 9l2 3M29 18l2-1" stroke-width="1.6"/>'),
+        /* Bulwark Counter: perisai menahan lalu tusukan bertubi-tubi */
+        shield: S('<path d="M5 6h8a2 2 0 0 1 2 2v13c0 4-3 6-6.500 7.500C5 27 3 25 3 21V8a2 2 0 0 1 2-2z" ' + F + '/><path d="M9 9v14" stroke-width="1.6"/><path d="M18 9h10M17 15h13M18 21h10" stroke-width="2.4"/><path d="M26 6l3 3-3 3M27 12l3 3-3 3M26 18l3 3-3 3" stroke-width="1.8"/>'),
+        /* Wyrmfang Charge: terjang dengan tombak + deretan taring naga dari tanah */
+        lance: S('<path d="M3 11h6M2 16h5" stroke-width="1.6" opacity=".7"/><path d="M6 20L22 8" stroke-width="2.6"/><path d="M21 3l9 3-3 9z" ' + FS + ' stroke="none"/><path d="M5 29l3-7 3 7z" ' + F + '/><path d="M12 29l3-9 3 9z" ' + F + '/><path d="M19 29l3-11 3 11z" ' + F + '/><path d="M3 29h27" stroke-width="1.6"/>'),
+        /* Rapid Fire: 3 panah beruntun */
+        rapid: S('<path d="M2 8h20" stroke-width="2.4"/><path d="M18 4l6 4-6 4" ' + FS + '/><path d="M2 8l-1-3M2 8l-1 3" stroke-width="1.6"/><path d="M5 16h22" stroke-width="2.4"/><path d="M23 12l6 4-6 4" ' + FS + '/><path d="M5 16l-1-3M5 16l-1 3" stroke-width="1.6"/><path d="M2 24h20" stroke-width="2.4"/><path d="M18 20l6 4-6 4" ' + FS + '/><path d="M2 24l-1-3M2 24l-1 3" stroke-width="1.6"/>'),
+        /* Backflip Volley: salto mundur lalu 5 panah menyebar + 1 panah besar */
+        backflip: S('<path d="M4 27C2 17 8 9 17 8" stroke-dasharray="1 3.500" stroke-width="2.4"/><path d="M13 3l6 5-6 5" stroke-width="2"/><path d="M19 12l10-6M20 16h11M19 20l10 6" stroke-width="1.8"/><path d="M26 3l3 3-4 1M28 13l3 3-3 3M26 25l3 1-1 4" stroke-width="1.4" opacity=".8"/><path d="M19 16h11" stroke-width="3.2"/>'),
+        /* Arrow Rain: lingkaran target merah + hujan panah jatuh */
+        rain: S('<ellipse cx="16" cy="25" rx="12" ry="4.500" ' + F + '/><ellipse cx="16" cy="25" rx="7" ry="2.500" opacity=".7"/><path d="M8 2v14M5 12l3 4 3-4" stroke-width="2"/><path d="M16 4v15M13 15l3 4 3-4" stroke-width="2.4"/><path d="M24 2v14M21 12l3 4 3-4" stroke-width="2"/><circle cx="16" cy="25" r="1.4" ' + FS + ' stroke="none"/>'),
+        /* Arcane Burst: lingkaran rune sihir + ledakan di titik target */
+        burst: S('<circle cx="16" cy="16" r="12.500" stroke-width="1.6" ' + F + '/><circle cx="16" cy="16" r="8" stroke-width="1.4" stroke-dasharray="2 2.500"/><path d="M16 5l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2z" ' + FS + ' stroke="none" opacity=".9"/><circle cx="16" cy="16" r="2.200" fill="#fff" stroke="none"/>'),
+        /* Blink Nova: bayangan tinggal + jejak teleport + nova bintang */
+        nova: S('<circle cx="6" cy="16" r="3.600" stroke-dasharray="1.600 2.200" opacity=".8"/><path d="M11 16h4" stroke-width="2.200" stroke-dasharray="1.500 2.500"/><path d="M21 3l2.600 7.400L31 13l-7.400 2.600L21 23l-2.600-7.400L11 13l7.400-2.600z" ' + FS + ' stroke="none" transform="translate(-1 3)"/><circle cx="20" cy="16" r="3" fill="#fff" stroke="none"/><path d="M20 27v3M10 26l2 2M30 26l-2 2" stroke-width="1.600"/>'),
+        /* Meteor Storm: beberapa meteor miring jatuh ke lingkaran sihir */
+        meteor: S('<ellipse cx="14" cy="27" rx="12" ry="3.500" ' + F + '/><circle cx="21" cy="17" r="4.500" ' + FS + ' stroke="none"/><path d="M18 14L5 2M20 12L12 3M15 17L4 8" stroke-width="2.400"/><circle cx="9" cy="21" r="2.500" ' + FS + ' stroke="none"/><path d="M7 19L1 14M8 18l-2-6" stroke-width="1.800"/><circle cx="27" cy="25" r="1.800" ' + FS + ' stroke="none"/><path d="M26 23l-4-4" stroke-width="1.600"/>'),
+        /* Shadow Dash: selinap lurus, 2 garis bayangan, lalu 2 tebasan pendek */
+        dash: S('<path d="M2 8h9M1 14h10" stroke-width="1.800" opacity=".7"/><path d="M2 20h9" stroke-width="1.800" opacity=".7"/><path d="M12 16h13" stroke-width="2.800"/><path d="M22 9l8 7-8 7z" ' + FS + ' stroke="none"/><path d="M14 5q6 2 9 8M14 27q6-2 9-8" stroke-width="1.800" opacity=".85"/>'),
+        /* Blade Burst: putaran lalu 10 bilah menembus melebar */
+        blades: S('<circle cx="16" cy="16" r="4" ' + F + '/><path d="M16 12V2M19.500 13.500L26 6M20 16h10M19.500 18.500L26 26M16 20v10M12.500 18.500L6 26M12 16H2M12.500 13.500L6 6" stroke-width="2.200"/><path d="M13.500 5L16 1l2.500 4M5 13.500L1 16l4 2.500M27 13.500l4 2.500-4 2.500M13.500 27L16 31l2.500-4" stroke-width="1.600"/>'),
+        /* Phantom Flurry: teleport menebas banyak musuh, tanda X + bayangan */
+        flurry: S('<circle cx="6" cy="8" r="2.800" stroke-dasharray="1.500 2" opacity=".8"/><circle cx="6" cy="24" r="2.800" stroke-dasharray="1.500 2" opacity=".8"/><path d="M9 9l6 3M9 23l6-3" stroke-dasharray="1 2.500" stroke-width="1.600"/><path d="M15 4l12 10M27 4L15 14" stroke-width="2.800"/><path d="M15 18l12 10M27 18L15 28" stroke-width="2.800"/><path d="M18 11l6-3M18 25l6-3" stroke-width="1.400" opacity=".7"/>'),
         /* aksi lain */
         bolt: S('<path d="M18 3L7 18h8l-2 11 12-16h-8z" fill="currentColor"/>'),
         eye: S('<circle cx="16" cy="16" r="9"/><circle cx="16" cy="16" r="2.5" fill="currentColor"/><path d="M16 3v5M16 24v5M3 16h5M24 16h5"/>'),
@@ -8885,6 +9131,7 @@
           b.title = q.n + ' · cooldown ' + q.cd + ' dtk';
         }
         $('mobAtkIco').innerHTML = IC[WICO[w]];
+        $('mobBtnAttack').style.setProperty('--ac', WCOL[w]);
       }
 
       /* ---------- cooldown: overlay + angka detik ---------- */
@@ -8988,6 +9235,7 @@
         try {
           if (!isMobile || !p) return;
           if (wi !== lastW) skin(wi);
+          $('mobBtnAttack').classList.toggle('charged', !!(M.d && p.hold >= .6));
           var set = SK[wi];
           for (var i = 0; i < 3; i++) cdUI($('mobBtnSkill' + (i + 1)), 'mobSk' + (i + 1) + 'Cd', 'mobSk' + (i + 1) + 'Num', p.sc[i], set[i].cd);
           cdUI($('mobBtnFocus'), 'mobFocusCd', 'mobFocusNum', p.ec, 12);
@@ -8998,6 +9246,26 @@
       skin(0);
     })();
 
+  </script>
+
+  <script>
+    /* ===== ANALOG: status aktif / sprint + penunjuk arah ===== */
+    (function () {
+      var jz = document.getElementById('joyZone'), jb = document.getElementById('joyBase'), jd = document.getElementById('joyDir');
+      if (!jz || !jb || !jd) return;
+      var id = null, sx = 0, sy = 0, MAXR = 56;
+      jz.addEventListener('pointerdown', function (e) { id = e.pointerId; sx = e.clientX; sy = e.clientY; jb.classList.add('on'); jb.classList.remove('sprint'); jd.style.setProperty('--a', '0rad') });
+      window.addEventListener('pointermove', function (e) {
+        if (e.pointerId !== id) return;
+        var dx = e.clientX - sx, dy = e.clientY - sy, d = Math.hypot(dx, dy);
+        jd.style.setProperty('--a', Math.atan2(dy, dx) + 'rad');
+        jd.style.opacity = d > MAXR * .12 ? '1' : '0';
+        jb.classList.toggle('sprint', d / MAXR > .72);
+      });
+      function off(e) { if (e.pointerId !== id) return; id = null; jb.classList.remove('on', 'sprint'); jd.style.opacity = '' }
+      window.addEventListener('pointerup', off);
+      window.addEventListener('pointercancel', off);
+    })();
   </script>
 </body>
 
