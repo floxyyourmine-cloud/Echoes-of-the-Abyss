@@ -9213,19 +9213,19 @@
         tx.clearRect(0, 0, tcv.width, tcv.height); const TW = tcv.width, TH = tcv.height, ta = ez((el - .9) / 1.2) * (1 - ez((el - 4.4) / 1.2));
         if (ta > .01) {
           const fs = Math.max(26, Math.min(TW * .062, TH * .105)), px = TW * (TW > TH ? .27 : .5), py = TH * .3;
-          tx.save(); tx.globalAlpha = ta; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(0,0,0,.9)'; tx.shadowBlur = 20; tx.shadowOffsetY = 2; tx.lineJoin = 'round'; tx.strokeStyle = 'rgba(30,14,0,.75)';
+          tx.save(); tx.globalAlpha = ta; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(143,123,224,.8)'; tx.shadowBlur = 30; tx.shadowOffsetY = 2; tx.lineJoin = 'round'; tx.strokeStyle = 'rgba(14,10,36,.92)';
           if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fs * .1) + 'px';
-          tx.fillStyle = '#fff4d6'; tx.font = '700 ' + fs * 1.18 + 'px UnifrakturCook, Cinzel, Georgia, "Times New Roman", serif'; tx.lineWidth = fs * .06; tx.strokeText('Echoes', px, py); tx.fillText('Echoes', px, py);
+          { const gr = tx.createLinearGradient(0, py - fs * .6, 0, py + fs * .6);[[0, '#ffffff'], [.3, '#e8e3fb'], [.48, '#a99ce6'], [.54, '#5a4ca8'], [.62, '#9f92e0'], [.85, '#dcd6f7'], [1, '#7b6cc8']].forEach(q => gr.addColorStop(q[0], q[1])); tx.fillStyle = gr } tx.font = '700 ' + fs * 1.18 + 'px UnifrakturCook, Cinzel, Georgia, "Times New Roman", serif'; tx.lineWidth = fs * .06; tx.strokeText('Echoes', px, py); tx.fillText('Echoes', px, py);
           if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fs * .26) + 'px';
-          tx.font = '700 ' + fs * .42 + 'px Cinzel, Georgia, "Times New Roman", serif'; tx.fillStyle = '#ffe7ad'; tx.lineWidth = fs * .05; tx.strokeText('OF THE ABYSS', px, py + fs * .95); tx.fillText('OF THE ABYSS', px, py + fs * .95);
-          tx.shadowBlur = 0; const lw = fs * 2.4 * ez((el - 1.4) / 1.2); tx.fillStyle = 'rgba(246,217,154,.8)'; tx.fillRect(px - lw / 2, py + fs * 1.3, lw, 1.5); tx.restore()
+          tx.font = '700 ' + fs * .42 + 'px Cinzel, Georgia, "Times New Roman", serif'; { const g2 = tx.createLinearGradient(0, py + fs * .7, 0, py + fs * 1.2); g2.addColorStop(0, '#f6f3ff'); g2.addColorStop(1, '#b3a8ea'); tx.fillStyle = g2 } tx.lineWidth = fs * .05; tx.strokeText('OF THE ABYSS', px, py + fs * .95); tx.fillText('OF THE ABYSS', px, py + fs * .95);
+          tx.shadowBlur = 0; const lw = fs * 2.4 * ez((el - 1.4) / 1.2); tx.fillStyle = 'rgba(190,180,245,.8)'; tx.fillRect(px - lw / 2, py + fs * 1.3, lw, 1.5); tx.restore()
         }
         {
           const EN = window.getLang && window.getLang() == 'en', CP = EN ? [['Once, heroes conquered the five shadow dynasties.', 5, 7.4], ['Now the kingdom is silent... and the world has forgotten.', 7.6, 9.8], ['But the Abyss has not slept.', 10, 11.9]] : [['Dahulu, para pahlawan menaklukkan lima wangsa bayangan.', 5, 7.4], ['Kini kerajaan sunyi... dan dunia telah melupakan mereka.', 7.6, 9.8], ['Namun Abyss belum tidur.', 10, 11.9]];
           for (const [tt, a0, a1] of CP) {
             const ca = ez((el - a0) / .6) * (1 - ez((el - (a1 - .6)) / .6)); if (ca < .01) continue; const fz = Math.max(11, Math.min(TW * .034, TH * .052, TW * .92 / (tt.length * .46)));
-            tx.save(); tx.globalAlpha = ca; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(0,0,0,.95)'; tx.shadowBlur = 14; tx.shadowOffsetY = 1; tx.fillStyle = '#f1d9a4'; tx.font = 'italic 500 ' + fz + 'px "Cormorant Garamond", Georgia, serif'; if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fz * .06) + 'px';
-            tx.fillText(tt, TW / 2, TH * .83); tx.shadowBlur = 0; tx.fillStyle = 'rgba(216,184,120,.7)'; const lw2 = Math.min(TW * .5, fz * tt.length * .3) * ca; tx.fillRect(TW / 2 - lw2 / 2, TH * .83 + fz * .95, lw2, 1); tx.restore()
+            tx.save(); tx.globalAlpha = ca; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(0,0,0,.95)'; tx.shadowBlur = 14; tx.shadowOffsetY = 1; tx.fillStyle = '#e6e0fa'; tx.font = 'italic 500 ' + fz + 'px "Cormorant Garamond", Georgia, serif'; if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fz * .06) + 'px';
+            tx.fillText(tt, TW / 2, TH * .83); tx.shadowBlur = 0; tx.fillStyle = 'rgba(190,180,245,.7)'; const lw2 = Math.min(TW * .5, fz * tt.length * .3) * ca; tx.fillRect(TW / 2 - lw2 / 2, TH * .83 + fz * .95, lw2, 1); tx.restore()
           }
         }
         const bl = Math.max(ez((el - 11.2) / 1.2), sk, 1 - ez(el / .9)); if (bl > 0) { ctx.fillStyle = 'rgba(0,0,0,' + bl + ')'; ctx.fillRect(0, 0, W, H) }
@@ -9258,6 +9258,111 @@
       try { menu.classList.add('hidden'); build(); root.addEventListener('pointerdown', skip); addEventListener('keydown', onKey); addEventListener('resize', onResize); t0 = last = performance.now(); raf = requestAnimationFrame(frame) } catch (e) { console.error(e); done = false; finish() }
     })();
   </script>
+  <script id="introDragons">
+    /* ===== INTRO: naga terbang (ikut paralaks langit seperti burung), bara api, dan judul sinematik (menu tidak diubah) ===== */
+    (function () {
+      const root = document.getElementById('intro'), sk = document.getElementById('introSkip'); if (!root) return;
+      /* suara otomatis: coba terus-menerus & buka kunci audio pada interaksi apa pun (browser tidak mengizinkan suara tanpa interaksi sama sekali) */
+      const unlock = () => { try { SFX.init() } catch (e) { } };
+      ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'click', 'keydown'].forEach(ev => addEventListener(ev, unlock, { capture: true, passive: true }));
+      document.addEventListener('visibilitychange', unlock); addEventListener('focus', unlock);
+      const uIv = setInterval(() => { if (!root.isConnected) { clearInterval(uIv); return } unlock() }, 250);
+      const mkc = css => { const c = document.createElement('canvas'); c.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;z-index:1;' + css; root.insertBefore(c, sk); return c };
+      const gc = mkc('width:100%;height:100%;mix-blend-mode:screen'), dc = mkc('image-rendering:pixelated');
+      const gx = gc.getContext('2d'), dx = dc.getContext('2d');
+      let W, H, SC, raf, GW = 0, GH = 0, fadeAt = 0; const t0 = performance.now(); let last = t0; const em = [], sp = [];
+      const cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)), ez = u => { u = cl(u); return u * u * (3 - 2 * u) }, bk = u => { u = cl(u) - 1; return 1 + u * u * (2.7 * u + 1.7) };
+      /* kamera identik dengan intro (spline), agar naga ikut bergulir seperti burung */
+      const KT = [0, 1.4, 5, 9, 12.2], KS = [0, .06, .85, 1.2, 1.9], KM = (() => { const n = 5, d = [], m = []; for (let i = 0; i < n - 1; i++) d[i] = (KS[i + 1] - KS[i]) / (KT[i + 1] - KT[i]); m[0] = 0; for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2; m[n - 1] = d[n - 2]; return m })();
+      function camS(t) { t = Math.min(t, 12.2); let i = 0; while (i < 3 && t > KT[i + 1]) i++; const h = KT[i + 1] - KT[i], u = (t - KT[i]) / h, u2 = u * u, u3 = u2 * u; return (2 * u3 - 3 * u2 + 1) * KS[i] + (u3 - 2 * u2 + u) * h * KM[i] + (-2 * u3 + 3 * u2) * KS[i + 1] + (u3 - u2) * h * KM[i + 1] }
+      /* ===== HIASAN JUDUL: mahkota sayap naga, braket sudut, pembatas permata, kilau bintang ===== */
+      const oc = mkc('width:100%;height:100%'), ox = oc.getContext('2d');
+      const gold = (a, l) => 'rgba(' + (l ? '240,238,255' : '170,155,235') + ',' + a + ')';
+      function dia(x, y, r, fill) { ox.beginPath(); ox.moveTo(x, y - r); ox.lineTo(x + r * .7, y); ox.lineTo(x, y + r); ox.lineTo(x - r * .7, y); ox.closePath(); ox.fillStyle = fill; ox.fill() }
+      function sword(x, cy, fs) {
+        const Hs = fs * 1.1, top = cy - Hs * .55, w = fs * .085, by = cy + Hs * .06;
+        const bg = ox.createLinearGradient(x - w, 0, x + w, 0); bg.addColorStop(0, '#7c70c8'); bg.addColorStop(.5, '#ffffff'); bg.addColorStop(1, '#8f84d8');
+        ox.save(); ox.shadowColor = 'rgba(160,140,255,.9)'; ox.shadowBlur = fs * .25; ox.fillStyle = bg; ox.beginPath(); ox.moveTo(x, top); ox.lineTo(x + w, top + Hs * .12); ox.lineTo(x + w, by); ox.lineTo(x - w, by); ox.lineTo(x - w, top + Hs * .12); ox.closePath(); ox.fill(); ox.restore();
+        ox.strokeStyle = 'rgba(60,50,130,.55)'; ox.lineWidth = Math.max(1, fs * .018); ox.beginPath(); ox.moveTo(x, top + Hs * .14); ox.lineTo(x, by - Hs * .02); ox.stroke();
+        ox.strokeStyle = '#d9d3f7'; ox.lineWidth = Math.max(2, fs * .05); ox.beginPath(); ox.moveTo(x - fs * .27, cy + Hs * .12); ox.quadraticCurveTo(x, cy + Hs * .02, x + fs * .27, cy + Hs * .12); ox.stroke();
+        [-1, 1].forEach(s => { ox.fillStyle = '#b6a8ff'; ox.beginPath(); ox.arc(x + s * fs * .27, cy + Hs * .12, fs * .04, 0, 6.283); ox.fill() });
+        ox.fillStyle = '#5a4ca8'; ox.fillRect(x - fs * .03, cy + Hs * .09, fs * .06, Hs * .27); ox.fillStyle = '#9d90e0'; for (let i = 0; i < 4; i++) ox.fillRect(x - fs * .03, cy + Hs * (.13 + i * .06), fs * .06, Math.max(1, fs * .012));
+        ox.fillStyle = '#ece8ff'; ox.beginPath(); ox.arc(x, cy + Hs * .4, fs * .06, 0, 6.283); ox.fill(); dia(x, cy + Hs * .08, fs * .05, '#6a5cc0')
+      }
+      function decor(el) {
+        const TW = oc.width, TH = oc.height; ox.clearRect(0, 0, TW, TH);
+        const ta = ez((el - .9) / 1.2) * (1 - ez((el - 4.4) / 1.2)); if (ta < .01) return;
+        const fs = Math.max(26, Math.min(TW * .062, TH * .105)), px = TW * (TW > TH ? .27 : .5), py = TH * .3, bw = fs * 2.7, g1 = ez((el - 1.3) / 1.4), cy = py - fs * .92;
+        ox.save(); ox.globalAlpha = ta; ox.lineCap = 'round';
+        const gg = ox.createRadialGradient(0, 0, 0, 0, 0, fs * 1.4); gg.addColorStop(0, 'rgba(200,190,255,.8)'); gg.addColorStop(1, 'rgba(120,100,220,0)');
+        ox.save(); ox.translate(px, cy); ox.fillStyle = gg; ox.globalAlpha = ta * (.7 + .3 * Math.sin(el * 3)); ox.fillRect(-fs * 1.4, -fs * 1.4, fs * 2.8, fs * 2.8); ox.restore();
+        /* sayap naga di kiri-kanan permata */
+        for (let s = -1; s <= 1; s += 2) for (let k = 0; k < 4; k++) {
+          const L = fs * (1.55 - k * .3) * g1, a = fs * .3, gr = ox.createLinearGradient(px + s * a, 0, px + s * (a + L), 0); gr.addColorStop(0, gold(.95, 1)); gr.addColorStop(1, gold(0));
+          ox.strokeStyle = gr; ox.lineWidth = Math.max(1.5, fs * .035 * (1 - k * .15)); ox.beginPath(); ox.moveTo(px + s * a, cy + k * fs * .015); ox.quadraticCurveTo(px + s * (a + L * .5), cy - fs * (.2 + k * .015), px + s * (a + L), cy + fs * (.1 + k * .09)); ox.stroke()
+        }
+        sword(px, cy, fs);
+        /* braket sudut */
+        const x0 = px - bw * g1, x1 = px + bw * g1, y0 = py - fs * .78, y1 = py + fs * 1.95, bl = fs * .42; ox.strokeStyle = gold(.8); ox.lineWidth = Math.max(1.5, fs * .028);
+        [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]].forEach(([x, y, sx, sy]) => { ox.beginPath(); ox.moveTo(x, y + sy * bl); ox.lineTo(x, y); ox.lineTo(x + sx * bl, y); ox.stroke(); dia(x, y, fs * .07, gold(1, 1)) });
+        /* pembatas permata di bawah subjudul */
+        const dy = py + fs * 1.62, dl = bw * .8 * ez((el - 1.7) / 1.2), dg = ox.createLinearGradient(px - dl, 0, px + dl, 0); dg.addColorStop(0, gold(0)); dg.addColorStop(.35, gold(.9)); dg.addColorStop(.5, gold(1, 1)); dg.addColorStop(.65, gold(.9)); dg.addColorStop(1, gold(0));
+        ox.fillStyle = dg; ox.fillRect(px - dl, dy - 1, dl * 2, 2); if (dl > fs * .3) { dia(px, dy, fs * .13, '#f2eeff'); dia(px, dy, fs * .07, '#6a5cc0');[-1, 1].forEach(s => { dia(px + s * fs * .34, dy, fs * .06, gold(1)); dia(px + s * fs * .55, dy, fs * .035, gold(.8)) }) }
+        /* kilau bintang yang berkedip */
+        ox.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < 6; i++) { const a = Math.pow(Math.max(0, Math.sin(el * 2.1 + i * 1.9)), 8); if (a < .02) continue; const x = px + (i / 5 - .5) * fs * 4.4, y = py + Math.sin(i * 7) * fs * .32, r = fs * (.12 + .22 * a); ox.strokeStyle = 'rgba(240,236,255,' + a + ')'; ox.lineWidth = 1.5; ox.beginPath(); ox.moveTo(x - r, y); ox.lineTo(x + r, y); ox.moveTo(x, y - r * 1.4); ox.lineTo(x, y + r * 1.4); ox.stroke() }
+        ox.restore()
+      }
+      function size() { SC = Math.max(2, Math.round(innerHeight / 340)); W = Math.ceil(innerWidth / SC); H = Math.ceil(innerHeight / SC); dc.width = W; dc.height = H; dc.style.width = W * SC + 'px'; dc.style.height = H * SC + 'px'; gc.width = oc.width = innerWidth; gc.height = oc.height = innerHeight }
+      size(); addEventListener('resize', size);
+      const R = (c, a, b, w, h) => { dx.fillStyle = c; dx.fillRect(Math.round(a), Math.round(b), Math.max(1, Math.round(w)), Math.max(1, Math.round(h))) };
+      const ln = (c, x0, y0, x1, y1, w) => { const n = Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))); for (let i = 0; i <= n; i++) { const u = n ? i / n : 0; R(c, x0 + (x1 - x0) * u, y0 + (y1 - y0) * u, w, w) } };
+      function tri(c, ax, ay, bx, by, cx, cy) { const E = [[ax, ay, bx, by], [bx, by, cx, cy], [cx, cy, ax, ay]]; for (let y = Math.floor(Math.min(ay, by, cy)); y <= Math.ceil(Math.max(ay, by, cy)); y++) { const xs = []; E.forEach(([p, q, r, s]) => { if ((q <= y && s > y) || (s <= y && q > y)) xs.push(p + (y - q) / (s - q) * (r - p)) }); if (xs.length > 1) { const a = Math.min(...xs), b = Math.max(...xs); R(c, a, y, b - a + 1, 1) } } }
+      function wing(x, y, s, t, f, ph, far) {
+        const P = v => x + v * f, p = Math.sin(t * 2.4 + ph), sh = [3 * s, -2 * s], E = [sh[0] - 5 * s, sh[1] - (7 + 10 * p) * s], F1 = [E[0] - 9 * s, E[1] + (8 + p) * s], F2 = [E[0] - 6 * s, E[1] + 14 * s], B = [-7 * s, 0];
+        const m = far ? '#25122a' : '#2e1631', bone = far ? '#5a2a3c' : '#a6523f';
+        [[sh, E, F1], [sh, F1, F2], [sh, F2, B]].forEach(q => tri(m, P(q[0][0]), y + q[0][1], P(q[1][0]), y + q[1][1], P(q[2][0]), y + q[2][1]));
+        ln(bone, P(sh[0]), y + sh[1], P(E[0]), y + E[1], 1);[F1, F2].forEach(q => ln(bone, P(E[0]), y + E[1], P(q[0]), y + q[1], 1))
+      }
+      function dragon(x, y, s, t, f, al) {
+        dx.globalAlpha = al; const P = v => x + v * f; wing(x + 1.5 * s * f, y - s, s, t, f, .9, 1);
+        for (let i = 0; i <= 28; i++) {
+          const u = i / 28 * 2 - 1, py = y + Math.sin(u * 3.2 - t * 2.4) * 1.7 * s * (.5 - u * .5) - Math.sin(u * 2 + 1) * s, r = s * (.7 + 2.6 * Math.exp(-Math.pow((u - .1) / .38, 2))), px = P(u * 15 * s);
+          for (let d = -Math.round(r); d <= r; d++) { const w = Math.round(Math.sqrt(Math.max(0, r * r - d * d)) * 1.1) + 1; R(d > r * .55 ? '#4a2038' : '#1c0f26', px - w / 2, py + d, w, 1) }
+        }
+        const hx = 15 * s, hy = y - Math.sin(3) * s; R('#1c0f26', P(hx) - (f < 0 ? 4 * s : 0), hy - s, 4 * s, 1.8 * s); R('#1c0f26', P(hx + 2 * s) - (f < 0 ? 3 * s : 0), hy + .8 * s, 3 * s, .8 * s);
+        ln('#d9a655', P(hx - 1.5 * s), hy - s, P(hx - 5 * s), hy - 4.5 * s, 1); ln('#d9a655', P(hx - 3 * s), hy - s, P(hx - 6.5 * s), hy - 3 * s, 1); R('#ffb347', P(hx + 1.2 * s), hy - .6 * s, 1, 1);
+        wing(x, y, s, t, f, 0, 0); dx.globalAlpha = 1; return [P(hx + 4 * s), hy]
+      }
+      function glow(x, y, r, a, c) { const g = gx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(' + c + ',' + a + ')'); g.addColorStop(1, 'rgba(' + c + ',0)'); gx.fillStyle = g; gx.fillRect(x - r, y - r, r * 2, r * 2) }
+      function burst(x, y, n, pw) { for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = 40 + Math.random() * pw; sp.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, l: 0, L: .6 + Math.random() * .9, r: 1 + Math.random() * 2.2 }) } }
+      function frame(now) {
+        if (!root.isConnected) return; raf = requestAnimationFrame(frame);
+        const el = (now - t0) / 1000, dt = Math.min(.05, (now - last) / 1000); last = now; GW = gc.width; GH = gc.height;
+        if (fadeAt) { const o = 1 - cl((now - fadeAt) / 250); gc.style.opacity = dc.style.opacity = oc.style.opacity = o }
+        dx.clearRect(0, 0, W, H); gx.clearRect(0, 0, GW, GH); const S = camS(el) * H;
+        const warm = ez((el - 2.5) / 4) * (1 - ez((el - 10.5) / 2)), pulse = .8 + .2 * Math.sin(el * 3);
+        glow(GW * .64, GH * 1.02, GH * .95, .2 * warm * pulse, '255,100,40'); glow(GW * .77, (.27 * H - S * .35) * SC, GH * .35, .1 * ez(el / 2), '255,200,140');
+        /* dua naga jauh (paralaks .75) */
+        [[.4, .13, 1, 1.2, 7.5, .8], [.5, .2, .9, 2.4, 9, .6]].forEach(([x0, y0, s, a, b, al], i) => { const u = cl((el - a) / (b - a)); if (u > 0 && u < 1) { const wy = y0 * H + .75 * camS(3) * H; dragon((x0 + u * .62) * W, wy - .75 * S + Math.sin(el + i * 2) * .012 * H, s, el + i, 1, al * Math.min(1, ez(u * 5) * (1 - ez((u - .85) / .15)) + .001)) } });
+        /* naga besar: dunia-anchored seperti burung (paralaks .9) — kamera turun, naga tetap di langit dan terdorong keluar atas */
+        const u = (el - 3.6) / 6.4;
+        if (u > 0 && u < 1) {
+          const s = 2.7, x = (1.14 - 1.28 * u) * W, wy = .3 * H + .9 * camS(6.2) * H, y = wy - .9 * S + Math.sin(el * 1.5) * .012 * H + (el - 6.2) * .006 * H, h = dragon(x, y, s, el, -1, 1), fa = ez((el - 6) / .4) * (1 - ez((el - 7.8) / .6));
+          if (fa > .01) for (let i = 0; i < 20; i++) { const k = i / 20; glow((h[0] - k * 26 * s + (Math.random() - .5) * 3) * SC, (h[1] + k * 9 * s + (Math.random() - .5) * 4) * SC, (3 + k * 12) * s * SC * .55, (1 - k) * .55 * fa, k < .35 ? '255,230,160' : '255,110,30') }
+          glow(h[0] * SC, h[1] * SC, 26 * SC, .3, '255,140,50')
+        }
+        if (el > 1.5 && em.length < 55 && Math.random() < .6) em.push({ x: Math.random() * GW, y: GH + 6, v: 25 + Math.random() * 55, ph: Math.random() * 6, r: 1 + Math.random() * 2.2 });
+        const ea = ez((el - 1.5) / 1.5) * (1 - ez((el - 11) / 1.2));
+        for (let i = em.length - 1; i >= 0; i--) { const e = em[i]; e.y -= e.v * dt; e.ph += dt * 2; e.x += Math.sin(e.ph) * 14 * dt; if (e.y < -8) { em.splice(i, 1); continue } const a = ea * cl(e.y / GH * 1.4) * .85; gx.fillStyle = 'rgba(255,' + (150 + 60 * Math.sin(e.ph) | 0) + ',70,' + a + ')'; gx.shadowColor = '#ff7a1a'; gx.shadowBlur = 8; gx.fillRect(e.x, e.y, e.r * SC / 2 + 1, e.r * SC / 2 + 1) }
+        for (let i = sp.length - 1; i >= 0; i--) { const q = sp[i]; q.l += dt; if (q.l > q.L) { sp.splice(i, 1); continue } q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 30 * dt; gx.fillStyle = 'rgba(255,' + (170 + 70 * (1 - q.l / q.L) | 0) + ',90,' + (1 - q.l / q.L) + ')'; gx.shadowColor = '#ff8a2e'; gx.shadowBlur = 10; gx.fillRect(q.x, q.y, q.r + 1, q.r + 1) }
+        gx.shadowBlur = 0; decor(el);
+      }
+      root.addEventListener('pointerdown', () => { if (!fadeAt) fadeAt = performance.now() }); addEventListener('keydown', e => { if (e.code == 'Enter' || e.code == 'Space' || e.code == 'Escape') { if (!fadeAt) fadeAt = performance.now() } });
+      raf = requestAnimationFrame(frame);
+    })();
+  </script>
+
 
   <style>
     /* ===== PIXEL UI: Pilih Dungeon & Kesulitan ===== */
