@@ -3453,6 +3453,36 @@
         for (let i = 0; i < 12; i++)timp(T + 6 + i * .25, .18 + i * .03, 60 + (i % 3) * 6, d);
         cym(T + 7.2, 2, .12, d); bigChord(T + 9, d)
       }
+      /* ===== MUSIK PEMBUKA FANTASI (intro langit → kerajaan → bukit, 12.6 dtk): angin, harpa berkilau, string, paduan suara, terompet & timpani; D-Lydian, selaras dengan teks intro ===== */
+      function opening(off = 0) {
+        if (!ac) return; const d = newIg(), now = ac.currentTime, base = now + .05 - off, A = t => base + t;
+        const ev = (t, fn) => { if (t >= off) fn(A(t)) };                                           // bunyi pendek
+        const sus = (t, dur, fn) => { const s0 = Math.max(t, off), r = dur - (s0 - t); if (r > .7) fn(A(s0), r) };  // nada panjang (ikut masuk di tengah jika audio baru aktif)
+        d.gain.setValueAtTime(Math.min(1, off / 1.8), now); if (off < 1.8) d.gain.linearRampToValueAtTime(1, A(1.8));
+        d.gain.setValueAtTime(1, A(11.2)); d.gain.linearRampToValueAtTime(0, A(13));
+        const CHs = [[0, 4.2, 73.42, [146.83, 220, 293.66, 369.99]], [4, 3.8, 61.74, [185, 246.94, 293.66, 369.99]], [7.6, 3.2, 98, [196, 246.94, 293.66, 369.99]], [10.6, 3.4, 73.42, [146.83, 220, 293.66, 369.99, 440]]];
+        CHs.forEach(c => { sus(c[0], c[1] + .9, (t, r) => bass(c[2], t, r, .11, d)); c[3].forEach(f => sus(c[0], c[1] + .9, (t, r) => str(f, t, r, .034, d))) });
+        // angin berhembus di atas awan
+        sus(0, 9.5, (t, r) => { const sr = ac.createBufferSource(), bp = ac.createBiquadFilter(), gn = ng(t, r * .45, r, .05, d); sr.buffer = nb; sr.loop = true; bp.type = 'bandpass'; bp.Q.value = .7; bp.frequency.setValueAtTime(350, t); bp.frequency.linearRampToValueAtTime(950, t + r * .5); bp.frequency.linearRampToValueAtTime(400, t + r); sr.connect(bp); bp.connect(gn); sr.start(t); sr.stop(t + r + .1) });
+        // harpa naik saat judul muncul, lalu glissando penutup
+        [146.83, 220, 293.66, 369.99, 440, 587.33, 739.99, 880].forEach((f, i) => { ev(1 + i * .23, t => harp(f, t, .09, d)); ev(9.7 + i * .12, t => harp(f * 2, t, .05, d)) });
+        // kilau lonceng ajaib mengikuti akor
+        for (let t = .8, k = 0; t < 11.4; t += .42, k++) {
+          const c = CHs.filter(x => t >= x[0]).pop(), n = c[3][(k * 3 + (k >> 2)) % c[3].length] * [4, 2, 4, 4][k % 4];
+          ev(t, T0 => harp(n, T0, .032 + (k % 4 == 0 ? .02 : 0), d))
+        }
+        // paduan suara (aah) naik bersama narasi
+        sus(1.2, 3.4, (t, r) => choir(293.66, t, r, .018, d));
+        sus(4.4, 3.6, (t, r) => { choir(369.99, t, r, .035, d); choir(293.66, t, r, .03, d) });
+        sus(7.8, 3.2, (t, r) => { choir(392, t, r, .035, d); choir(293.66, t, r, .03, d) });
+        sus(10.4, 2.6, (t, r) => { choir(440, t, r, .04, d); choir(587.33, t, r, .035, d); choir(739.99, t, r, .03, d) });
+        // terompet heroik & timpani di tiap kalimat narasi
+        sus(5, 2.2, (t, r) => { brass(293.66, t, r, .05, d); brass(440, t, r, .03, d) });
+        sus(7.6, 2.4, (t, r) => { brass(392, t, r, .045, d); brass(293.66, t, r, .03, d) });
+        sus(10.5, 2.2, (t, r) => { brass(293.66, t, r, .05, d); brass(369.99, t, r, .035, d) });
+        ev(4.9, t => timp(t, .26, 73.42, d)); ev(7.5, t => timp(t, .28, 73.42, d)); ev(10.5, t => { timp(t, .36, 73.42, d); timp(t + .02, .2, 110, d) });
+        ev(4.8, t => cym(t, 1, .035, d)); ev(10.3, t => cym(t, 1.6, .06, d))
+      }
       function cut(tau = .12) { if (ac && ig) { ig.gain.setTargetAtTime(0, ac.currentTime, tau) } ig = null }
       // ===== SFX gameplay engine v2: layered synthesis, pan/pitch variety, SFX-bus compressor+saturation, big reverb =====
       const rnd = Math.random, DC = new Float32Array(257); for (let i = 0; i < 257; i++)DC[i] = Math.tanh((i / 128 - 1) * 4);
@@ -3494,7 +3524,7 @@
         T(130, 55, .12, 'sine', .38 * v); N(.3, .26 * v, 5200, 1300, 3.5, 'bandpass', .015, { at: .03, pan: (rnd() - .5) * .8 }); N(.18, .12 * v, 9000, 3500, 1, 'highpass', .03, { at: .02 }); RING(2600, .025 * v, .18, .005)
       };
       return {
-        init, ready: () => !!ac, intro, cut, finale() { if (!ac) return; cut(); bigChord(ac.currentTime + .05, newIg()) },
+        init, ready: () => !!ac, state: () => ac ? ac.state : 'none', opening, intro, cut, finale() { if (!ac) return; cut(); bigChord(ac.currentTime + .05, newIg()) },
         vol(v) { vl = v; if (oc) oc.gain.value = v; if (mu) mu.gain.value = .3 * v },
         mode(m) { md = m; if (m == 'menu') { mt = 0; bi = 0 } if (ml) ml.gain.setTargetAtTime(m == 'menu' ? 1 : 0, ac.currentTime, .4) },
         isOn: () => on, toggle() { on = !on; if (mg) mg.gain.value = on ? .55 : 0 }, blip(f) { T(f, f * .86, .05, 'square', .028, 0, { lp: 2600 }) },
@@ -9202,14 +9232,29 @@
         if (el >= DUR || sk >= 1) finish();
       }
       function finish() {
-        if (done) return; done = true; cancelAnimationFrame(raf); removeEventListener('resize', onResize); removeEventListener('keydown', onKey);
+        if (done) return; done = true; try { SFX.mode('menu') } catch (e) { } cancelAnimationFrame(raf); removeEventListener('resize', onResize); removeEventListener('keydown', onKey);
         menu.classList.remove('hidden'); root.style.background = '#000'; root.style.pointerEvents = 'none'; root.style.transition = 'opacity .9s ease'; root.style.opacity = '0';
         setTimeout(() => { root.remove(); A = null }, 1000);
       }
-      const skip = () => { if (!skipAt && !done) skipAt = performance.now() };
+      const skip = () => { if (!skipAt && !done) { skipAt = performance.now(); try { SFX.cut(.3) } catch (e) { } } };
       const onKey = e => { if (e.code == 'Enter' || e.code == 'Space' || e.code == 'Escape') { e.preventDefault(); skip() } };
       const onResize = () => { clearTimeout(rz); rz = setTimeout(() => { if (!done) try { build() } catch (e) { } }, 200) };
       try { document.fonts && (document.fonts.load('700 40px UnifrakturCook'), document.fonts.load('italic 500 20px "Cormorant Garamond"'), document.fonts.load('700 40px Cinzel')) } catch (e) { }
+      /* ===== SUARA INTRO: mulai otomatis bila browser mengizinkan; jika tidak, ketukan/tombol pertama menyalakan suara (tanpa melewati intro) ===== */
+      let sndOn = false, hint = null;
+      const sndState = () => { try { return SFX.state() } catch (e) { return 'none' } };
+      const startSnd = () => { sndOn = true; if (hint) { hint.remove(); hint = null } try { SFX.opening(Math.max(0, (performance.now() - t0) / 1000)) } catch (e) { } };
+      try { SFX.init(); SFX.mode('cine') } catch (e) { }
+      const sndPoll = setInterval(() => {
+        if (done) { clearInterval(sndPoll); return }
+        if (sndState() === 'running') { clearInterval(sndPoll); startSnd(); return }
+        if (!hint && performance.now() - t0 > 700) {
+          hint = document.createElement('div'); hint.textContent = (window.getLang && window.getLang() == 'en') ? '♪ TAP FOR SOUND' : '♪ KETUK UNTUK SUARA';
+          hint.style.cssText = 'position:absolute;left:0;right:0;bottom:7%;text-align:center;pointer-events:none;font:600 12px Cinzel,Georgia,serif;letter-spacing:.3em;color:#f1d9a4;opacity:.8;text-shadow:0 0 8px #000,0 1px 2px #000;animation:introSkipIn 1s ease both';
+          root.appendChild(hint)
+        }
+      }, 150);
+      root.addEventListener('pointerdown', e => { if (!sndOn && !done && sndState() !== 'running' && !(e.target.closest && e.target.closest('#introSkip'))) { e.stopPropagation(); try { SFX.init() } catch (_) { } } }, true);
       try { menu.classList.add('hidden'); build(); root.addEventListener('pointerdown', skip); addEventListener('keydown', onKey); addEventListener('resize', onResize); t0 = last = performance.now(); raf = requestAnimationFrame(frame) } catch (e) { console.error(e); done = false; finish() }
     })();
   </script>
@@ -10660,39 +10705,136 @@
         g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(x, y + h - 1, fw, 1);
       }
       function face(x, y, now) {
-        var map = FEM ? FF : FM, tt = now / 1000, blink = (tt % 3.9) < .13 || ((tt + 1.7) % 7.3) < .1, i, j, ch;
-        for (j = 0; j < 16; j++) for (i = 0; i < 16; i++) {
-          ch = map[j].charAt(i); if (ch === '.') continue;
-          if (blink && (j === 8 || j === 9) && (ch === 'w' || ch === 'c' || ch === 'g')) ch = j === 9 ? 'S' : 's';
-          g.fillStyle = FP[ch]; g.fillRect(x + i * 2, y + j * 2, 2, 2);
+        var tt = now / 1000, blink = (tt % 3.9) < .13 || ((tt + 1.7) % 7.3) < .1, glt = (tt % 5.1) < .2,
+          cv = pfBuild(FEM ? 1 : 0, blink ? 1 : 0);
+        g.drawImage(cv, x, y);
+        if (glt && !blink) { g.fillStyle = '#fff'; g.fillRect(x + PFX + 5, y + PFY - 12, 1, 1) }
+      }
+      /* ===== potret 46x44 px: kepala + bahu dirender dari rumus piksel yang sama dengan sprite in-game (1 unit-setengah = 1 px) ===== */
+      var PL = {
+        ol: '#0b0a10', bk: '#17151b', s1: '#f1f3f8', s2: '#c9ccd6', s3: '#9a9dac', s4: '#666878', s5: '#3b3b48',
+        b1: '#6b3a34', b2: '#43231f', hk: '#1b1a21', hm: '#2c2a33', hh: '#4d4a58', sk: '#f6e6dd', ss: '#dcc3ba', ch: '#f2a6a8',
+        ey: '#27b4c6', ed: '#0d6574', el: '#a8f2f7', rd: '#8a1a2c', rl: '#bd2c45', rk: '#4a0d1a', rm: '#9d2036'
+      };
+      var PFW = 46, PFH = 44, PFX = 23, PFY = 36, PFC = {};
+      function pfBuild(fem, blk) {
+        var key = fem + '_' + blk; if (PFC[key]) return PFC[key];
+        var cv = document.createElement('canvas'); cv.width = PFW; cv.height = PFH; var q = cv.getContext('2d');
+        var Z = function (a, b, w, h, c) { q.fillStyle = c; q.fillRect(a + PFX, b + PFY, w, h) }, ZH = Z, ZP = Z;
+        var faceZ = function () {
+          ZH(-10, -17, 20, 9, PL.sk); ZH(7, -17, 3, 9, PL.ss); ZH(-10, -17, 20, 1, '#c9b2ae'); ZH(-8, -9, 2, 1, PL.ch); ZH(6, -9, 2, 1, PL.ch);
+          ZH(-10, -9, 20, 1, PL.ss);
+          [-1, 1].forEach(function (s) {
+            var x0 = s < 0 ? -8 : 2, E1 = s < 0 ? PL.ey : '#e3a92a', E2 = s < 0 ? PL.ed : '#7a520a', E3 = s < 0 ? PL.el : '#fff0a8', E4 = s < 0 ? '#06242a' : '#2a1800';
+            if (blk) { ZH(x0, -15, 6, 1, PL.ol); ZH(x0, -14, 6, 3, PL.sk); ZH(x0 + 1, -11, 4, 1, '#5a2a34') }
+            else {
+              ZH(x0, -15, 6, 1, PL.ol); ZH(s < 0 ? x0 - 1 : x0 + 6, -14, 1, 1, PL.ol);
+              ZH(x0, -14, 6, 4, '#ffffff'); ZH(x0 + 1, -14, 4, 4, E1); ZH(x0 + 1, -14, 4, 1, E2); ZH(x0 + 2, -13, 2, 2, E4);
+              ZH(x0 + 1, -11, 4, 1, E3); ZH(x0 + 1, -14, 1, 1, '#ffffff')
+            }
+          });
+          ZH(-1, -10, 2, 1, '#e3a89c'); ZH(-2, -7, 4, 1, '#b86a72'); ZH(-1, -6, 2, 1, '#8a4452')
+        };
+        var scarfZ = function (wd) {
+          Z(-wd + 1, -8, 2 * wd - 2, 4, PL.rd); Z(-wd, -4, 2 * wd, 5, PL.rd); Z(-wd + 1, -8, 2 * wd - 2, 1, PL.rl); Z(-wd, -4, 9, 1, PL.rl); Z(2, -3, wd - 3, 1, PL.rm);
+          Z(-wd, 1, 2 * wd, 1, PL.rk); Z(-6, -6, 1, 5, PL.rk); Z(4, -5, 1, 5, PL.rk); Z(-3, -7, 3, 1, PL.rm); Z(7, -3, 1, 4, PL.rk)
+        };
+        var i, y;
+        if (!fem) {
+          /* ---- COWOK ---- */
+          Z(-11, 2, 22, 17, PL.bk);
+          Z(-9, -2, 18, 13, PL.s2); Z(-9, -2, 18, 2, PL.s1); Z(-8, 0, 7, 4, PL.s1); Z(-8, 4, 5, 3, '#dfe1e9'); Z(1, 0, 7, 4, PL.s2); Z(2, 4, 6, 3, PL.s3); Z(-1, 0, 2, 9, PL.s5); Z(-9, 9, 18, 1, PL.s4); Z(-9, 10, 18, 1, PL.s5);
+          for (i = 0; i < 8; i++) { Z(-10 + i, 0 + i, 3, 2, PL.b1); Z(7 - i, 0 + i, 3, 2, PL.b1); Z(-10 + i, 2 + i, 3, 1, PL.b2); Z(7 - i, 2 + i, 3, 1, PL.b2) }
+          [-1, 1].forEach(function (s) {
+            var M = function (a, w) { return s < 0 ? a : -a - w }, hi = s < 0 ? PL.s1 : PL.s2, md = s < 0 ? PL.s2 : PL.s3, sh = s < 0 ? PL.s3 : PL.s4,
+              pl = function (x, w, yy, h) { ZP(M(x + 1, w - 2), yy, w - 2, 1, hi); ZP(M(x, w), yy + 1, w, h - 2, md); ZP(M(x + 1, w - 2), yy + h - 1, w - 2, 1, PL.s4); ZP(M(x + 1, w - 2), yy + 1, 3, 2, hi); ZP(s < 0 ? M(x, w) + w - 1 : M(x, w), yy + 2, 1, h - 3, sh) };
+            pl(-21, 11, -5, 6); pl(-23, 13, 0, 6); pl(-21, 11, 5, 6);
+            ZP(M(-14, 2), 2, 2, 2, PL.s5); ZP(M(-14, 2), 8, 2, 1, PL.s5); ZP(M(-19, 1), 3, 1, 1, PL.s5); ZP(M(-12, 1), -2, 1, 1, PL.s5); ZP(s < 0 ? -10 : 9, -5, 1, 16, PL.s5)
+          });
+          scarfZ(12); faceZ();
+          var H = PL.hk, Mm = PL.hm, L = PL.hh, L2 = '#6c6a7c';
+          [[-8, -30, 3, 2], [-3, -33, 4, 5], [2, -31, 3, 3], [7, -29, 3, 2]].forEach(function (a, k) { ZH(a[0], a[1], a[2], a[3], k % 2 ? Mm : H); ZH(a[0] + 1, a[1] - 1, Math.max(1, a[2] - 2), 1, H) });
+          ZH(-10, -29, 20, 2, H); ZH(-12, -27, 24, 3, H); ZH(-13, -24, 26, 5, H);
+          [[-16, -24, 3, 2], [-17, -21, 4, 2], [-15, -19, 3, 2]].forEach(function (a, k) { ZH(a[0], a[1], a[2], a[3], k % 2 ? Mm : H) });
+          [[13, -25, 3, 2], [14, -22, 4, 2], [13, -19, 3, 2]].forEach(function (a, k) { ZH(a[0], a[1], a[2], a[3], k % 2 ? H : Mm) });
+          ZH(-13, -19, 3, 7, H); ZH(10, -19, 3, 7, H); ZH(-12, -12, 2, 3, Mm); ZH(10, -12, 2, 3, Mm);
+          ZH(-12, -19, 24, 3, H); ZH(-11, -16, 22, 1, H);
+          [[-11, 3, 4], [-8, 3, 3], [-5, 3, 4], [-2, 4, 6], [2, 3, 4], [5, 3, 3], [8, 3, 4]].forEach(function (a, k) {
+            var x = a[0], w = a[1], l = a[2];
+            ZH(x, -20, w, l, k % 2 ? Mm : H); ZH(x, -20, 1, l, H); ZH(x + 1, -20 + l, w - 1, 1, H); if (l > 4) { ZH(x + 1, -19 + l, w - 1, 1, H); ZH(x + 2, -18 + l, 1, 1, H) }
+          });
+          ZH(-3, -32, 1, 3, L); ZH(-7, -28, 4, 1, L); ZH(1, -27, 5, 1, L); ZH(-11, -24, 3, 1, L2); ZH(8, -24, 3, 1, L2); ZH(-6, -22, 3, 1, L); ZH(3, -21, 4, 1, L);
+          ZH(-12, -9, 2, 4, Mm); ZH(10, -9, 2, 4, Mm)
+        } else {
+          /* ---- CEWEK ---- */
+          for (y = -24; y <= 8; y++) {
+            var s2 = Math.round(Math.sin(-y * .14) * (y > 4 ? 1 : .3)), u = Math.max(0, y - 2), wv = Math.round(Math.sin(y * .38 + 1) * (1 + Math.min(2.4, u * .09))), w0 = (y < 4 ? 16 : 17 + Math.min(3, u * .12)) | 0,
+              c = (y + 24) % 7 < 2 ? PL.hm : (y + 24) % 11 == 5 ? PL.hh : PL.hk;
+            Z(-w0 + s2 + wv, y, 2 * w0, 1, PL.hk); Z(-w0 + s2 + wv, y, 7, 1, c); Z(w0 - 7 + s2 + wv, y, 7, 1, c)
+          }
+          Z(-9, 2, 18, 15, PL.bk);
+          Z(-8, -1, 16, 12, PL.s2); Z(-8, -1, 16, 2, PL.s1); Z(-7, 1, 6, 4, PL.s1); Z(1, 1, 6, 4, PL.s2); Z(-8, 9, 16, 1, PL.s4); Z(-8, 10, 16, 1, PL.s5);
+          Z(-1, 1, 2, 8, PL.s5); Z(-4, 3, 8, 2, PL.s5); Z(-1, 1, 2, 1, PL.s4);
+          [-1, 1].forEach(function (s) {
+            var M = function (a, w) { return s < 0 ? a : -a - w }, hi = s < 0 ? PL.s1 : PL.s2, md = s < 0 ? PL.s2 : PL.s3;
+            ZP(M(-18, 10), -4, 10, 5, md); ZP(M(-18, 10), -4, 10, 1, hi); ZP(M(-17, 4), -3, 4, 2, hi); ZP(M(-18, 10), 0, 10, 1, PL.s4);
+            ZP(M(-19, 11), 1, 11, 5, md); ZP(M(-19, 11), 1, 11, 1, hi); ZP(M(-18, 4), 2, 4, 2, hi); ZP(M(-19, 11), 5, 11, 1, PL.s5); ZP(M(-14, 2), 2, 2, 2, PL.s5)
+          });
+          scarfZ(11); Z(-2, -2, 4, 4, PL.s3); Z(-1, -2, 2, 2, PL.s1); Z(-1, 0, 2, 1, PL.s5);
+          faceZ();
+          var H2 = PL.hk, M2 = PL.hm, L3 = PL.hh;
+          ZH(-6, -33, 12, 2, H2); ZH(-10, -32, 20, 2, H2); ZH(-13, -30, 26, 3, H2); ZH(-15, -27, 30, 4, H2); ZH(-16, -23, 32, 6, H2);
+          [[-14, 4, 4], [-11, 4, 5], [-8, 3, 4], [-5, 3, 5], [-2, 4, 6], [1, 3, 4], [4, 3, 5], [6, 3, 4], [9, 4, 5], [12, 3, 3]].forEach(function (a, k) { ZH(a[0], -19, a[1], a[2], k % 2 ? M2 : H2); ZH(a[0], -19, 1, a[2], H2) });
+          ZH(-9, -31, 5, 1, L3); ZH(1, -30, 6, 1, L3); ZH(-13, -26, 4, 1, L3); ZH(9, -26, 4, 1, L3); ZH(-4, -25, 5, 1, M2); ZH(3, -24, 5, 1, M2); ZH(-8, -22, 4, 1, L3); ZH(6, -22, 4, 1, L3);
+          for (y = -18; y <= 8; y++) {
+            var wv2 = Math.round(Math.sin(y * .5) * 1.2), c2 = y % 6 < 2 ? M2 : H2;
+            ZH(-17 + wv2, y, 7, 1, c2); ZH(10 - wv2, y, 7, 1, c2); if (y % 7 == 3) { ZH(-16 + wv2, y, 1, 1, L3); ZH(11 - wv2, y, 1, 1, L3) }
+          }
+          ZH(5, -34, 6, 5, PL.rd); ZH(5, -34, 6, 1, PL.rl); ZH(7, -32, 2, 2, PL.rk); ZH(13, -36, 6, 6, PL.rm); ZH(13, -36, 6, 1, PL.rl); ZH(15, -34, 2, 2, PL.rk);
+          ZH(10, -32, 3, 3, PL.rd); ZH(10, -32, 3, 1, PL.rl); ZH(10, -29, 3, 8, PL.rm); ZH(10, -29, 1, 8, PL.rl); ZH(13, -28, 3, 6, PL.rd); ZH(13, -23, 3, 1, PL.rk); ZH(11, -22, 1, 1, PL.rk)
         }
+        /* bayangan lembut di sisi bawah supaya bahu menyatu dengan bingkai */
+        var gr = q.createLinearGradient(0, PFH - 8, 0, PFH); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.35)'); q.fillStyle = gr; q.fillRect(0, PFH - 8, PFW, 8);
+        return PFC[key] = cv;
       }
 
       window.hudPlayer = function () {
-        var now = performance.now(), mx = mhp(), fr = p.hp / mx, low = p.hp > 0 && fr < .2,
-          pu = .5 + .5 * Math.sin(now / 1000 * (fr < .1 ? 11 : 7.5)), i;
-        /* --- sisi layar kedap-kedip merah saat darah < 20% --- */
-        if (low) { if (!vig || vW !== W || vH !== H) buildVig(); g.globalAlpha = .22 + .68 * pu; g.drawImage(vig, 0, 0); g.globalAlpha = 1 }
+        var now = performance.now(), mx = mhp(), fr = p.hp / mx, low = p.hp > 0 && fr < .4, crit = low && fr < .2,
+          pu = .5 + .5 * Math.sin(now / 1000 * (fr < .1 ? 11 : crit ? 9 : 6)), i;
+        /* --- sisi layar berdenyut merah saat HP < 40% (lebih cepat & pekat saat < 20%) --- */
+        if (low) { if (!vig || vW !== W || vH !== H) buildVig(); g.globalAlpha = crit ? .22 + .68 * pu : .12 + .5 * pu; g.drawImage(vig, 0, 0); g.globalAlpha = 1 }
         if (hpG < 0 || p.hp > hpG) hpG = p.hp; else hpG += (p.hp - hpG) * .08;
         g.save(); g.imageSmoothingEnabled = false;
 
-        /* --- potret --- */
-        var px = 10, py = 8, shk = low ? Math.round(Math.sin(now / 38)) : 0;
-        frame(px, py, 36, 36);
-        g.fillStyle = low ? 'rgb(' + ((60 + 70 * pu) | 0) + ',14,22)' : '#231d3f'; g.fillRect(px, py, 36, 36);
-        g.fillStyle = 'rgba(255,255,255,.06)'; g.fillRect(px, py, 36, 10);
-        g.save(); g.beginPath(); g.rect(px, py, 36, 36); g.clip();
-        face(px + 2 + shk, py + 2, now);
-        if (p.hurt > 0) { g.fillStyle = 'rgba(255,40,40,.45)'; g.fillRect(px, py, 36, 36) }
-        else if (low) { g.fillStyle = 'rgba(255,30,40,' + (.1 + .22 * pu) + ')'; g.fillRect(px, py, 36, 36) }
+        /* --- potret (46x44, bingkai emas berhias) --- */
+        var px = 8, py = 6, PW = 46, PH = 44, shk = crit ? Math.round(Math.sin(now / 38)) : 0;
+        g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(px - 1, py + 3, PW + 4, PH + 4);
+        g.fillStyle = '#6b5326'; g.fillRect(px - 3, py - 3, PW + 6, PH + 6);
+        g.fillStyle = '#d8b878'; g.fillRect(px - 3, py - 3, PW + 6, 1); g.fillRect(px - 3, py - 3, 1, PH + 6);
+        g.fillStyle = '#3a2c12'; g.fillRect(px - 3, py + PH + 2, PW + 6, 1); g.fillRect(px + PW + 2, py - 3, 1, PH + 6);
+        g.fillStyle = '#07060c'; g.fillRect(px - 1, py - 1, PW + 2, PH + 2);
+        /* latar: gradasi ungu gelap + kilau halus */
+        var bgG = g.createLinearGradient(0, py, 0, py + PH);
+        if (low) { var lr = (60 + 70 * pu) | 0; bgG.addColorStop(0, 'rgb(' + lr + ',14,22)'); bgG.addColorStop(1, 'rgb(' + (lr >> 1) + ',8,14)') }
+        else { bgG.addColorStop(0, '#3a2f66'); bgG.addColorStop(1, '#17132b') }
+        g.fillStyle = bgG; g.fillRect(px, py, PW, PH);
+        g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(px, py, PW, 12);
+        g.save(); g.beginPath(); g.rect(px, py, PW, PH); g.clip();
+        face(px + shk, py, now);
+        if (p.hurt > 0) { g.fillStyle = 'rgba(255,40,40,.45)'; g.fillRect(px, py, PW, PH) }
+        else if (low) { g.fillStyle = 'rgba(255,30,40,' + (.1 + .22 * pu) + ')'; g.fillRect(px, py, PW, PH) }
+        g.fillStyle = 'rgba(255,255,255,.10)'; g.fillRect(px, py, PW, 1); g.fillRect(px, py, 1, PH);
         g.restore();
+        /* paku sudut bingkai */
+        g.fillStyle = '#ffe9b0'; g.fillRect(px - 3, py - 3, 3, 3); g.fillRect(px + PW, py - 3, 3, 3); g.fillRect(px - 3, py + PH, 3, 3); g.fillRect(px + PW, py + PH, 3, 3);
+        g.fillStyle = '#8a6a2a'; g.fillRect(px - 2, py - 2, 1, 1); g.fillRect(px + PW + 1, py - 2, 1, 1); g.fillRect(px - 2, py + PH + 1, 1, 1); g.fillRect(px + PW + 1, py + PH + 1, 1, 1);
         /* lencana level */
-        g.font = 'bold 7px monospace'; var lt = 'Lv ' + lvl, lw = Math.ceil(g.measureText(lt).width) + 6, lx = px + 18 - (lw >> 1);
-        frame(lx, py + 33, lw, 9, true); g.fillStyle = '#4a3a1c'; g.fillRect(lx, py + 33, lw, 9); g.fillStyle = '#d8b878'; g.fillRect(lx, py + 33, lw, 1);
-        sh(lt, lx + (lw >> 1), py + 40, '#ffe9b0', 'center');
+        g.font = 'bold 7px monospace'; var lt = 'Lv ' + lvl, lw = Math.ceil(g.measureText(lt).width) + 8, lx = px + (PW >> 1) - (lw >> 1);
+        frame(lx, py + PH - 3, lw, 10, true); g.fillStyle = '#4a3a1c'; g.fillRect(lx, py + PH - 3, lw, 10); g.fillStyle = '#d8b878'; g.fillRect(lx, py + PH - 3, lw, 1); g.fillStyle = '#2a1f0c'; g.fillRect(lx, py + PH + 6, lw, 1);
+        sh(lt, lx + (lw >> 1), py + PH + 4, '#ffe9b0', 'center');
 
         /* --- HP --- */
-        var bx = 54, bw = 126, c;
+        var bx = 62, bw = 126, c;
         frame(bx, 9, bw, 10); fill(bx, 9, bw, 10, 1, '#1b1830');
         g.fillStyle = 'rgba(255,225,190,.55)'; g.fillRect(bx, 9, Math.round(bw * Math.min(1, hpG / mx)), 10);
         c = low ? 'rgb(' + ((170 + 85 * pu) | 0) + ',' + ((24 + 20 * pu) | 0) + ',' + ((28 + 20 * pu) | 0) + ')' : '#e04b4b';
