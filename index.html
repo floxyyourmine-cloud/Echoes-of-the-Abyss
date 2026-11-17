@@ -17,6 +17,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <link
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Press+Start+2P&family=VT323&display=swap"
     rel="stylesheet">
@@ -2195,6 +2196,482 @@
 
       100% {
         box-shadow: 0 7px 20px rgba(0, 0, 0, .78), 0 0 40px var(--ac), inset 0 0 0 5px rgba(10, 9, 15, .4), inset 0 0 0 6px #fff;
+      }
+    }
+  </style>
+  <style id="medievalMenu">
+    /* ===== ROMBAKAN MENU UTAMA — TEMA MEDIEVAL (hanya layout & tampilan menu) ===== */
+    #menu {
+      --gold: #d8b878;
+      --goldhi: #f8dfaa;
+      --parch: #ead7a9;
+      display: grid;
+      grid-template-columns: minmax(0, 430px) minmax(0, 340px);
+      grid-template-rows: auto auto auto;
+      grid-template-areas: "head head" "chars nav" "foot foot";
+      justify-content: center;
+      align-content: center;
+      align-content: safe center;
+      align-items: center;
+      justify-items: center;
+      column-gap: clamp(20px, 5vw, 64px);
+      row-gap: clamp(12px, 3vh, 26px);
+      padding: max(16px, env(safe-area-inset-top, 0px)) max(26px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(26px, env(safe-area-inset-left, 0px));
+      overflow-x: hidden;
+      overflow-y: auto;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(8, 5, 3, 0) 0%, rgba(8, 5, 3, .72) 90%),
+        linear-gradient(180deg, rgba(8, 5, 3, .84), rgba(8, 5, 3, .46) 38%, rgba(8, 5, 3, .58) 68%, rgba(8, 5, 3, .93));
+    }
+
+    /* bingkai besi + cahaya obor */
+    #menu .menu-overlay {
+      z-index: 0;
+      background:
+        radial-gradient(circle at 10% 55%, rgba(226, 140, 52, .13), transparent 30%),
+        radial-gradient(circle at 90% 55%, rgba(226, 140, 52, .13), transparent 30%);
+    }
+
+    #menu .menu-overlay::before {
+      content: "";
+      position: absolute;
+      inset: max(8px, env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+      border: 1px solid rgba(216, 184, 120, .4);
+      box-shadow: inset 0 0 0 5px rgba(8, 5, 3, .4), inset 0 0 0 6px rgba(216, 184, 120, .16);
+      pointer-events: none;
+    }
+
+    /* pembungkus dilebur agar judul, tombol, karakter & footer bisa ditata satu grid */
+    #menu .menu-wrap {
+      display: contents;
+    }
+
+    #menu .menu-head,
+    #menu .menu-buttons,
+    #menu #charSel,
+    #menu .menu-footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ---- JUDUL ---- */
+    #menu .menu-head {
+      grid-area: head;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    #menu .eyebrow {
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      letter-spacing: 6px;
+      color: #c9b182;
+    }
+
+    #menu .eyebrow::before,
+    #menu .eyebrow::after {
+      content: "";
+      width: clamp(18px, 6vw, 44px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+
+    #menu .eyebrow::after {
+      transform: scaleX(-1);
+    }
+
+    #menu .game-title {
+      align-items: center;
+      text-transform: none;
+      line-height: 1;
+    }
+
+    #menu .game-title .t1 {
+      font-family: 'UnifrakturCook', 'Cinzel', Georgia, serif;
+      font-weight: 700;
+      font-size: clamp(46px, 7vw, 86px);
+      letter-spacing: 2px;
+      text-transform: none;
+    }
+
+    #menu .game-title .t2 {
+      font-size: clamp(14px, 2.4vw, 26px);
+      letter-spacing: .38em;
+      padding-left: .38em;
+      margin-top: 6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #menu .title-divider {
+      width: min(320px, 80%);
+      margin: 14px auto 10px;
+      background:
+        linear-gradient(90deg, transparent, var(--gold)) left center / calc(50% - 18px) 1px no-repeat,
+        linear-gradient(90deg, var(--gold), transparent) right center / calc(50% - 18px) 1px no-repeat;
+    }
+
+    #menu .title-divider::after {
+      content: "\269C\FE0E";
+      left: 50%;
+      top: -10px;
+      transform: translateX(-50%);
+      font-size: 16px;
+    }
+
+    #menu .tagline {
+      color: #a89878;
+      font-size: 12px;
+      letter-spacing: 5px;
+    }
+
+    /* ---- PANEL KAYU BERPAKU (tombol & pilih karakter) ---- */
+    #menu .menu-buttons,
+    #menu #charSel {
+      padding: 20px 20px 18px;
+      background:
+        radial-gradient(circle, #e7c987 0 2px, transparent 2.6px) left 8px top 8px / 8px 8px no-repeat,
+        radial-gradient(circle, #e7c987 0 2px, transparent 2.6px) right 8px top 8px / 8px 8px no-repeat,
+        radial-gradient(circle, #e7c987 0 2px, transparent 2.6px) left 8px bottom 8px / 8px 8px no-repeat,
+        radial-gradient(circle, #e7c987 0 2px, transparent 2.6px) right 8px bottom 8px / 8px 8px no-repeat,
+        linear-gradient(180deg, rgba(44, 30, 17, .9), rgba(16, 11, 7, .93));
+      border: 1px solid rgba(216, 184, 120, .55);
+      border-radius: 3px;
+      box-shadow: inset 0 0 0 4px rgba(8, 5, 3, .85), inset 0 0 0 5px rgba(216, 184, 120, .28), 0 14px 40px rgba(0, 0, 0, .6);
+    }
+
+    /* ---- TOMBOL MENU ---- */
+    #menu .menu-buttons {
+      grid-area: nav;
+      width: 100%;
+      max-width: 340px;
+      gap: 8px;
+    }
+
+    #menu .menu-button {
+      justify-content: center;
+      text-align: center;
+      text-indent: .35em;
+      min-height: 46px;
+      padding: 12px 38px;
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 5px;
+      color: var(--parch);
+      border: 1px solid rgba(216, 184, 120, .5);
+      border-radius: 2px;
+      background: linear-gradient(180deg, #46301a 0%, #2a1b0f 55%, #1d130a 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 226, 170, .18), inset 0 0 0 3px rgba(8, 5, 3, .55), 0 2px 0 #090603;
+      text-shadow: 0 1px 2px #000;
+    }
+
+    #menu .menu-button::before,
+    #menu .menu-button::after {
+      content: "\2726";
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      right: auto;
+      bottom: auto;
+      width: auto;
+      height: auto;
+      font-size: 9px;
+      color: var(--gold);
+      background: none;
+      box-shadow: none;
+      opacity: .65;
+      transform: translateY(-50%);
+      transition: opacity .25s, color .25s;
+    }
+
+    #menu .menu-button::after {
+      left: auto;
+      right: 14px;
+    }
+
+    #menu .menu-button:hover,
+    #menu .menu-button:focus-visible {
+      color: #fff2d0;
+      border-color: var(--goldhi);
+      background: linear-gradient(180deg, #5d4023 0%, #3a2616 55%, #271a0e 100%);
+    }
+
+    #menu .menu-button:hover::before,
+    #menu .menu-button:hover::after,
+    #menu .menu-button:focus-visible::before,
+    #menu .menu-button:focus-visible::after {
+      opacity: 1;
+      color: var(--goldhi);
+      transform: translateY(-50%);
+    }
+
+    #menu .menu-button:active {
+      filter: brightness(1.25);
+    }
+
+    #menu .menu-button.primary {
+      min-height: 52px;
+      font-size: 16px;
+      color: #fff0ca;
+      margin: 0 0 4px;
+      border: 1px solid #e3bf7c;
+      background: linear-gradient(180deg, #9a2a2a 0%, #6d1818 55%, #4a0e0e 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 200, 170, .3), inset 0 0 0 3px rgba(40, 6, 6, .55), 0 0 22px rgba(160, 40, 30, .28), 0 2px 0 #090603;
+    }
+
+    #menu .menu-button.primary:hover,
+    #menu .menu-button.primary:focus-visible {
+      background: linear-gradient(180deg, #b13434 0%, #7f1d1d 55%, #571010 100%);
+    }
+
+    /* ---- PILIH KARAKTER ---- */
+    #menu #charSel {
+      grid-area: chars;
+      position: relative;
+      inset: auto;
+      height: auto;
+      margin: 0;
+      width: 100%;
+      max-width: 430px;
+      gap: 12px;
+    }
+
+    #menu #charSel .cs-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      letter-spacing: 5px;
+      color: var(--goldhi);
+    }
+
+    #menu #charSel .cs-title::before,
+    #menu #charSel .cs-title::after {
+      content: "";
+      flex: 0 0 22px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+
+    #menu #charSel .cs-title::after {
+      transform: scaleX(-1);
+    }
+
+    #menu #charSel .cs-row {
+      width: 100%;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    #menu #charSel .cs-card {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 8px 8px 9px;
+      gap: 6px;
+      border-radius: 2px;
+      color: #a8977a;
+      font-size: 11px;
+      letter-spacing: 3px;
+      border: 1px solid rgba(216, 184, 120, .32);
+      background: linear-gradient(180deg, rgba(58, 40, 22, .82), rgba(18, 12, 7, .92));
+    }
+
+    #menu #charSel .cs-card canvas {
+      height: clamp(84px, 20vh, 170px);
+      width: auto;
+      aspect-ratio: 112 / 120;
+    }
+
+    #menu #charSel .cs-card.on {
+      color: var(--goldhi);
+      border-color: var(--goldhi);
+      background: linear-gradient(180deg, rgba(84, 58, 30, .85), rgba(26, 17, 9, .94));
+      box-shadow: 0 0 22px rgba(216, 150, 70, .32), inset 0 0 18px rgba(216, 184, 120, .14);
+    }
+
+    /* ---- FOOTER ---- */
+    #menu .menu-footer {
+      grid-area: foot;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      width: 100%;
+      padding: 0;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px 28px;
+      text-align: center;
+      color: #8a7c64;
+      font-size: 10px;
+      letter-spacing: 3px;
+    }
+
+    /* ---- HP LANDSCAPE (layar pendek): judul 1 baris, karakter kiri, tombol kanan ---- */
+    @media (max-height: 520px) {
+      #menu {
+        grid-template-columns: auto minmax(0, 270px);
+        column-gap: clamp(16px, 4vw, 40px);
+        row-gap: 6px;
+        padding: max(12px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+      }
+
+      #menu .eyebrow {
+        display: none;
+      }
+
+      #menu .game-title {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 10px;
+      }
+
+      #menu .game-title .t1 {
+        font-size: clamp(30px, 6vw, 46px);
+      }
+
+      #menu .game-title .t2 {
+        font-size: clamp(11px, 2vw, 16px);
+        letter-spacing: .3em;
+        margin-top: 0;
+      }
+
+      #menu .title-divider {
+        margin: 6px auto 4px;
+        width: min(260px, 60%);
+      }
+
+      #menu .tagline {
+        font-size: 9px;
+        letter-spacing: 4px;
+      }
+
+      #menu .menu-buttons,
+      #menu #charSel {
+        padding: 10px 12px;
+      }
+
+      #menu .menu-buttons {
+        gap: 4px;
+      }
+
+      #menu .menu-button {
+        min-height: 36px;
+        padding: 8px 30px;
+        font-size: 12px;
+        letter-spacing: 4px;
+      }
+
+      #menu .menu-button.primary {
+        min-height: 40px;
+        font-size: 13px;
+        margin-bottom: 2px;
+      }
+
+      #menu .menu-button::before {
+        left: 10px;
+      }
+
+      #menu .menu-button::after {
+        right: 10px;
+      }
+
+      #menu #charSel {
+        width: auto;
+        gap: 6px;
+      }
+
+      #menu #charSel .cs-title {
+        font-size: 9px;
+        letter-spacing: 3px;
+      }
+
+      #menu #charSel .cs-title::before,
+      #menu #charSel .cs-title::after {
+        flex-basis: 12px;
+      }
+
+      #menu #charSel .cs-row {
+        gap: 8px;
+      }
+
+      #menu #charSel .cs-card {
+        flex: 0 0 auto;
+        padding: 5px 6px 6px;
+        gap: 4px;
+        font-size: 9px;
+        letter-spacing: 2px;
+      }
+
+      #menu #charSel .cs-card canvas {
+        height: clamp(52px, 22vh, 86px);
+      }
+
+      #menu .menu-footer {
+        font-size: 8px;
+        letter-spacing: 2px;
+      }
+    }
+
+    @media (max-height: 400px) {
+      #menu .tagline {
+        display: none;
+      }
+
+      #menu #charSel .cs-card canvas {
+        height: 54px;
+      }
+    }
+
+    /* ---- HP PORTRAIT: satu kolom — judul, karakter, tombol, footer ---- */
+    @media (max-width: 700px) and (min-height: 521px) {
+      #menu {
+        grid-template-columns: minmax(0, 420px);
+        grid-template-areas: "head" "chars" "nav" "foot";
+        row-gap: clamp(12px, 2.4vh, 22px);
+        padding-top: max(22px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+      }
+
+      #menu .eyebrow {
+        font-size: 9px;
+        letter-spacing: 3px;
+      }
+
+      #menu .game-title .t1 {
+        font-size: clamp(44px, 15vw, 64px);
+      }
+
+      #menu .game-title .t2 {
+        font-size: clamp(13px, 4vw, 18px);
+      }
+
+      #menu .tagline {
+        font-size: 10px;
+        letter-spacing: 4px;
+      }
+
+      #menu .menu-buttons,
+      #menu #charSel {
+        max-width: none;
+        padding: 16px 14px;
+      }
+
+      #menu #charSel .cs-card canvas {
+        height: clamp(78px, 15vh, 130px);
+      }
+
+      #menu .menu-footer {
+        flex-direction: column;
+        align-items: center;
+        font-size: 9px;
+        letter-spacing: 2px;
       }
     }
   </style>
@@ -8138,7 +8615,7 @@
       position: fixed;
       inset: 0;
       z-index: 7;
-      background: #3f86dd;
+      background: #0b0a1a;
       touch-action: manipulation;
       cursor: pointer;
     }
@@ -8175,6 +8652,42 @@
       }
     }
   </style>
+  <style>
+    /* intro: vinyet + bar sinematik + tombol lewati senada tema gelap-emas */
+    #intro::before,
+    #intro::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    #intro::before {
+      background: radial-gradient(ellipse at 50% 46%, transparent 42%, rgba(4, 3, 10, .8) 100%);
+    }
+
+    #intro::after {
+      background: linear-gradient(180deg, rgba(0, 0, 0, .88) 0, rgba(0, 0, 0, 0) 9%, rgba(0, 0, 0, 0) 91%, rgba(0, 0, 0, .88) 100%);
+    }
+
+    #introSkip {
+      z-index: 3;
+      font-family: var(--f-title, Cinzel, Georgia, serif);
+      color: #f1d9a4;
+      border: 1px solid rgba(216, 184, 120, .55);
+      border-radius: 2px;
+      background: linear-gradient(180deg, rgba(58, 40, 22, .85), rgba(18, 12, 7, .92));
+    }
+
+    #introSkip:hover {
+      background: linear-gradient(180deg, #5d4023, #271a0e);
+      border-color: #f8dfaa;
+    }
+  </style>
   <div id="intro">
     <canvas id="introCv"></canvas>
     <button id="introSkip" type="button" aria-label="Lewati intro">LEWATI »</button>
@@ -8197,7 +8710,7 @@
       function camS(t) { t = Math.min(t, KT[KT.length - 1]); let i = 0; while (i < KT.length - 2 && t > KT[i + 1]) i++; const h = KT[i + 1] - KT[i], u = (t - KT[i]) / h, u2 = u * u, u3 = u2 * u; return (2 * u3 - 3 * u2 + 1) * KS[i] + (u3 - 2 * u2 + u) * h * KM[i] + (-2 * u3 + 3 * u2) * KS[i + 1] + (u3 - u2) * h * KM[i + 1] }
       const WY = { mount: 1.30, A: 1.46, B: 1.60, C: 1.74, field: 1.80 }, F2 = { sky: .55, sun: .35, mount: .8, A: .88, B: .95, C: 1.0, field: 1.05, grass: 1.3 }, GW = 2.82;
       /* langit: pita warna lembut + dithering tipis di sambungan */
-      const SKY = ['#3f72c4', '#4c82d0', '#5c92da', '#6fa4e2', '#84b5ea', '#9cc6f0', '#b6d7f5', '#cfe5f9'];
+      const SKY = ['#0b0a1a', '#12102a', '#1b1638', '#2a1f48', '#43294f', '#6a3a58', '#9a5654', '#d08a58'];
       function mkSky(h) { const c = mk(W, h), x = c.getContext('2d'), im = x.createImageData(W, h), d = im.data, P = SKY.map(rgb), n = P.length; for (let y = 0; y < h; y++) { const t = y / h * (n - 1), i = Math.min(n - 2, t | 0), f = cl((t - i - .55) / .45); for (let px = 0; px < W; px++) { const k = P[i + (f * 16 > B4[(y & 3) * 4 + (px & 3)] ? 1 : 0)], o = (y * W + px) * 4; d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255 } } x.putImageData(im, 0, 0); return c }
       /* awan pixel: bentuk dari gabungan lingkaran, diarsir per baris (terang atas, bayangan biru lembut di bawah) */
       function mkCloud(r, k) {
@@ -8206,12 +8719,12 @@
         const m = new Uint8Array(w * h); for (let y = 0; y < base; y++)for (let px = 0; px < w; px++)for (const q of cs) if ((px - q[0]) ** 2 + (y - q[1]) ** 2 <= q[2] * q[2]) { m[y * w + px] = 1; break }
         for (let y = 0; y < base; y++)for (let px = 0; px < w; px++) {
           if (!m[y * w + px]) continue; let up = 0, dn = 0; while (up < 4 && y - up - 1 >= 0 && m[(y - up - 1) * w + px]) up++; while (dn < 5 && y + dn + 1 < base && m[(y + dn + 1) * w + px]) dn++;
-          x.fillStyle = up == 0 ? '#fdfeff' : dn == 0 ? '#93a9d4' : dn < 2 ? '#b4c6e6' : dn < 4 ? '#ccdaf0' : up < 3 ? '#f0f5fd' : '#e1eaf8'; x.fillRect(px, y, 1, 1)
+          x.fillStyle = up == 0 ? '#9c92c6' : dn == 0 ? '#1c1730' : dn < 2 ? '#262040' : dn < 4 ? '#302948' : up < 3 ? '#4a406c' : '#3a3258'; x.fillRect(px, y, 1, 1)
         } return c
       }
       function ridge(seed, amp) { const r = rng(seed), p = [r() * 6, r() * 6, r() * 6], f = [.0032 + r() * .001, .0075, .017]; return px => amp * (.55 * Math.sin(px * f[0] * 2.2 + p[0]) + .3 * Math.sin(px * f[1] * 2.2 + p[1]) + .15 * Math.sin(px * f[2] * 2.2 + p[2])) }
-      const TP = ['#245f31', '#3b8440', '#7dbd5a'];
-      function tree(x, px, py, s, pal) { const r = Math.max(2, Math.round(s * 2.3)); x.fillStyle = '#4e3626'; x.fillRect(Math.round(px) - (r > 3 ? 1 : 0), Math.round(py - r), r > 3 ? 2 : 1, r + 1); disc(x, pal[0], px, py - r * 1.5, r); disc(x, pal[1], px - r * .25, py - r * 1.65, r * .78 | 0); disc(x, pal[2], px - r * .4, py - r * 1.9, Math.max(1, r * .4 | 0)) }
+      const TP = ['#243438', '#304441', '#4c5e51'];
+      function tree(x, px, py, s, pal) { const r = Math.max(2, Math.round(s * 2.3)); x.fillStyle = '#2f2633'; x.fillRect(Math.round(px) - (r > 3 ? 1 : 0), Math.round(py - r), r > 3 ? 2 : 1, r + 1); disc(x, pal[0], px, py - r * 1.5, r); disc(x, pal[1], px - r * .25, py - r * 1.65, r * .78 | 0); disc(x, pal[2], px - r * .4, py - r * 1.9, Math.max(1, r * .4 | 0)) }
       function tufts(x, ry, rr, n, col, span) { x.fillStyle = col; for (let k = 0; k < n; k++) { const px = rr() * W | 0, py = ry(px) + 4 + (rr() * span | 0); x.fillRect(px, py, 1, 1); x.fillRect(px + 1, py - 1, 1, 1); x.fillRect(px + 2, py, 1, 1) } }
       function mkHill(o) {
         const M = o.M, h = M + Math.ceil(1.35 * H), c = mk(W, h), x = c.getContext('2d'), R = ridge(o.seed, o.amp);
@@ -8223,7 +8736,7 @@
       }
       /* kerajaan pixel: tembok bata, menara beratap sirap biru, jendela berpendar, gerbang kayu, rumah-rumah kecil */
       function drawCastle(x, ox, oy, cw, flags) {
-        const u = cw / 100, gy = 76, ST = '#ddd6c4', SL = '#efe9d9', SS = '#bdb5a2', SD = '#8f887a', OL = '#5f5a74', RL = '#5a82dc', RR = '#3b5db4', RD = '#2a428a', WN = '#2e2842', GL = '#f6dc86';
+        const u = cw / 100, gy = 76, ST = '#736e7b', SL = '#7b7784', SS = '#645f6b', SD = '#4f4b58', OL = '#3a3650', RL = '#3d4876', RR = '#2e3764', RD = '#252b53', WN = '#231f39', GL = '#f6dc86';
         const R = (a, b, w, h, c) => F(x, c, ox + a * u, oy + b * u, w * u, h * u);
         const bricks = (a, b, w, h) => { for (let yy = b, i = 0; yy < b + h; yy += 2.4, i++) { R(a, yy, w, .3, SS); for (let xx = a + (i & 1) * 2.4 + 1; xx < a + w - 1; xx += 4.8)R(xx, yy, .3, 2.4, SS) } };
         const roof = (cx, w, top, apex, fl) => { const y0 = Math.round(oy + apex * u), y1 = Math.round(oy + top * u), hw = w * .68 * u, c = Math.round(ox + cx * u); for (let py = y0; py <= y1; py++) { const k = Math.round((py - y0 + 1) / (y1 - y0 + 1) * hw), sh = (py - y0) % 5 == 4; x.fillStyle = sh ? RD : RL; x.fillRect(c - k, py, k, 1); x.fillStyle = sh ? RD : RR; x.fillRect(c, py, k, 1) } R(cx - w * .68 - .5, top - .2, w * 1.36 + 1, .9, OL); R(cx - .3, apex - 1.4, .6, 1.6, GL); if (fl) flags.push({ x: ox + cx * u, y: oy + (apex - 1.4) * u }) };
@@ -8236,10 +8749,10 @@
         for (let i = 0; i < 3; i++)win(47 + i * 3.1, 22); R(39.5, 30, 21, 1.2, SD); win(50, 33);
         R(6.5, gy - 2.6, 87, 2.6, SD); R(6.5, gy - 2.6, 87, .5, SL);
         for (let d = 0; d <= 5.4; d += .35) { const hw = Math.sqrt(5.4 * 5.4 - d * d); R(50 - hw, 62 - d - .35, hw * 2, .4, SD) } R(44.6, 62, 10.8, gy - 62, SD);
-        for (let d = 0; d <= 4.5; d += .35) { const hw = Math.sqrt(4.5 * 4.5 - d * d); R(50 - hw, 62 - d - .35, hw * 2, .4, '#6b4d33') } R(45.5, 62, 9, gy - 62, '#6b4d33');
-        R(47.5, 57, .35, gy - 57, '#3a2a1c'); R(52.1, 57, .35, gy - 57, '#3a2a1c'); R(50, 57, .35, gy - 57, '#3a2a1c'); R(45.5, 66, 9, .8, '#2b2833'); R(45.5, 71, 9, .8, '#2b2833'); R(52.6, 70, 1, 1.4, GL);
-        const roofs = ['#c8643c', '#b9472f', '#d98a3a', '#a8453a'], walls = ['#f0e4c8', '#e9d9b8', '#f4ecd8'];
-        const house = (hx, hy, w, h, rf, wl) => { R(hx + 1, hy + h, w, 1.2, 'rgba(0,0,0,.18)'); R(hx, hy, w, h, wl); R(hx + w * .6, hy, w * .4, h, 'rgba(0,0,0,.14)'); R(hx, hy, w, .4, SL); const rh = h * .75; for (let d = 0; d < rh; d += .5) { const wd = (w + 2.4) * (d / rh); R(hx + w / 2 - wd / 2, hy - rh + d, wd, .55, rf); R(hx + w / 2, hy - rh + d, wd / 2, .55, 'rgba(0,0,0,.2)') } R(hx + w * .4, hy + h * .45, w * .2, h * .55, '#5b3d2a'); R(hx + w * .12, hy + h * .28, w * .2, h * .22, GL) };
+        for (let d = 0; d <= 4.5; d += .35) { const hw = Math.sqrt(4.5 * 4.5 - d * d); R(50 - hw, 62 - d - .35, hw * 2, .4, '#3c303a') } R(45.5, 62, 9, gy - 62, '#3c303a');
+        R(47.5, 57, .35, gy - 57, '#27202d'); R(52.1, 57, .35, gy - 57, '#27202d'); R(50, 57, .35, gy - 57, '#27202d'); R(45.5, 66, 9, .8, '#221f34'); R(45.5, 71, 9, .8, '#221f34'); R(52.6, 70, 1, 1.4, GL);
+        const roofs = ['#5f3e43', '#57313c', '#684e47', '#51303e'], walls = ['#7b757e', '#777078', '#7d7984'];
+        const house = (hx, hy, w, h, rf, wl) => { R(hx + 1, hy + h, w, 1.2, 'rgba(0,0,0,.18)'); R(hx, hy, w, h, wl); R(hx + w * .6, hy, w * .4, h, 'rgba(0,0,0,.14)'); R(hx, hy, w, .4, SL); const rh = h * .75; for (let d = 0; d < rh; d += .5) { const wd = (w + 2.4) * (d / rh); R(hx + w / 2 - wd / 2, hy - rh + d, wd, .55, rf); R(hx + w / 2, hy - rh + d, wd / 2, .55, 'rgba(0,0,0,.2)') } R(hx + w * .4, hy + h * .45, w * .2, h * .55, '#342935'); R(hx + w * .12, hy + h * .28, w * .2, h * .22, GL) };
         [[1, 62, 9, 8], [12, 65, 8, 7], [22, 63, 9, 8], [33, 67, 7, 6], [60, 67, 7, 6], [70, 63, 9, 8], [81, 65, 8, 7], [91, 62, 9, 8], [6, 70, 8, 6], [78, 70, 8, 6]].forEach((q, i) => house(q[0], q[1] + 4, q[2], q[3], roofs[i % 4], walls[i % 3]));
         [[40, 74], [60, 74], [28, 76], [68, 76]].forEach(q => tree(x, ox + q[0] * u, oy + q[1] * u, Math.max(1, Math.round(u * .45)), TP))
       }
@@ -8254,60 +8767,61 @@
         tcv.width = innerWidth; tcv.height = innerHeight;
         const u8 = H / 340, r = rng(11); A = { clouds: [], birds: [], leaves: [], flags: [] };
         A.sky = mkSky(Math.ceil(1.65 * H));
+        { const sx = A.sky.getContext('2d'), sr = rng(5), sh = A.sky.height; for (let i = 0, n = Math.round(W * sh / 2300); i < n; i++) { const px = sr() * W | 0, py = Math.pow(sr(), 1.5) * sh * .52 | 0; sx.globalAlpha = .35 + sr() * .6; sx.fillStyle = sr() > .82 ? '#ffe7ad' : '#cfcaf0'; sx.fillRect(px, py, 1, 1) } sx.globalAlpha = 1 }
         A.cl = [.6, .9, 1.35].map((k, i) => [0, 1, 2].map(v => mkCloud(rng(100 + i * 9 + v), k)));
         [[.55, .3, 0, .8, 12], [.8, .55, 1, .9, 16], [1.2, 1, 2, .96, 22]].forEach(([f, a, ki, al, n]) => { for (let i = 0; i < n; i++)A.clouds.push({ v: r() * 3 | 0, k: ki, x: r() * (W + 300), wy: r() * (f > 1 ? 1.05 : 1.25) * H, f, sp: (1 + r() * 3) * f, a: al * (.88 + r() * .12) }) });
         A.clouds.sort((p, q) => p.f - q.f);
         for (let i = 0; i < 7; i++)A.birds.push({ x: r() * (W + 120), wy: (.5 + r() * .65) * H, ph: r() * 6, sp: 14 + r() * 10 });
-        for (let i = 0; i < 20; i++)A.leaves.push({ x: r() * W, y: r() * H, vx: 16 + r() * 34, vy: 4 + r() * 12, rot: r() * 6, ph: r() * 6, col: ['#74b84a', '#8fc552', '#5aa23a', '#b5c552', '#cfae45'][r() * 5 | 0] });
+        for (let i = 0; i < 20; i++)A.leaves.push({ x: r() * W, y: r() * H, vx: 16 + r() * 34, vy: 4 + r() * 12, rot: r() * 6, ph: r() * 6, col: ['#ff9a3c', '#ffb84d', '#e2672a', '#ffd27a', '#c94a22'][r() * 5 | 0] });
         {
           const M = Math.round(.2 * H), c = mk(W, M + .6 * H), x = c.getContext('2d'), R1 = ridge(31, .12 * H), R2 = ridge(77, .09 * H);
-          [[R2, '#b6cae1', '#a5bbd7', 1.1], [R1, '#9ab5d4', '#89a6c9', 1]].forEach(([R, c0, c1, k]) => { for (let px = 0; px < W; px++) { const top = Math.round(M - .06 * H * k - Math.abs(R(px * 1.6)) * 1.15 - R(px) * .3); x.fillStyle = c0; x.fillRect(px, top, 1, c.height - top); x.fillStyle = c1; x.fillRect(px, top + Math.round(.1 * H), 1, c.height); if (px & 1) x.fillRect(px, top + Math.round(.1 * H) - 2, 1, 2); x.fillStyle = '#d6e4f3'; x.fillRect(px, top, 1, 1) } });
+          [[R2, '#2b2547', '#251f3f', 1.1], [R1, '#1f1a38', '#19152f', 1]].forEach(([R, c0, c1, k]) => { for (let px = 0; px < W; px++) { const top = Math.round(M - .06 * H * k - Math.abs(R(px * 1.6)) * 1.15 - R(px) * .3); x.fillStyle = c0; x.fillRect(px, top, 1, c.height - top); x.fillStyle = c1; x.fillRect(px, top + Math.round(.1 * H), 1, c.height); if (px & 1) x.fillRect(px, top + Math.round(.1 * H) - 2, 1, 2); x.fillStyle = '#4a406c'; x.fillRect(px, top, 1, 1) } });
           A.mount = { cv: c, M }
         }
         {
           const cw = Math.max(150, Math.min(W * .4, H * .9)), ch = cw * .84, cx = W * .64, M = Math.round(ch + .06 * H);
           A.A = mkHill({
-            seed: 5, amp: .03 * H, M, cols: ['#d2f0bc', '#86bf86', '#79b676', '#6aa868'], bump: { x: cx, h: .05 * H, w: W * .2 }, plateau: { x: cx, hw: cw * .62, ramp: cw * .4 },
+            seed: 5, amp: .03 * H, M, cols: ['#71787a', '#516061', '#4b5c5a', '#445553'], bump: { x: cx, h: .05 * H, w: W * .2 }, plateau: { x: cx, hw: cw * .62, ramp: cw * .4 },
             extra: (x, ry) => {
-              const yb = ry(cx), rr = rng(9); F(x, 'rgba(20,50,30,.35)', cx - cw * .47, yb + 4, cw * .94, .04 * cw);
-              x.save(); x.globalCompositeOperation = 'source-atop'; const n = Math.round(.2 * H); for (let i = 0; i <= n; i++) { const t = i / n, c0 = cx + Math.sin(t * 3.4) * W * .06 * t, hw = Math.round(2 + t * 16 * u8); x.fillStyle = '#dcc994'; x.fillRect(Math.round(c0 - hw), yb + 2 + i, hw * 2, 1); x.fillStyle = '#b9a56e'; x.fillRect(Math.round(c0 - hw), yb + 2 + i, 1, 1); x.fillRect(Math.round(c0 + hw - 1), yb + 2 + i, 1, 1) } x.restore();
-              tufts(x, ry, rr, 70, '#a9d99a', .12 * H); for (let k = 0; k < 40; k++) { const px = rr() * W, py = ry(px) + 6 + rr() * .1 * H; if (Math.abs(px - cx) > cw * .46) tree(x, px, py, Math.max(1, Math.round(.9 * u8 + rr() * .6)), TP) }
+              const yb = ry(cx), rr = rng(9); F(x, 'rgba(5,3,12,.5)', cx - cw * .47, yb + 4, cw * .94, .04 * cw);
+              x.save(); x.globalCompositeOperation = 'source-atop'; const n = Math.round(.2 * H); for (let i = 0; i <= n; i++) { const t = i / n, c0 = cx + Math.sin(t * 3.4) * W * .06 * t, hw = Math.round(2 + t * 16 * u8); x.fillStyle = '#70686a'; x.fillRect(Math.round(c0 - hw), yb + 2 + i, hw * 2, 1); x.fillStyle = '#605859'; x.fillRect(Math.round(c0 - hw), yb + 2 + i, 1, 1); x.fillRect(Math.round(c0 + hw - 1), yb + 2 + i, 1, 1) } x.restore();
+              tufts(x, ry, rr, 70, '#606d6b', .12 * H); for (let k = 0; k < 40; k++) { const px = rr() * W, py = ry(px) + 6 + rr() * .1 * H; if (Math.abs(px - cx) > cw * .46) tree(x, px, py, Math.max(1, Math.round(.9 * u8 + rr() * .6)), TP) }
               const fl = []; drawCastle(x, cx - cw / 2, yb - .905 * ch + 4, cw, fl); A.flags = fl
             }
           })
         }
         A.B = mkHill({
-          seed: 13, amp: .04 * H, M: Math.round(.14 * H), cols: ['#c8ec9c', '#6cae55', '#60a04a', '#55943f'], extra: (x, ry, M) => {
-            const rr = rng(21), cs = ['#8cc152', '#a4c64a', '#6aa84f', '#c9c957', '#7fb844'];
-            for (let k = 0; k < 60; k++) { const px = rr() * W, py = M + 10 + rr() * .45 * H, w = 14 + rr() * 34, h = 4 + rr() * 8; x.save(); x.globalCompositeOperation = 'source-atop'; x.globalAlpha = .6; x.fillStyle = cs[k % 5]; x.fillRect(Math.round(px), Math.round(py), Math.round(w), Math.round(h)); x.fillStyle = 'rgba(40,80,30,.5)'; x.fillRect(Math.round(px), Math.round(py + h), Math.round(w), 1); x.restore() }
-            tufts(x, ry, rr, 90, '#9dd47a', .4 * H); for (let k = 0; k < 70; k++) { const px = rr() * W, py = ry(px) + 8 + rr() * .2 * H; tree(x, px, py, Math.max(1, Math.round((.7 + rr() * .7) * Math.max(.8, u8))), TP) }
+          seed: 13, amp: .04 * H, M: Math.round(.14 * H), cols: ['#6c766f', '#45584e', '#3f5148', '#3a4c43'], extra: (x, ry, M) => {
+            const rr = rng(21), cs = ['#526150', '#5b644f', '#44554b', '#696755', '#4c5c4a'];
+            for (let k = 0; k < 60; k++) { const px = rr() * W, py = M + 10 + rr() * .45 * H, w = 14 + rr() * 34, h = 4 + rr() * 8; x.save(); x.globalCompositeOperation = 'source-atop'; x.globalAlpha = .6; x.fillStyle = cs[k % 5]; x.fillRect(Math.round(px), Math.round(py), Math.round(w), Math.round(h)); x.fillStyle = 'rgba(5,3,12,.55)'; x.fillRect(Math.round(px), Math.round(py + h), Math.round(w), 1); x.restore() }
+            tufts(x, ry, rr, 90, '#5a6a5f', .4 * H); for (let k = 0; k < 70; k++) { const px = rr() * W, py = ry(px) + 8 + rr() * .2 * H; tree(x, px, py, Math.max(1, Math.round((.7 + rr() * .7) * Math.max(.8, u8))), TP) }
           }
         });
         A.C = mkHill({
-          seed: 29, amp: .05 * H, M: Math.round(.14 * H), cols: ['#c2eba4', '#5ba544', '#4f9a3b', '#43902f'], extra: (x, ry) => {
-            const rr = rng(33); tufts(x, ry, rr, 110, '#8fd070', .4 * H);
-            for (let k = 0; k < 120; k++) { const px = rr() * W | 0, py = ry(px) + 6 + (rr() * .4 * H | 0); x.fillStyle = k % 3 ? '#fff0a0' : '#f4f8ec'; x.fillRect(px, py, 1, 1) } for (let k = 0; k < 28; k++) { const px = rr() * W, py = ry(px) + 10 + rr() * .12 * H; tree(x, px, py, Math.max(1, Math.round((1 + rr() * .8) * Math.max(.8, u8))), ['#1f5a2a', '#2f7a38', '#6bb352']) }
+          seed: 29, amp: .05 * H, M: Math.round(.14 * H), cols: ['#6a7571', '#3e5347', '#384e42', '#33493d'], extra: (x, ry) => {
+            const rr = rng(33); tufts(x, ry, rr, 110, '#55675b', .4 * H);
+            for (let k = 0; k < 120; k++) { const px = rr() * W | 0, py = ry(px) + 6 + (rr() * .4 * H | 0); x.fillStyle = k % 3 ? '#e8c86a' : '#b8b4d8'; x.fillRect(px, py, 1, 1) } for (let k = 0; k < 28; k++) { const px = rr() * W, py = ry(px) + 10 + rr() * .12 * H; tree(x, px, py, Math.max(1, Math.round((1 + rr() * .8) * Math.max(.8, u8))), ['#223235', '#2a403d', '#455a4d']) }
           }
         });
-        A.plants = [[[1, '#1f6b34', '#58b24a'], [2, '#3f7d2a', '#a3cf5a'], [3, '#185e3a', '#4fae6d']].map(a => [7, 13, 24].map(z => mkPlant(a[0] + z, a[1], a[2], z)))];
+        A.plants = [[[1, '#23393a', '#3e584a'], [2, '#304139', '#5c6755'], [3, '#20343a', '#3b5754']].map(a => [7, 13, 24].map(z => mkPlant(a[0] + z, a[1], a[2], z)))];
         A.plants = A.plants[0]; A.grass = [[], []]; const gr = rng(77);
         for (let L = 0; L < 2; L++)for (let i = 0; i < Math.ceil(W / (L ? 3.8 : 3)); i++)A.grass[L].push({ x: gr() * (W + 8) - 4 | 0, o: Math.round((L ? .13 : .035) * H + gr() * .035 * H), h: Math.round((L ? .09 : .06) * H * (.55 + gr() * .9)), w: gr() > (L ? .55 : .75) ? 2 : 1, ph: gr() * 6, lean: gr() - .5 })
       }
       function drawClouds(S, time, f0, f1, fade) { A.clouds.forEach(c => { if (c.f < f0 || c.f >= f1) return; const im = A.cl[c.k][c.v], span = W + im.width * 2, x = Math.round(((c.x + c.sp * time) % span) - im.width), y = Math.round(c.wy - S * c.f - im.height * .6); if (y > H || y + im.height < 0) return; ctx.globalAlpha = c.a * fade; ctx.drawImage(im, x, y) }); ctx.globalAlpha = 1 }
       function layer(L, wy, f, S) { const y = Math.round(wy * H - L.M - S * f); if (y > H || y + L.h < 0) return y; ctx.drawImage(L.cv, 0, y); return y }
-      function haze(y, a, h) { y = Math.round(y);[.2, .5, 1, .5, .2].forEach((k, i) => { ctx.fillStyle = 'rgba(225,240,255,' + a * k + ')'; ctx.fillRect(0, y - h + Math.round(i * h * .4), W, Math.round(h * .4) + 1) }) }
+      function haze(y, a, h) { y = Math.round(y);[.2, .5, 1, .5, .2].forEach((k, i) => { ctx.fillStyle = 'rgba(110,80,140,' + a * k + ')'; ctx.fillRect(0, y - h + Math.round(i * h * .4), W, Math.round(h * .4) + 1) }) }
       function drawField(S, time) {
-        const top = Math.round(WY.field * H - S * F2.field), Fh = 1.7 * H; if (top > H) return; ctx.fillStyle = '#6aab4e'; ctx.fillRect(0, Math.max(0, top), W, H);
+        const top = Math.round(WY.field * H - S * F2.field), Fh = 1.7 * H; if (top > H) return; ctx.fillStyle = '#44564b'; ctx.fillRect(0, Math.max(0, top), W, H);
         const N = 16; for (let i = 0; i < N; i++) {
           const ty = Math.pow((i + 1) / N, 1.9), y = Math.round(top + Fh * ty), y1 = Math.round(top + Fh * Math.pow((i + 2) / N, 1.9)); if (y > H + 4 || y1 < -4) continue;
-          ctx.fillStyle = i & 1 ? '#5f9e46' : '#68a94c'; ctx.fillRect(0, y, W, y1 - y); ctx.fillStyle = '#3f6e2c'; ctx.fillRect(0, y1 - 1, W, ty > .5 ? 2 : 1);
+          ctx.fillStyle = i & 1 ? '#3f5047' : '#43554a'; ctx.fillRect(0, y, W, y1 - y); ctx.fillStyle = '#2f3b39'; ctx.fillRect(0, y1 - 1, W, ty > .5 ? 2 : 1);
           const cls = ty < .22 ? 0 : ty < .55 ? 1 : 2, z = [7, 13, 24][cls], sp = Math.round(z * 1.9); if (y1 - z * 1.6 > H) continue;
           for (let x = -(i & 1) * (sp >> 1) - sp, j = 0; x < W + sp; x += sp, j++) { const v = ((Math.floor(j / 4) % 3) + 3) % 3, sw = cls == 2 ? Math.round(Math.sin(time * 1.6 + x * .02 + i * .7) * .9) : 0; ctx.drawImage(A.plants[v][cls], x - z + sw, y1 - Math.ceil(z * 1.6) + 1) }
         }
       }
       /* rumput depan: helai pixel 3 nada, goyang pelan per langkah 1 piksel (tidak berkedip) */
       function drawGrass(S, time) {
-        const y0 = Math.round(GW * H - S * F2.grass); if (y0 > H + 4) return; const cols = [['#1b5224', '#32823a', '#6fb94d'], ['#154520', '#2d7a33', '#86c657']];
+        const y0 = Math.round(GW * H - S * F2.grass); if (y0 > H + 4) return; const cols = [['#1f2f32', '#2c433f', '#475c4c'], ['#1c292f', '#29403b', '#506252']];
         for (let L = 0; L < 2; L++) {
           const c = cols[L], fy = y0 + Math.round((L ? .13 : .035) * H); ctx.fillStyle = c[0]; ctx.fillRect(0, fy, W, H - fy + 2);
           A.grass[L].forEach(b => {
@@ -8318,19 +8832,19 @@
       }
       function drawFlags(S, time) {
         const y0 = Math.round(WY.A * H - A.A.M - S * F2.A); if (y0 > H || y0 + A.A.M < -20) return;
-        A.flags.forEach(f => { const x = Math.round(f.x), y = y0 + Math.round(f.y); ctx.fillStyle = '#5b4a3a'; ctx.fillRect(x, y - 9, 1, 9); for (let i = 0; i < 7; i++) { const o = Math.round(Math.sin(time * 4 + f.x + i * .8) * 1.2 * (i / 6)); ctx.fillStyle = '#c9453f'; ctx.fillRect(x + 1 + i, y - 9 + o, 1, 4 - (i > 4 ? 1 : 0)); ctx.fillStyle = '#e3665b'; ctx.fillRect(x + 1 + i, y - 9 + o, 1, 1) } })
+        A.flags.forEach(f => { const x = Math.round(f.x), y = y0 + Math.round(f.y); ctx.fillStyle = '#362f3c'; ctx.fillRect(x, y - 9, 1, 9); for (let i = 0; i < 7; i++) { const o = Math.round(Math.sin(time * 4 + f.x + i * .8) * 1.2 * (i / 6)); ctx.fillStyle = '#c9453f'; ctx.fillRect(x + 1 + i, y - 9 + o, 1, 4 - (i > 4 ? 1 : 0)); ctx.fillStyle = '#e3665b'; ctx.fillRect(x + 1 + i, y - 9 + o, 1, 1) } })
       }
-      function drawBirds(S, time) { ctx.fillStyle = '#2a3550'; A.birds.forEach(b => { const x = Math.round(((b.x + b.sp * time) % (W + 60)) - 30), y = Math.round(b.wy - S * .9 + Math.sin(time * 1.3 + b.ph) * 3); if (y < -6 || y > H + 6) return; const up = (time * 5 + b.ph | 0) & 1; (up ? [[-3, -1], [-2, 0], [-1, 0], [0, 1], [1, 0], [2, 0], [3, -1]] : [[-3, 0], [-2, -1], [-1, 0], [0, 1], [1, 0], [2, -1], [3, 0]]).forEach(p => ctx.fillRect(x + p[0], y + p[1], 1, 1)) }) }
+      function drawBirds(S, time) { ctx.fillStyle = '#050409'; A.birds.forEach(b => { const x = Math.round(((b.x + b.sp * time) % (W + 60)) - 30), y = Math.round(b.wy - S * .9 + Math.sin(time * 1.3 + b.ph) * 3); if (y < -6 || y > H + 6) return; const up = (time * 5 + b.ph | 0) & 1; (up ? [[-3, -1], [-2, 0], [-1, 0], [0, 1], [1, 0], [2, 0], [3, -1]] : [[-3, 0], [-2, -1], [-1, 0], [0, 1], [1, 0], [2, -1], [3, 0]]).forEach(p => ctx.fillRect(x + p[0], y + p[1], 1, 1)) }) }
       function drawLeaves(dt, time, a) {
         if (a <= .01) return; ctx.globalAlpha = a;
-        A.leaves.forEach(l => { l.x += l.vx * dt; l.y += (l.vy + Math.sin(time * 2 + l.ph) * 9) * dt; l.rot += dt * 2; if (l.x > W + 6) { l.x = -6; l.y = Math.random() * H } if (l.y > H + 6) l.y = -6; const x = Math.round(l.x), y = Math.round(l.y); ctx.fillStyle = l.col; if ((l.rot | 0) & 1) { ctx.fillRect(x, y, 2, 1); ctx.fillRect(x + 1, y + 1, 2, 1) } else { ctx.fillRect(x, y + 1, 2, 1); ctx.fillRect(x + 1, y, 2, 1) } }); ctx.globalAlpha = 1
+        A.leaves.forEach(l => { l.x += l.vx * .35 * dt; l.y -= (l.vy + 8 - Math.sin(time * 2 + l.ph) * 9) * dt; l.rot += dt * 2; if (l.x > W + 6) { l.x = -6; l.y = Math.random() * H } if (l.y < -6) { l.y = H + 6; l.x = Math.random() * W } const x = Math.round(l.x), y = Math.round(l.y); ctx.fillStyle = l.col; if ((l.rot | 0) & 1) { ctx.fillRect(x, y, 2, 1); ctx.fillRect(x + 1, y + 1, 2, 1) } else { ctx.fillRect(x, y + 1, 2, 1); ctx.fillRect(x + 1, y, 2, 1) } }); ctx.globalAlpha = 1
       }
       function frame(now) {
         if (done) return; raf = requestAnimationFrame(frame);
         const el = (now - t0) / 1000, dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now;
         const sH = camS(el), S = Math.round(sH * H), time = el, sk = skipAt ? cl((now - skipAt) / 450) : 0;
         ctx.drawImage(A.sky, 0, Math.round(-.35 * H - S * F2.sky));
-        { const sx = Math.round(W * .77), sy = Math.round(.27 * H - S * F2.sun), r = Math.round(H * .06);[[r * 3.4, 'rgba(255,240,190,.10)'], [r * 2.4, 'rgba(255,240,190,.14)'], [r * 1.6, 'rgba(255,244,200,.22)'], [r, '#fff6d2']].forEach(a => disc(ctx, a[1], sx, sy, Math.round(a[0]))) }
+        { const sx = Math.round(W * .77), sy = Math.round(.27 * H - S * F2.sun), r = Math.round(H * .06);[[r * 3.4, 'rgba(170,170,255,.10)'], [r * 2.4, 'rgba(170,170,255,.14)'], [r * 1.6, 'rgba(200,200,255,.22)'], [r, '#e9e6f8']].forEach(a => disc(ctx, a[1], sx, sy, Math.round(a[0]))) }
         drawClouds(S, time, 0, .7, 1); drawBirds(S, time);
         { const y = Math.round(WY.mount * H - A.mount.M - S * F2.mount); if (y < H) ctx.drawImage(A.mount.cv, 0, y) }
         haze(WY.mount * H - S * F2.mount + .02 * H, .45, Math.round(.05 * H)); drawClouds(S, time, .7, 1, 1);
@@ -8340,12 +8854,20 @@
         tx.clearRect(0, 0, tcv.width, tcv.height); const TW = tcv.width, TH = tcv.height, ta = ez((el - .9) / 1.2) * (1 - ez((el - 4.4) / 1.2));
         if (ta > .01) {
           const fs = Math.max(26, Math.min(TW * .062, TH * .105)), px = TW * (TW > TH ? .27 : .5), py = TH * .3;
-          tx.save(); tx.globalAlpha = ta; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(8,20,60,.85)'; tx.shadowBlur = 20; tx.shadowOffsetY = 2; tx.lineJoin = 'round'; tx.strokeStyle = 'rgba(14,30,80,.55)';
+          tx.save(); tx.globalAlpha = ta; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(0,0,0,.9)'; tx.shadowBlur = 20; tx.shadowOffsetY = 2; tx.lineJoin = 'round'; tx.strokeStyle = 'rgba(30,14,0,.75)';
           if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fs * .1) + 'px';
-          tx.fillStyle = '#fff4d6'; tx.font = '700 ' + fs + 'px Cinzel, Georgia, "Times New Roman", serif'; tx.lineWidth = fs * .06; tx.strokeText('ECHOES', px, py); tx.fillText('ECHOES', px, py);
+          tx.fillStyle = '#fff4d6'; tx.font = '700 ' + fs * 1.18 + 'px UnifrakturCook, Cinzel, Georgia, "Times New Roman", serif'; tx.lineWidth = fs * .06; tx.strokeText('Echoes', px, py); tx.fillText('Echoes', px, py);
           if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fs * .26) + 'px';
-          tx.font = '700 ' + fs * .42 + 'px Cinzel, Georgia, "Times New Roman", serif'; tx.fillStyle = '#ffe7ad'; tx.lineWidth = fs * .05; tx.strokeText('OF THE ABYSS', px, py + fs * .78); tx.fillText('OF THE ABYSS', px, py + fs * .78);
-          tx.shadowBlur = 0; const lw = fs * 2.4 * ez((el - 1.4) / 1.2); tx.fillStyle = 'rgba(246,217,154,.8)'; tx.fillRect(px - lw / 2, py + fs * 1.12, lw, 1.5); tx.restore()
+          tx.font = '700 ' + fs * .42 + 'px Cinzel, Georgia, "Times New Roman", serif'; tx.fillStyle = '#ffe7ad'; tx.lineWidth = fs * .05; tx.strokeText('OF THE ABYSS', px, py + fs * .95); tx.fillText('OF THE ABYSS', px, py + fs * .95);
+          tx.shadowBlur = 0; const lw = fs * 2.4 * ez((el - 1.4) / 1.2); tx.fillStyle = 'rgba(246,217,154,.8)'; tx.fillRect(px - lw / 2, py + fs * 1.3, lw, 1.5); tx.restore()
+        }
+        {
+          const EN = window.getLang && window.getLang() == 'en', CP = EN ? [['Once, heroes conquered the five shadow dynasties.', 5, 7.4], ['Now the kingdom is silent... and the world has forgotten.', 7.6, 9.8], ['But the Abyss has not slept.', 10, 11.9]] : [['Dahulu, para pahlawan menaklukkan lima wangsa bayangan.', 5, 7.4], ['Kini kerajaan sunyi... dan dunia telah melupakan mereka.', 7.6, 9.8], ['Namun Abyss belum tidur.', 10, 11.9]];
+          for (const [tt, a0, a1] of CP) {
+            const ca = ez((el - a0) / .6) * (1 - ez((el - (a1 - .6)) / .6)); if (ca < .01) continue; const fz = Math.max(11, Math.min(TW * .034, TH * .052, TW * .92 / (tt.length * .46)));
+            tx.save(); tx.globalAlpha = ca; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.shadowColor = 'rgba(0,0,0,.95)'; tx.shadowBlur = 14; tx.shadowOffsetY = 1; tx.fillStyle = '#f1d9a4'; tx.font = 'italic 500 ' + fz + 'px "Cormorant Garamond", Georgia, serif'; if ('letterSpacing' in tx) tx.letterSpacing = Math.round(fz * .06) + 'px';
+            tx.fillText(tt, TW / 2, TH * .83); tx.shadowBlur = 0; tx.fillStyle = 'rgba(216,184,120,.7)'; const lw2 = Math.min(TW * .5, fz * tt.length * .3) * ca; tx.fillRect(TW / 2 - lw2 / 2, TH * .83 + fz * .95, lw2, 1); tx.restore()
+          }
         }
         const bl = Math.max(ez((el - 11.2) / 1.2), sk, 1 - ez(el / .9)); if (bl > 0) { ctx.fillStyle = 'rgba(0,0,0,' + bl + ')'; ctx.fillRect(0, 0, W, H) }
         if (el >= DUR || sk >= 1) finish();
@@ -8358,6 +8880,7 @@
       const skip = () => { if (!skipAt && !done) skipAt = performance.now() };
       const onKey = e => { if (e.code == 'Enter' || e.code == 'Space' || e.code == 'Escape') { e.preventDefault(); skip() } };
       const onResize = () => { clearTimeout(rz); rz = setTimeout(() => { if (!done) try { build() } catch (e) { } }, 200) };
+      try { document.fonts && (document.fonts.load('700 40px UnifrakturCook'), document.fonts.load('italic 500 20px "Cormorant Garamond"'), document.fonts.load('700 40px Cinzel')) } catch (e) { }
       try { menu.classList.add('hidden'); build(); root.addEventListener('pointerdown', skip); addEventListener('keydown', onKey); addEventListener('resize', onResize); t0 = last = performance.now(); raf = requestAnimationFrame(frame) } catch (e) { console.error(e); done = false; finish() }
     })();
   </script>
