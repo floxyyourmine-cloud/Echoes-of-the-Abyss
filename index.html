@@ -2770,7 +2770,7 @@
       if (room) for (let j = 0, n = 0; j < 2 * Math.max(0, wave - 7) && n < 400; n++) { const x = 200 + R() * 560, y = 50 + R() * 380; if (!blk(x, y, 9)) { ex.push([['skel', 'mage', 'slime'][j % 3], x, y]); j++ } }   // gelombang 8-10: musuh tambahan
       es = (room ? L2 : L).slice(0, Math.min(8 + EXTRA_ENEMIES, 3 + wave + EXTRA_ENEMIES)).concat(ex).map(([k, x, y], i) => { const e = mk(k, x, y); e.hp = e.mhp = e.hp * (1 + Math.max(0, wave - 5) * .12); e.sd = i * .14; e.st = 1.1 + e.sd; e.sw = e.st; e.sx = 0; return e }); SFX.summon()
     }
-    function reset() { const pot = p ? p.pot : 3; p = { x: lobby ? 320 : 60, y: lobby ? 320 : DY, vx: 0, vy: 0, r: 5, hp: mhp(), st: 100, stT: 0, face: 0, cdA: 0, combo: 0, comboT: 0, dod: 0, dx: 0, dy: 0, inv: 0, hold: 0, sc: [0, 0, 0], skb: 0, spn: 0, fa: 0, spv: 0, dsp: 0, ec: 0, focus: 0, pot, potC: 0, hurt: 0, swing: 0, dead: 0, recoil: 0, sd: 1, sa: 1, al: 0, rmax: .18, hn: 0, wb: 0, wph: 0, idt: 0, dfx: 0 }; gh = []; dp = []; SQ = []; spawn() }
+    function reset() { const pot = p ? p.pot : 3; p = { x: lobby ? 320 : 60, y: lobby ? 320 : DY, vx: 0, vy: 0, r: 5, hp: mhp(), st: 100, stT: 0, face: 0, cdA: 0, combo: 0, comboT: 0, dod: 0, dx: 0, dy: 0, inv: 0, hold: 0, sc: [0, 0, 0], skb: 0, spn: 0, fa: 0, spv: 0, dsp: 0, ec: 0, focus: 0, pot, potC: 0, hurt: 0, swing: 0, dead: 0, recoil: 0, sd: 1, sa: 1, al: 0, rmax: .18, hn: 0, wb: 0, wph: 0, idt: 0, dfx: 0, an: null, buf: 0 }; gh = []; dp = []; SQ = []; spawn() }
     const mul = () => { const w = WP[wi]; return (1 + (w.sc.reduce((s, k) => s + A[k], 0) / w.sc.length - 5) * .08) * (p.focus > 0 ? 1.5 : 1) };
     function dn(x, y, s, crit, col) { fx.push({ k: 't', x, y, s, col: col || (crit ? '#ffd34d' : '#fff'), crit, life: .8, max: .8 }) }
     function hurt(d) {
@@ -2792,7 +2792,7 @@
     const SH = [[{ hn: 0, sd: 1, r: 30, arc: 1.7, lg: 60 }, { hn: 1, sd: -1, r: 30, arc: 1.7, lg: 60 }, { hn: 2, sd: 1, r: 40, arc: 2.5, lg: 130 }], [{ hn: 0, sd: 1, r: 46, arc: .5, lg: 70 }, { hn: 1, sd: -1, r: 40, arc: 1.5, lg: 50 }, { hn: 2, sd: 1, r: 68, arc: .45, lg: 170 }], [], [], [{ hn: 0, sd: 1, r: 24, arc: .7, lg: 60 }, { hn: 1, sd: -1, r: 24, arc: 1.6, lg: 60 }, { hn: 2, sd: 1, r: 32, arc: 2.6, lg: 90 }]];
     const MELEE_R = 1.25, MELEE_A = 1.2;
     function melee(r, arc, d, kb, sh) {
-      r *= MELEE_R; arc = arc >= 6.2 ? arc : arc < 1 ? Math.min(1, arc * 1.5) : Math.min(6.2, arc * MELEE_A); SFX.swing(wi); sh = sh || SH[wi][2] || { hn: 2, sd: 1, lg: 50 }; const a = p.face, sd = sh.sd; const lf = wi == 0 || wi == 1 || wi == 4 ? .3 : .22; fx.push({ k: 'slash', x: p.x, y: p.y, a, arc, r, life: lf, max: lf, sd, w: wi, hn: sh.hn });
+      if (!AN_KEEP) p.an = null; r *= MELEE_R; arc = arc >= 6.2 ? arc : arc < 1 ? Math.min(1, arc * 1.5) : Math.min(6.2, arc * MELEE_A); SFX.swing(wi); sh = sh || SH[wi][2] || { hn: 2, sd: 1, lg: 50 }; const a = p.face, sd = sh.sd; const lf = sh.lf || (wi == 0 || wi == 1 || wi == 4 ? .3 : .22); fx.push({ k: 'slash', x: p.x, y: p.y, a, arc, r, life: lf, max: lf, sd, w: wi, hn: sh.hn });
       for (let i = 0; i < 8; i++) { const q = a + sd * (-arc / 2 + arc * i / 7); dp.push({ k: 'p', x: p.x + Math.cos(q) * r * .9, y: p.y + Math.sin(q) * r * .9, vx: -Math.sin(q) * sd * 40 + Math.cos(q) * 20, vy: Math.cos(q) * sd * 40 + Math.sin(q) * 20, life: .2 + R() * .15, max: .35, s: 1 + R() * 1.5, c: wi == 4 ? '#ffb48a' : wi == 1 ? '#ff9a9a' : '#e8f2ff' }) }
       if (sh.hn == 2 && (wi == 0 || wi == 4)) { fx.push({ k: 'ring', x: p.x + Math.cos(a) * r * .6 * (wi == 0), y: p.y + Math.sin(a) * r * .6 * (wi == 0), r: (wi == 0 ? 20 : 26) * MELEE_R, life: .3, max: .3, col: wi == 0 ? '#e8f2ff' : '#ffb48a' }); shake = Math.max(shake, 2) }
       for (let i = 0; i < 10; i++) { const q = a + (R() - .5) * Math.min(arc, 3.5), d2 = r * (.6 + R() * .5); dp.push({ k: 'p', x: p.x + Math.cos(q) * d2, y: p.y + Math.sin(q) * d2, vx: Math.cos(q) * 70, vy: Math.sin(q) * 70, life: .3 + R() * .25, max: .55, s: 1.5 + R() * 2, c: WCOL[wi] }) } shake = Math.max(shake, 2.5); p.swing = .14; p.sd = sd; p.sa = arc; p.hn = sh.hn; p.vx += Math.cos(a) * sh.lg; p.vy += Math.sin(a) * sh.lg;
@@ -2802,14 +2802,98 @@
     function ultSweep(r, d, kb) { es.slice().forEach(e => { if (e.sw <= 0 && dist(p, e) < r + e.r + HB()) hit(e, d, p.x, p.y, kb) }) }
     function shoot(a, d, s, col, aoe = 0) { SFX.shot(aoe); if (aoe) fx.push({ k: 'rune', x: p.x, y: p.y + 4, life: .4, max: .4 }); p.recoil = .18; fx.push({ k: 'muzz', x: p.x + Math.cos(a) * 14, y: p.y + Math.sin(a) * 14, a, col, life: .18, max: .18, aoe }); pr.push({ x: p.x + Math.cos(a) * 8, y: p.y + Math.sin(a) * 8, vx: Math.cos(a) * s, vy: Math.sin(a) * s, d, r: wi == 2 && !aoe ? 5 : 3, col, own: 'p', life: 1.2, aoe }) }
     function boom(x, y, r, d) { SFX.boom(r); arcBlast(x, y, r); es.slice().forEach(e => { if (Math.hypot(e.x - x, e.y - y) < r + e.r + HB()) hit(e, d, x, y, 90) }) }
+    // ===== ANIMASI SERANGAN DASAR v2: windup -> strike -> follow-through (keyframe + easing) =====
+    // Setiap hit punya keyframe sendiri. Damage/proyektil keluar tepat di akhir windup (hits[]),
+    // jadi ayunan terasa punya antisipasi, tenaga, dan pemulihan, bukan sekadar sapuan linear.
+    const AN_TW = 6.2832;
+    const AN_D = { ro: 0, ex: 0, lat: 0, sr: 0, sc: 1, lun: 0, so: 0, tr: 0, exA: 0, exB: 0, roA: 0, roB: 0, pull: 0, orb: 0, rec: 0 };
+    const AN_E = {
+      lin: u => u, ios: u => .5 - .5 * Math.cos(Math.PI * u), o2: u => 1 - (1 - u) * (1 - u), o3: u => 1 - Math.pow(1 - u, 3), o4: u => 1 - Math.pow(1 - u, 4),
+      io3: u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2
+    };
+    let AN_KEEP = 0;
+    const effArc = a => a >= 6.2 ? a : a < 1 ? Math.min(1, a * 1.5) : Math.min(6.2, a * MELEE_A);
+    const K_ = (t, v, e) => ({ t, v, e });
+    function anBuild(w, hn, big, A, s) {
+      const a2 = A / 2, TW = AN_TW, K = K_; let kf, hits, cd, lf = .24;
+      if (w == 0) {            // PEDANG: tebas kiri, tebas balik kanan, lalu putar bilah & hantam besar
+        if (hn == 0) { kf = [K(0, { so: 1 }), K(.05, { ro: -s * (a2 + .5), ex: -2.5, lun: -1.2, lat: -s * .8 }, 'ios'), K(.135, { ro: s * (a2 + .1), ex: 1.5, lun: 3.2 }, 'o3'), K(.2, { ro: s * (a2 + .3), ex: .6, lun: 2.2 }, 'o2'), K(.3, { so: 1 }, 'ios')]; hits = [.06]; cd = .26 }
+        else if (hn == 1) { kf = [K(0, { so: 1 }), K(.042, { ro: -s * (a2 + .55), ex: -2, lun: -1.5, lat: -s * 1.2 }, 'ios'), K(.12, { ro: s * (a2 + .12), ex: 2, lun: 4, lat: s * .4 }, 'o3'), K(.19, { ro: s * (a2 + .3), ex: .8, lun: 2.5 }, 'o2'), K(.27, { so: 1 }, 'ios')]; hits = [.05]; cd = .24 }
+        else { kf = [K(0, { so: 1 }), K(.055, { ro: -s * (a2 + .35), ex: -3, lun: -2.5, lat: -s * 1.5 }, 'o2'), K(.2, { ro: -s * (a2 + .2), ex: 1.5, lun: -1, sr: s * TW, sc: 1.18, tr: 1 }, 'ios'), K(.31, { ro: s * (a2 + .15), ex: 2, lun: 7, sr: s * TW, sc: 1.38 }, 'o4'), K(.42, { ro: s * (a2 + .4), ex: 1, lun: 5, sr: s * TW, sc: 1.22 }, 'o2'), K(.56, { sr: s * TW, so: 1 }, 'ios')]; hits = [.205]; cd = .5; lf = .32 }
+      }
+      else if (w == 1) {       // TOMBAK: tusuk cepat, sapu samping, lalu PUTAR tombak 2x dan tusukan dalam
+        if (hn == 0) { kf = [K(0, {}), K(.055, { ex: -4.5, lun: -1.6 }, 'ios'), K(.135, { ex: 19, lun: 5.5, sc: 1.05 }, 'o4'), K(.19, { ex: 16, lun: 4.4, sc: 1.04 }, 'lin'), K(.3, {}, 'ios')]; hits = [.06]; cd = .27; lf = .26 }
+        else if (hn == 1) { kf = [K(0, {}), K(.05, { ro: -s * (a2 + .35), ex: -2, lun: -1.2, lat: -s * 1.5 }, 'ios'), K(.14, { ro: s * (a2 + .12), ex: 6, lun: 3.4, lat: s * .5 }, 'o3'), K(.2, { ro: s * (a2 + .25), ex: 3.5, lun: 2.2 }, 'o2'), K(.3, {}, 'ios')]; hits = [.055]; cd = .26 }
+        else { kf = [K(0, {}), K(.07, { ex: -3, lun: -2, lat: -s, sc: 1.02 }, 'o2'), K(.31, { ex: 3, lun: -.5, sr: s * TW * 2, tr: 1, sc: 1.1 }, 'ios'), K(.4, { ex: 30, lun: 11, sr: s * TW * 2, sc: 1.2 }, 'o4'), K(.47, { ex: 28, lun: 10, sr: s * TW * 2, sc: 1.18 }, 'lin'), K(.63, { sr: s * TW * 2 }, 'ios')]; hits = [.315]; cd = .56; lf = .34 }
+      }
+      else if (w == 2) {       // BUSUR: tarik - lepas - string bergetar; hit 2 = dua panah beruntun; hit 3 = tarik penuh
+        if (hn == 0) { kf = [K(0, {}), K(.055, { pull: .92, ex: -1.5, ro: -.02 }, 'o2'), K(.065, { pull: 0, rec: 1, ex: 2.5, ro: .05, lun: -1.6 }, 'o3'), K(.14, { rec: .55, ex: 1, ro: .02, lun: -.6 }, 'lin'), K(.3, {}, 'o2')]; hits = [.06]; cd = .26 }
+        else if (hn == 1) { kf = [K(0, {}), K(.04, { pull: .8, ex: -1.2 }, 'o2'), K(.048, { pull: 0, rec: .8, ex: 2, lun: -1.2 }, 'o3'), K(.085, { pull: .8, ex: -1, rec: .2 }, 'o2'), K(.093, { pull: 0, rec: 1, ex: 2.6, ro: .05, lun: -1.8 }, 'o3'), K(.17, { rec: .6, ex: 1, lun: -.6 }, 'lin'), K(.3, {}, 'o2')]; hits = [.045, .09]; cd = .27 }
+        else { kf = [K(0, {}), K(.15, { pull: 1, ex: -2.5, ro: -.05, lun: 1.2 }, 'o2'), K(.16, { pull: 0, rec: 1.4, ex: 5, ro: .08, lun: -3 }, 'o4'), K(.26, { rec: 1, ex: 2.5, lun: -1.5 }, 'o2'), K(.4, { rec: .3, ex: .6 }, 'o2'), K(.52, {}, 'ios')]; hits = [.155]; cd = .46 }
+      }
+      else if (w == 3) {       // TONGKAT: kumpulkan orb, hentak ke depan; hit 3 = putar tongkat lalu ledakkan
+        if (hn == 0) { kf = [K(0, {}), K(.07, { ro: -.4, ex: -2.5, orb: 1, lat: -.8 }, 'o2'), K(.13, { ro: .12, ex: 5.5, orb: .5, lun: 2 }, 'o3'), K(.2, { ro: .04, ex: 3, orb: .3, lun: 1 }, 'o2'), K(.34, {}, 'ios')]; hits = [.075]; cd = .3 }
+        else if (hn == 1) { kf = [K(0, {}), K(.06, { ro: -.7, ex: -1.5, orb: 1, lat: -1 }, 'o2'), K(.14, { ro: .6, ex: 4, orb: .6, lat: 1, lun: 2 }, 'o3'), K(.22, { ro: .25, ex: 2, orb: .2, lun: 1 }, 'o2'), K(.34, {}, 'ios')]; hits = [.085]; cd = .3 }
+        else { kf = [K(0, {}), K(.07, { ro: -.8, ex: -3, orb: 1.2, lat: -1.5 }, 'o2'), K(.24, { ro: -.15, ex: -1, sr: TW, orb: 2.2, tr: 1 }, 'ios'), K(.31, { ro: .1, ex: 8, sr: TW, orb: .9, lun: 3 }, 'o4'), K(.42, { ro: .04, ex: 5, sr: TW, orb: .5, lun: 1.5 }, 'o2'), K(.58, { sr: TW }, 'ios')]; hits = [.245]; cd = .52 }
+      }
+      else {                   // BELATI: tusuk diagonal, tebas silang, lalu pusaran 360 dengan tangan menyilang
+        if (hn == 0) { kf = [K(0, {}), K(.04, { ro: -s * .5, exA: -3, roA: -.35, lun: -1 }, 'ios'), K(.1, { ro: s * .1, exA: 14, exB: 3, roA: .15, lun: 3.4 }, 'o3'), K(.14, { ro: s * .18, exA: 11, exB: 2, lun: 2.6 }, 'o2'), K(.22, {}, 'ios')]; hits = [.045]; cd = .19 }
+        else if (hn == 1) { kf = [K(0, {}), K(.035, { ro: -s * (a2 + .4), exB: -2, roB: s * .3, lun: -1.2 }, 'ios'), K(.1, { ro: s * (a2 + .1), exA: 2, exB: 8, lun: 3.6 }, 'o3'), K(.145, { ro: s * (a2 + .25), exA: 1, exB: 5, lun: 2.4 }, 'o2'), K(.23, {}, 'ios')]; hits = [.04]; cd = .2 }
+        else { kf = [K(0, {}), K(.07, { roA: -.75, roB: .75, exA: 2, exB: 2, lun: -1.5 }, 'ios'), K(.26, { ro: s * TW, roA: -.2, roB: .2, exA: 9, exB: 9, lun: 4, sc: 1.15, tr: 1 }, 'o2'), K(.34, { ro: s * TW, exA: 5, exB: 5, lun: 2, sc: 1.08 }, 'o2'), K(.42, { ro: s * TW }, 'ios')]; hits = [.075]; cd = .37; lf = .3 }
+      }
+      let tot = kf[kf.length - 1].t;
+      if (big) {               // charged: pemain sudah menahan, jadi windup dipangkas
+        const h0 = hits[0], ws = .3, f = t => t <= h0 ? t * ws : t - h0 * (1 - ws);
+        kf.forEach(k => k.t = f(k.t)); hits = hits.map(f); cd = f(cd); tot = kf[kf.length - 1].t
+      }
+      return { w, hn, big, kf, hits, cd, lf, tot, t: 0, cur: null, pv: null }
+    }
+    function anCh(AN, tt) {
+      const K = AN.kf; tt = Math.max(0, Math.min(AN.tot, tt)); let i = 0; while (i < K.length - 2 && tt > K[i + 1].t) i++;
+      const a = K[i], b = K[i + 1], u = Math.min(1, Math.max(0, (tt - a.t) / Math.max(1e-4, b.t - a.t))), e = (AN_E[b.e] || AN_E.ios)(u), o = {};
+      for (const k in AN_D) { const va = a.v[k] === undefined ? AN_D[k] : a.v[k], vb = b.v[k] === undefined ? AN_D[k] : b.v[k]; o[k] = va + (vb - va) * e }
+      return o
+    }
+    function anPose(AN) {
+      const c = anCh(AN, AN.t), c2 = anCh(AN, AN.t - .03); c.srv = ((c.sr + c.ro) - (c2.sr + c2.ro)) / .03;
+      if (AN.pv && AN.t < .06) { const w = AN_E.ios(AN.t / .06); for (const k in AN_D) c[k] = AN.pv[k] + (c[k] - AN.pv[k]) * w }   // sambung mulus dari pose hit sebelumnya
+      AN.cur = c; return c
+    }
+    function anTrail(cx, cy, r, ang, dir, tr, col, n) {
+      n = n || 7; if (tr < .03 || !dir) return; g.save(); g.globalCompositeOperation = 'lighter'; g.lineCap = 'round';
+      for (let i = 0; i < n; i++) { const a0 = ang - dir * i * .24, a1 = a0 - dir * .24; g.strokeStyle = col; g.globalAlpha = tr * (1 - i / n) * .75; g.lineWidth = 3.4 - i * .38; g.beginPath(); g.arc(cx, cy, r, a0, a1, dir > 0); g.stroke() }
+      g.restore()
+    }
     function atk(h) {
-      const w = WP[wi], a = p.face, n = p.combo % w.hits, fin = n == w.hits - 1, big = h > 0; let m = mul();
-      if (big) m *= 1 + Math.min(h, 1.5) * 1.3; else { p.combo = n + 1; p.comboT = .7; if (fin) m *= 2 }
-      const d = w.dmg * m;
-      p.hn = big ? 2 : n; if (fin && !big) dn(p.x, p.y - 22, 'HIT 3  x2', 0, '#ffd34d'); if (w.rng) { const sh = SH[wi][p.hn]; melee(sh.r * (big ? 1.35 : 1), sh.arc * (big ? 1.3 : 1), d, big || fin ? 150 : 70, sh) }
-      else if (wi == 2) { const bs = (o, dm, sp) => shoot(a + o, dm, sp, '#8bd17c'); if (big) { bs(0, d, 340); bs(.1, d, 340); bs(-.1, d, 340) } else if (n == 0) bs(0, d, 340); else if (n == 1) { bs(-.05, d * .5, 380); bs(.05, d * .5, 380) } else { bs(0, d, 430); const b = pr[pr.length - 1]; b.pierce = 1; b.big = 1 } }
-      else { const ss = (o, dm, ap, sp) => shoot(a + o, dm, sp, '#b48cff', ap); if (big) ss(0, d, 40, 230); else if (n == 0) ss(0, d, 24, 230); else if (n == 1) { ss(-.14, d * .5, 22, 250); ss(.14, d * .5, 22, 250) } else ss(0, d, 48, 170) }
-      p.rmax = p.recoil = big ? .3 : (n == 2 ? .32 : n == 1 ? .22 : .18); p.cdA = big ? .5 : w.cd * (fin ? 1.7 : 1)
+      const w = WP[wi], n = p.combo % w.hits, fin = n == w.hits - 1, big = h > 0, W = wi; let m = mul();
+      if (big) m *= 1 + Math.min(h, 1.5) * 1.3; else { p.combo = n + 1; if (fin) m *= 2 }
+      const d = w.dmg * m, hn = big ? 2 : n; p.hn = hn;
+      if (fin && !big) dn(p.x, p.y - 22, 'HIT 3  x2', 0, '#ffd34d');
+      const sh = w.rng ? SH[wi][hn] : null, sd = sh ? sh.sd : 1, A = sh ? effArc(sh.arc * (big ? 1.3 : 1)) : 0, AN = anBuild(wi, hn, big, A, sd);
+      if (p.an && p.an.cur) { const pv = Object.assign({}, p.an.cur); pv.sr = wrapA(pv.sr); pv.ro = wrapA(pv.ro); AN.pv = pv }
+      p.an = AN; p.buf = 0; if (!big) p.comboT = AN.tot + .42;
+      const ok = () => p.an === AN && wi === W && p.dead <= 0 && ULTT <= 0, at = (t, f) => skLater(t, () => { if (ok()) f() });
+      if (w.rng) {
+        at(AN.hits[0], () => {
+          AN_KEEP = 1; try { melee(sh.r * (big ? 1.35 : 1), sh.arc * (big ? 1.3 : 1), d, big || fin ? 150 : 70, Object.assign({}, sh, { lf: AN.lf })) } finally { AN_KEEP = 0 }
+          if (hn == 2) { puff(p.x, p.y + 7, 3, '110,100,90', .6); if (wi == 1) { shake = Math.max(shake, 3.5) } }
+        })
+      }
+      else if (wi == 2) {
+        const bs = (o, dm, sp) => shoot(p.face + o, dm, sp, '#8bd17c'), rl = () => { p.recoil = 0 };
+        if (big) at(AN.hits[0], () => { bs(0, d, 340); bs(.1, d, 340); bs(-.1, d, 340); rl(); shake = Math.max(shake, 3) });
+        else if (n == 0) at(AN.hits[0], () => { bs(0, d, 340); rl() });
+        else if (n == 1) { at(AN.hits[0], () => { bs(-.05, d * .5, 380); rl() }); at(AN.hits[1], () => { bs(.05, d * .5, 380); rl() }) }
+        else at(AN.hits[0], () => { bs(0, d, 430); const b = pr[pr.length - 1]; b.pierce = 1; b.big = 1; rl(); shake = Math.max(shake, 3) })
+      }
+      else {
+        const ss = (o, dm, ap, sp) => shoot(p.face + o, dm, sp, '#b48cff', ap), rl = () => { p.recoil = 0 };
+        if (big) at(AN.hits[0], () => { ss(0, d, 40, 230); rl() });
+        else if (n == 0) at(AN.hits[0], () => { ss(0, d, 24, 230); rl() });
+        else if (n == 1) at(AN.hits[0], () => { ss(-.14, d * .5, 22, 250); ss(.14, d * .5, 22, 250); rl() });
+        else at(AN.hits[0], () => { ss(0, d, 48, 170); rl(); shake = Math.max(shake, 2.5) })
+      }
+      p.rmax = .18; p.cdA = AN.cd
     }
     // ===== SKILL BARU: 3 per senjata (Z X C) =====
     let SQ = []; const sk = (n, cd, dur, f) => ({ n, cd, dur, f });
@@ -2923,7 +3007,7 @@
     };
     // ===== EFEK TEBAL =====
     const WCL = ['110,175,255', '255,70,70', '150,255,120', '200,120,255', '255,120,100'], WCOL = ['#bfe4ff', '#ff8a8a', '#b6f08a', '#e6b8ff', '#ff9a8a']; let FLSH = 0, FLSC = '255,255,255', HST = 0;
-    function skCast(i) { FLSH = i == 2 ? .9 : .5; FLSC = WCL[wi]; shake = Math.max(shake, i == 2 ? 6 : 3); fx.push({ k: 'ring', x: p.x, y: p.y, r: i == 2 ? 38 : 26, w: wi == 2 || wi == 3 ? 3.5 : 1, life: .45, max: .45, col: 'rgb(' + WCL[wi] + ')' }); if (wi != 1) HST = Math.max(HST, i == 2 ? .07 : .04) }
+    function skCast(i) { p.an = null; p.buf = 0; FLSH = i == 2 ? .9 : .5; FLSC = WCL[wi]; shake = Math.max(shake, i == 2 ? 6 : 3); fx.push({ k: 'ring', x: p.x, y: p.y, r: i == 2 ? 38 : 26, w: wi == 2 || wi == 3 ? 3.5 : 1, life: .45, max: .45, col: 'rgb(' + WCL[wi] + ')' }); if (wi != 1) HST = Math.max(HST, i == 2 ? .07 : .04) }
     function pilFx(f, k) { const gr = g.createLinearGradient(0, f.y, 0, f.y - f.h); gr.addColorStop(0, 'rgba(' + f.c + ',' + k * .8 + ')'); gr.addColorStop(1, 'rgba(' + f.c + ',0)'); g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = gr; const w = f.w * (.4 + k * .6); g.fillRect(f.x - w / 2, f.y - f.h, w, f.h); g.fillStyle = 'rgba(255,255,255,' + k * .7 + ')'; g.fillRect(f.x - w / 6, f.y - f.h * .8, w / 3, f.h * .8); g.restore() }
     function gflame(q, k) { const a = 1 - k, r = q.s * (1.3 - a * .7), c1 = a < .25 ? '255,225,215' : a < .55 ? '255,90,70' : '200,25,25'; g.save(); g.globalCompositeOperation = 'lighter'; const gr = g.createRadialGradient(q.x, q.y, 0, q.x, q.y, r * 2); gr.addColorStop(0, 'rgba(' + c1 + ',' + k * .9 + ')'); gr.addColorStop(.5, 'rgba(255,60,40,' + k * .45 + ')'); gr.addColorStop(1, 'rgba(130,10,10,0)'); g.fillStyle = gr; g.beginPath(); g.arc(q.x, q.y, r * 2, 0, 7); g.fill(); g.restore() }
     /* ===== Efek tebasan baru: Sword & Daggers ===== */
@@ -3272,7 +3356,7 @@
     for (let i = 0; i < 5; i++) { const f0 = UL[i].f; UL[i].f = (a, m) => { f0(a, m); ultVfx(i, a, m) } }
     function castUlt() {
       if (ULT < ULT_MAX || ULTT > 0 || p.dead > 0) return; const U = UL[wi]; ULT = 0; ULTT = U.dur + .5; ULTF = 1.4; ULTN = U.n; ULTC = WCL[wi];
-      p.skb = p.cdA = U.dur; p.inv = Math.max(p.inv, U.dur + .5); p.combo = 0; p.hold = 0; SFX.ult(wi); FLSH = 1; FLSC = WCL[wi]; shake = Math.max(shake, 10); HST = Math.max(HST, .15);
+      p.an = null; p.buf = 0; p.skb = p.cdA = U.dur; p.inv = Math.max(p.inv, U.dur + .5); p.combo = 0; p.hold = 0; SFX.ult(wi); FLSH = 1; FLSC = WCL[wi]; shake = Math.max(shake, 10); HST = Math.max(HST, .15);
       fx.push({ k: 'ring', x: p.x, y: p.y, r: 50, w: 5, life: .6, max: .6, col: 'rgb(' + WCL[wi] + ')' }, { k: 'gl', x: p.x, y: p.y, r: 110, c: WCL[wi], life: .5, max: .5 }, { k: 'rune', x: p.x, y: p.y + 4, life: 1, max: 1, sc: 4, w: 3 });
       U.f(p.face, mul())
     }
@@ -3344,10 +3428,10 @@
       if (HST > 0) { HST -= dt; return } FLSH = Math.max(0, FLSH - dt * 2.2); ULTF = Math.max(0, ULTF - dt); ULTT = Math.max(0, ULTT - dt); if (ULTT <= 0) ULTH = 0; if (ULTT > 0) p.inv = Math.max(p.inv, .15); t += dt; msgT -= dt; if (P.KeyM) SFX.toggle(); if (P.KeyL) guide = !guide; shake = Math.max(0, shake - 20 * dt);
       if (p.dead > 0) { p.dead -= dt; if (p.dead <= 0) { toLobby(); reset() } return }
       { const due = SQ.filter(q => (q.t -= dt) <= 0); SQ = SQ.filter(q => q.t > 0); due.forEach(q => q.f()) }
-      p.sc = p.sc.map(v => v - dt);['cdA', 'skb', 'ec', 'focus', 'inv', 'hurt', 'swing', 'potC', 'comboT', 'stT', 'recoil'].forEach(k => p[k] -= dt);
-      if (p.comboT <= 0) p.combo = 0; p.al += ((M.d || p.cdA > 0 || p.recoil > 0 ? 1 : 0) - p.al) * Math.min(1, dt * 12);
+      p.sc = p.sc.map(v => v - dt);['cdA', 'skb', 'ec', 'focus', 'inv', 'hurt', 'swing', 'potC', 'comboT', 'stT', 'recoil'].forEach(k => p[k] -= dt); if (p.an) { p.an.t += dt; if (p.an.t >= p.an.tot) p.an = null } if (p.buf > 0) p.buf -= dt;
+      if (p.comboT <= 0) p.combo = 0; p.al += ((M.d || p.cdA > 0 || p.recoil > 0 || p.an ? 1 : 0) - p.al) * Math.min(1, dt * 12);
       if (p.stT <= 0) p.st = Math.min(100, p.st + 35 * dt);
-      for (let i = 0; i < 5; i++)if (P['Digit' + (i + 1)]) { if (wi != i) SFX.sw(); wi = i; p.combo = 0 }
+      for (let i = 0; i < 5; i++)if (P['Digit' + (i + 1)]) { if (wi != i) SFX.sw(); wi = i; p.combo = 0; p.an = null; p.buf = 0 }
       [['Digit6', 'VIT'], ['Digit7', 'STR'], ['Digit8', 'DEF'], ['Digit9', 'AGI'], ['Digit0', 'INT']].forEach(([k, s]) => { if (P[k] && pts > 0) { SFX.point(); A[s]++; pts--; if (s == 'VIT') p.hp += 8 } });
       if (window.mobAim && window.mobAim(touchAiming)) { /* HP: auto-lock musuh terdekat / arah joystick */ }
       else if (!touchAiming && touchJoy.active && (Math.abs(touchJoy.x) > 0.1 || Math.abs(touchJoy.y) > 0.1)) { p.face = Math.atan2(touchJoy.y, touchJoy.x) }
@@ -3356,7 +3440,7 @@
       let ix = (K.KeyD ? 1 : 0) - (K.KeyA ? 1 : 0), iy = (K.KeyS ? 1 : 0) - (K.KeyW ? 1 : 0);
       if (touchJoy.active) { ix = touchJoy.x; iy = touchJoy.y }
       const l = Math.hypot(ix, iy); if (l && !touchJoy.active) { ix /= l; iy /= l }
-      if (P.Space && p.st >= 25 && p.dod <= 0 && ULTT <= 0) { p.st -= 25; p.stT = .8; p.dod = .2; p.dsp = 0; p.inv = .22; p.dx = l ? ix : Math.cos(p.face); p.dy = l ? iy : Math.sin(p.face); fx.push({ k: 'ring', x: p.x, y: p.y, r: 8, life: .25, max: .25, col: '#9ef' }); p.dfx = 1; dodgeBurst(); SFX.dodge() }
+      if (P.Space && p.st >= 25 && p.dod <= 0 && ULTT <= 0) { p.st -= 25; p.stT = .8; p.an = null; p.buf = 0; p.dod = .2; p.dsp = 0; p.inv = .22; p.dx = l ? ix : Math.cos(p.face); p.dy = l ? iy : Math.sin(p.face); fx.push({ k: 'ring', x: p.x, y: p.y, r: 8, life: .25, max: .25, col: '#9ef' }); p.dfx = 1; dodgeBurst(); SFX.dodge() }
       if (p.dod > 0) { p.dod -= dt; mv(p, p.dx * (p.dsp || 300) * dt, p.dy * (p.dsp || 300) * dt) }
       else {
         const sp = (K.ShiftLeft || K.ShiftRight || touchJoy.sprint ? 125 : 85) * (1 + (A.AGI - 5) * .015) * (M.d && p.hold > .3 ? .45 : (p.cdA > 0 ? .7 : 1));
@@ -3372,7 +3456,8 @@
       }
       if (p.dfx) { if (p.dod > 0) dodgeTrail(); else { p.dfx = 0; dodgeEnd() } }
       if (M.d) { const ph = p.hold; p.hold += dt; if (ph < .6 && p.hold >= .6) SFX.ready() }
-      if (M.u) { M.u = 0; const h = p.hold; p.hold = 0; if (ULTT > 0) { } else if (h > .6 && p.st >= 30) { p.st -= 30; p.stT = .8; atk(h) } else if (p.cdA <= 0) atk(0) }
+      if (M.u) { M.u = 0; const h = p.hold; p.hold = 0; if (ULTT > 0) { } else if (h > .6 && p.st >= 30) { p.st -= 30; p.stT = .8; atk(h) } else if (p.cdA <= 0) atk(0); else if (h <= .6) p.buf = .22 }
+      if (p.buf > 0 && p.cdA <= 0 && ULTT <= 0 && p.dead <= 0 && !M.d) { p.buf = 0; atk(0) }
       [['KeyZ', 0], ['KeyX', 1], ['KeyC', 2]].forEach(([k, i]) => { const q = SK[wi][i]; if (P[k] && p.sc[i] <= 0 && p.skb <= 0) { p.sc[i] = q.cd; p.skb = q.dur; SFX.skill(i); skCast(i); q.f(p.face, mul()) } });
       if (P.KeyQ) castUlt();
       if (P.KeyE && p.ec <= 0) { p.ec = 12; p.focus = 5; SFX.focus(); fx.push({ k: 'ring', x: p.x, y: p.y, r: 20, life: .4, max: .4, col: '#ffd34d' }); dn(p.x, p.y - 14, 'BATTLE FOCUS', 0, '#ffd34d') }
@@ -3671,45 +3756,56 @@
       const ch = M.d && p.hold > .12, pull = Math.min(1, p.hold / .6), rc = p.recoil > 0 ? p.recoil / (p.rmax || .18) : 0, hn = p.hn, br = Math.sin(t * 2.5), hs = HSd, f = p.face, cf = Math.cos(f), sf = Math.sin(f),
         bl = p.dod > 0 ? 1 : p.wb, bob = Math.abs(Math.sin(p.wph)) * 1.5 * bl + Math.sin(p.idt) * .5, o = { lx: 0, ly: 0, sp: [], gr: [], fn: null }, side = hs >= 0 ? 1 : -1;
       if (wi == 0 || wi == 1 || wi == 4) {
-        const sw = p.swing > 0, pg = sw ? 1 - p.swing / .14 : 0, k = sw ? 1 : p.al, sd = p.sd; let ro = 0, ex = 0, sc = 1;
+        const AN = p.an, CH = AN ? anPose(AN) : null, sw = !AN && p.swing > 0, pg = sw ? 1 - p.swing / .14 : 0, k = AN ? Math.max(p.al, Math.min(1, AN.t / .05)) : (sw ? 1 : p.al), sd = p.sd; let ro = 0, ex = 0, sc = 1, lat = 0, sr = 0;
+        if (CH) { ro = CH.ro; ex = CH.ex; sc = CH.sc; lat = CH.lat; sr = CH.sr }
         if (sw) {
           ro = -sd * p.sa / 2 + sd * p.sa * Math.min(1, pg * 1.6); const s = Math.sin(pg * 3.14);
           if (wi == 1) { if (hn == 1) ex = s * 6; else { ro = 0; ex = s * (hn == 2 ? 34 : 18) * .78; sc = hn == 2 ? 1.15 : 1 } }
           else if (wi == 4) { if (hn == 0) { ro = 0; ex = s * 14 } else if (hn == 2) { ro = sd * pg * 6.28; sc = 1.1 } }
           else if (hn == 2) sc = 1 + .35 * s
         }
-        const lun = wi == 1 ? Math.max(0, ex - 6) * .55 : wi == 4 ? ex * .3 : 0; o.lx = cf * lun; o.ly = sf * lun;
+        const lun = CH ? CH.lun : (wi == 1 ? Math.max(0, ex - 6) * .55 : wi == 4 ? ex * .3 : 0), lsub = CH ? (wi == 1 ? lun : 0) : lun; o.lx = cf * lun; o.ly = sf * lun;
         const Cx = p.x + o.lx, Cy = p.y - 8 - bob + o.ly, a1 = f + ro;
         if (wi == 4) {
           for (const i of [-1, 1]) {
-            const rx = Cx + i * 10.5, ry = Cy + 11, bx = Cx + i * 5, by = Cy + 2, ar = Math.PI / 2 - i * .5 + Math.sin(t * 5 + i) * .06, fr = R2(a1, ((8 + ex) - lun) * k, i * 2.8 * k),
-              gx = lp(rx, bx, k) + fr[0], gy = lp(ry, by, k) + fr[1], a = lerpA(ar, a1, k); o.sp.push([4, gx, gy, a + Math.PI / 2, sc]); o.gr.push({ x: gx, y: gy, s: i })
+            const rx = Cx + i * 10.5, ry = Cy + 11, bx = Cx + i * 5, by = Cy + 2, ar = Math.PI / 2 - i * .5 + Math.sin(t * 5 + i) * .06, ai = a1 + (CH ? (i > 0 ? CH.roA : CH.roB) : 0), fr = R2(ai, ((8 + ex + (CH ? (i > 0 ? CH.exA : CH.exB) : 0)) - lsub) * k, (i * 2.8 + lat) * k),
+              gx = lp(rx, bx, k) + fr[0], gy = lp(ry, by, k) + fr[1], a = lerpA(ar, ai, k) + sr; o.sp.push([4, gx, gy, a + Math.PI / 2, sc]); o.gr.push({ x: gx, y: gy, s: i })
           }
+          if (CH && CH.tr > .03) o.fn = () => anTrail(Cx, Cy, 17 + Math.max(0, ex) + (CH.exA + CH.exB) / 2, a1, Math.sign(CH.srv), CH.tr, 'rgba(255,150,110,.9)')
         }
         else {
           const ar0 = wi == 0 ? -Math.PI / 2 + hs * .62 + br * .04 * hs + Math.sin(p.wph) * bl * .12 * hs : -Math.PI / 2 + hs * .1 + br * .02, IS = wi == 0 ? swIdle(hs, (1 - p.wb) * (1 - k) * (p.hurt > 0 || p.dod > 0 ? 0 : 1), ar0) : null,
             rx = Cx + hs * (wi == 1 ? 13 : wi == 0 ? 9.5 : 10.5) + (IS ? IS.dx : 0), ry = Cy + (wi == 1 ? 7 : wi == 0 ? 6 : 11) + (IS ? IS.dy : 0) - (wi == 0 ? side * Math.sin(p.wph - .45) * bl * 2.4 : 0), bx = Cx + hs * 7, by = Cy + 3, ar = ar0 + (IS ? IS.da : 0),
-            fr = R2(a1, ((8.5 + ex) - lun) * k, 0), gx = lp(rx, bx, k) + fr[0], gy = lp(ry, by, k) + fr[1], a = lerpA(ar, a1 + (wi == 0 && !sw ? -hs * .16 : 0), k); o.sp.push([wi, gx, gy, a + Math.PI / 2, sc]); o.gr.push({ x: gx, y: gy, s: side }); if (wi == 0) o.gr.push({ x: gx - Math.cos(a) * 4.5, y: gy - Math.sin(a) * 4.5, s: -side }); if (IS) o.fn = () => IS.fx(gx, gy, a)
+            fr = R2(a1, ((8.5 + ex) - lsub) * k, lat * k), gx = lp(rx, bx, k) + fr[0], gy = lp(ry, by, k) + fr[1], a = lerpA(ar, a1 + (wi == 0 && !sw ? -hs * .16 * (CH ? CH.so : 1) : 0), k) + sr; o.sp.push([wi, gx, gy, a + Math.PI / 2, sc]); o.gr.push({ x: gx, y: gy, s: side }); if (wi == 0) o.gr.push({ x: gx - Math.cos(a) * 4.5, y: gy - Math.sin(a) * 4.5, s: -side }); if (IS) o.fn = () => IS.fx(gx, gy, a); if (CH && CH.tr > .03) { const _f = o.fn, tr0 = CH.tr, tv = Math.sign(CH.srv), tl = (wi == 0 ? 25 : 20) * sc * .92; o.fn = () => { if (_f) _f(); anTrail(gx, gy, tl, a, tv, tr0, wi == 0 ? 'rgba(190,225,255,.9)' : 'rgba(255,150,140,.9)') } }
         }
       }
       else if (wi == 2) {
-        const k = (ch || rc > 0) ? 1 : p.al, rcc = hn == 1 ? Math.abs(Math.sin(rc * 6.28)) : rc, bx = (10 - rcc * 3 * (hn == 2 ? 1.6 : 1)) * k, Cx = p.x, Cy = p.y - 8 - bob,
-          fr = R2(f, bx, 0), gx = lp(Cx + hs * 11, Cx + hs * 3, k) + fr[0], gy = lp(Cy + 10, Cy + 3, k) + fr[1], a = lerpA(0, f, k), rel = ch ? -pull * 7 : (k > .5 ? rcc * 2 : .6);
+        const AN = p.an, CH = AN ? anPose(AN) : null, chA = CH ? CH.pull > .06 : ch, pv = CH ? CH.pull : pull, k = CH ? Math.max(p.al, Math.min(1, AN.t / .05)) : ((ch || rc > 0) ? 1 : p.al), rcc = hn == 1 ? Math.abs(Math.sin(rc * 6.28)) : rc, lun = CH ? CH.lun : 0;
+        o.lx = cf * lun; o.ly = sf * lun;
+        const bx = CH ? (10 + CH.ex) * k : (10 - rcc * 3 * (hn == 2 ? 1.6 : 1)) * k, Cx = p.x + o.lx, Cy = p.y - 8 - bob + o.ly, ra = f + (CH ? CH.ro : 0),
+          fr = R2(ra, bx, 0), gx = lp(Cx + hs * 11, Cx + hs * 3, k) + fr[0], gy = lp(Cy + 10, Cy + 3, k) + fr[1], a = lerpA(0, ra, k),
+          rel = CH ? -pv * 7 + CH.rec * Math.sin(AN.t * 62) * 2.4 : (ch ? -pull * 7 : (k > .5 ? rcc * 2 : .6)), glow = CH ? (AN.hn == 2 ? Math.min(1, CH.rec) : 0) : (rc > 0 && hn == 2 ? rc : 0);
         o.sp.push([2, gx, gy, a, 1]); o.gr.push({ x: gx, y: gy, s: side });
-        if (k > .35 || ch) { const s2 = R2(a, rel, 0); o.gr.push({ x: gx + s2[0], y: gy + s2[1], s: -side }) }
+        if (k > .35 || chA) { const s2 = R2(a, rel, 0); o.gr.push({ x: gx + s2[0], y: gy + s2[1], s: -side }) }
         o.fn = () => {
           g.save(); g.translate(gx, gy); g.rotate(a); g.lineWidth = 1; g.strokeStyle = '#e6d8c8'; g.beginPath(); g.moveTo(0, -11.3); g.lineTo(rel, 0); g.lineTo(0, 11.3); g.stroke();
-          if (ch) { g.fillStyle = '#c2a17a'; g.fillRect(rel, -.8, 17, 1.6); g.fillStyle = '#dce2ec'; g.beginPath(); g.moveTo(rel + 17, -2); g.lineTo(rel + 21, 0); g.lineTo(rel + 17, 2); g.fill(); g.fillStyle = '#a33b4c'; g.fillRect(rel, -2, 4, 1.2); g.fillRect(rel, .8, 4, 1.2) }
-          if (rc > 0 && hn == 2) { g.fillStyle = 'rgba(255,230,150,' + rc * .6 + ')'; g.beginPath(); g.arc(24, 0, 6 * rc + 2, 0, 7); g.fill() } g.restore()
+          if (chA) { g.fillStyle = '#c2a17a'; g.fillRect(rel, -.8, 17, 1.6); g.fillStyle = '#dce2ec'; g.beginPath(); g.moveTo(rel + 17, -2); g.lineTo(rel + 21, 0); g.lineTo(rel + 17, 2); g.fill(); g.fillStyle = '#a33b4c'; g.fillRect(rel, -2, 4, 1.2); g.fillRect(rel, .8, 4, 1.2) }
+          if (CH && AN.hn == 2 && pv > .5) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,230,150,' + (pv - .5) * .5 + ')'; g.beginPath(); g.arc(rel + 19, 0, 3 + pv * 4, 0, 7); g.fill() }
+          if (glow > 0) { g.fillStyle = 'rgba(255,230,150,' + glow * .6 + ')'; g.beginPath(); g.arc(24, 0, 6 * glow + 2, 0, 7); g.fill() } g.restore()
         }
       }
       else {
-        const k = (ch || rc > 0) ? 1 : p.al, an = hn == 1 ? Math.sin((1 - rc) * 6.28) * .8 * rc : hn == 2 ? -rc * .9 : 0, oxs = 8 + (hn == 0 ? rc * 4 : hn == 2 ? -rc * 3 : 0), rad = 3 + (ch ? pull * 3 : 0) + rc * 4 + Math.sin(t * 8) * .6, Cx = p.x, Cy = p.y - 8 - bob,
-          a1 = f + an, fr = R2(a1, oxs * k, 0), gx = lp(Cx + hs * 13.5, Cx + hs * 7, k) + fr[0], gy = lp(Cy + 9, Cy + 3, k) + fr[1], a = lerpA(-Math.PI / 2 + hs * .1 + br * .03, a1, k), ox2 = gx + Math.cos(a) * 14, oy2 = gy + Math.sin(a) * 14;
+        const AN = p.an, CH = AN ? anPose(AN) : null, k = CH ? Math.max(p.al, Math.min(1, AN.t / .05)) : ((ch || rc > 0) ? 1 : p.al), lun = CH ? CH.lun : 0;
+        o.lx = cf * lun; o.ly = sf * lun;
+        const an = CH ? CH.ro : (hn == 1 ? Math.sin((1 - rc) * 6.28) * .8 * rc : hn == 2 ? -rc * .9 : 0), oxs = CH ? 8 + CH.ex : 8 + (hn == 0 ? rc * 4 : hn == 2 ? -rc * 3 : 0),
+          rad = 3 + (CH ? CH.orb * 3 : (ch ? pull * 3 : 0) + rc * 4) + Math.sin(t * 8) * .6, Cx = p.x + o.lx, Cy = p.y - 8 - bob + o.ly,
+          a1 = f + an, fr = R2(a1, oxs * k, CH ? CH.lat * k : 0), gx = lp(Cx + hs * 13.5, Cx + hs * 7, k) + fr[0], gy = lp(Cy + 9, Cy + 3, k) + fr[1],
+          a = lerpA(-Math.PI / 2 + hs * .1 + br * .03, a1, k) + (CH ? CH.sr : 0), ox2 = gx + Math.cos(a) * 14, oy2 = gy + Math.sin(a) * 14, big2 = CH ? CH.orb > .35 : (ch || rc > 0);
         o.sp.push([3, gx, gy, a + Math.PI / 2, 1]); o.gr.push({ x: gx, y: gy, s: side });
         o.fn = () => {
-          orb(ox2, oy2, lp(6 + Math.sin(t * 9) * .8, rad + 4, k), lp(.7, 1, k)); if (ch || rc > 0) orb(ox2, oy2, rad * .9, 1.4);
-          if (ch) for (let i = 0; i < 4; i++) { const q = t * 7 + i * 1.57; g.fillStyle = '#fff'; g.fillRect(ox2 + Math.cos(q) * (10 - pull * 3) - 1, oy2 + Math.sin(q) * (10 - pull * 3) - 1, 2, 2) }
+          if (CH && CH.tr > .03) anTrail(gx, gy, 14, a, Math.sign(CH.srv), CH.tr, 'rgba(210,170,255,.9)');
+          orb(ox2, oy2, lp(6 + Math.sin(t * 9) * .8, rad + 4, k), lp(.7, 1, k)); if (big2) orb(ox2, oy2, rad * .9, 1.4);
+          if (CH ? CH.orb > .5 : ch) for (let i = 0; i < 4; i++) { const q = t * 7 + i * 1.57, rr2 = CH ? 10 - Math.min(1, CH.orb / 2) * 3 : 10 - pull * 3; g.fillStyle = '#fff'; g.fillRect(ox2 + Math.cos(q) * rr2 - 1, oy2 + Math.sin(q) * rr2 - 1, 2, 2) }
         }
       }
       return o
@@ -8984,7 +9080,7 @@
       function preview(card) {
         const pc = card.querySelector('canvas'), pctx = pc.getContext('2d'), fem = card.dataset.hero === 'f';
         const sv = { p, t, HSd, wi, FEM, HT, HSH };
-        const q = Object.assign({}, p, { x: 28, y: 36, vx: 0, vy: 0, wb: 0, wph: 0, idt: T * 3, face: .5, al: 0, dod: 0, swing: 0, hold: 0, recoil: 0, hurt: 0, cdA: 0 });
+        const q = Object.assign({}, p, { x: 28, y: 36, vx: 0, vy: 0, wb: 0, wph: 0, idt: T * 3, face: .5, al: 0, dod: 0, swing: 0, hold: 0, recoil: 0, hurt: 0, cdA: 0, an: null });
         g.save();
         try {
           p = q; t = T; HSd = 1; wi = 0; FEM = fem; HT = null;
