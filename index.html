@@ -10965,6 +10965,71 @@
       };
     })();
   </script>
+
+  <script>
+    /* ===== MINI BOS — Room 1 (Ancient Hall), Wave 5 ===== */
+    const MINI_HP = 520;   // atur kesulitan mini bos di sini
+    const MINI = { fx: [] };
+    const _spawnMini = spawn; spawn = function () {
+      _spawnMini();
+      if (lobby || room !== 0 || wave !== 5 || !es.length || es[0].k === 'dummy') return;
+      let x = 600, y = DY; for (let i = 0; i < 200 && blk(x, y, 16); i++) { x = 520 + R() * 220; y = 90 + R() * 300 }
+      const e = mk('skel', x, y), d = (typeof DF !== 'undefined' && DF[DIFF]) ? DF[DIFF] : { hp: 1, sp: 1 };
+      const lv = (typeof lavaOn === 'function' && lavaOn()) ? 1.15 : 1;
+      e.mini = 1; e.r = 13; e.ht = 44; e.sp = 38 * d.sp; e.sg = 260; e.xp = 140;
+      e.lava = lv > 1 ? 1 : 0; e.hp = e.mhp = Math.round(MINI_HP * d.hp * lv * (e.lava ? 1.25 : 1)); e.pt = 0;
+      e.sd = es.length * .14 + .3; e.st = 1.6 + e.sd; e.sw = e.st; e.sx = 0;
+      e.mt = 3.5; e.dash = 0; e.dcd = 7; e.ring = 0; e.big = 0;
+      es.push(e); msg('⚠ MINI BOS muncul — Wave 5!'); try { SFX.wave() } catch (_) { } shake = Math.max(shake, 6);
+    };
+    const _updMini = upd; upd = function (dt) {
+      _updMini(dt);
+      if (lobby || room !== 0 || p.dead > 0 || HST > 0) return;
+      es.forEach(e => {
+        if (!e.mini || e.sw > 0 || e.dying) return;
+        if (e.stun > 0) { e.ring = 0; e.dash = 0; return }
+        const a = ang(e, p);
+        // dash menerjang
+        if (e.dash > 0) {
+          e.dash -= dt; mv(e, Math.cos(e.da) * 190 * dt, Math.sin(e.da) * 190 * dt);
+          if (R() < .6) dp.push({ k: 'p', x: e.x, y: e.y, vx: 0, vy: 0, life: .3, max: .3, s: 2, c: '#ff8a5a' });
+          if (e.lava && (e.pt -= dt) <= 0) { e.pt = .09; LZ.push({ x: e.x, y: e.y + 4, r: 34, life: 3 }) }
+          if (dist(e, p) < e.r + p.r + 4 && p.inv <= 0) { hurt(20); p.vx = Math.cos(e.da) * 160; p.vy = Math.sin(e.da) * 160 }
+          if (e.dash <= 0) { e.dcd = 7 + R() * 2 } return
+        }
+        if (e.dwind > 0) { e.dwind -= dt; if (e.dwind <= 0) { e.dash = .55; e.da = ang(e, p); try { SFX.slam() } catch (_) { } } return }
+        // ledakan peluru melingkar
+        if (e.ring > 0) {
+          e.ring -= dt;
+          if (e.ring <= 0) {
+            const n = e.lava ? 16 : 12, off = R() * 6.283; try { SFX.eshot() } catch (_) { }
+            if (e.lava) { LZ.push({ x: e.x, y: e.y + 4, r: 52, life: 4 }); for (let k = 0; k < 6; k++) { const q = off + k / 6 * 6.283; LZ.push({ x: e.x + Math.cos(q) * 70, y: e.y + Math.sin(q) * 55, r: 36, life: 3.5 }) } }
+            for (let i = 0; i < n; i++) { const b = off + i / n * 6.283; pr.push({ x: e.x, y: e.y, vx: Math.cos(b) * 120, vy: Math.sin(b) * 120, d: 11, r: 3, col: '#ff7a5a', own: 'e', life: 3.2 }) }
+            fx.push({ k: 'ring', x: e.x, y: e.y, r: 46, life: .3, max: .3, col: '#ff7a5a' }); shake = Math.max(shake, 5); e.mt = 4.5;
+          } return
+        }
+        e.mt -= dt; e.dcd -= dt;
+        if (e.dcd <= 0 && dist(e, p) > 50) { e.dwind = .7; e.dcd = 99; e.da = a; try { SFX.warn(0) } catch (_) { } fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, life: .7, max: .7, col: '#ffd34d' }) }
+        else if (e.mt <= 0) { e.ring = .8; e.mt = 99; try { SFX.warn(1) } catch (_) { } fx.push({ k: 'ring', x: e.x, y: e.y, r: 50, life: .8, max: .8, col: '#ff5a5a' }) }
+      });
+    };
+    const _deMini = drawEnemy; drawEnemy = function (e) {
+      if (!e.mini) return _deMini(e);
+      g.save(); const cy = e.y + 7; g.translate(e.x, cy); g.scale(1.6, 1.6); g.translate(-e.x, -cy);
+      const pu = .5 + .5 * Math.sin(t * 6); if (e.lava) { lavaGlow(e.x, e.y - 6, 46, .45 + .15 * pu); for (let i = 0; i < 4; i++)lavaFlame(e.x - 9 + i * 6, e.y - 14, 3, 11, '#ff5a1f', '#ffd34d', i * 1.7 + e.ph) } g.fillStyle = 'rgba(255,70,50,' + (.12 + .1 * pu) + ')'; g.beginPath(); g.ellipse(e.x, e.y + 6, 15, 7, 0, 0, 7); g.fill();
+      _deMini(e); g.restore();
+      if (e.dwind > 0 || e.ring > 0) { g.save(); g.strokeStyle = 'rgba(255,' + (e.dwind > 0 ? 210 : 90) + ',60,.7)'; g.lineWidth = 1.5; g.beginPath(); g.arc(e.x, e.y, 22 + 6 * Math.sin(t * 20), 0, 7); g.stroke(); g.restore() }
+    };
+    const _drawMini = draw; draw = function () {
+      _drawMini();
+      if (lobby || room !== 0) return; const e = es.find(x => x.mini && !x.dying); if (!e || e.sw > 0) return;
+      g.save(); const bw = Math.min(220, W - 40), bx = (W - bw) / 2, by = H - 26;
+      g.fillStyle = 'rgba(12,11,20,.9)'; g.fillRect(bx - 3, by - 14, bw + 6, 24);
+      g.font = 'bold 9px monospace'; g.textAlign = 'center'; g.fillStyle = '#ff8aa0'; g.fillText(e.lava ? 'MINI BOS — MAGMA GOLEM' : 'MINI BOS — GOLEM PENJAGA', W / 2, by - 4);
+      g.fillStyle = '#2a1018'; g.fillRect(bx, by, bw, 6); g.fillStyle = e.lava ? '#ff7a1f' : '#e0364a'; g.fillRect(bx, by, bw * Math.max(0, e.hp) / e.mhp, 6);
+      g.strokeStyle = '#ffe9b0'; g.lineWidth = 1; g.strokeRect(bx - .5, by - .5, bw + 1, 7); g.restore();
+    };
+  </script>
 </body>
 
 </html>
