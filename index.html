@@ -2735,7 +2735,22 @@
         summon() { [300, 450, 600].forEach((f, i) => T(f, f * 3, .8, 'sine', .05, i * .05, { at: .4, send: .4 })); N(.8, .06, 500, 6000, 1.5, 'bandpass', 0, { at: .45, send: .3 }) },
         appear() { T(140, 40, .4, 'sine', .5); CK(.3); RING(2200, .06, .5, 0, { send: .4 }); N(.2, .2, 3000, 500, 1, 'bandpass', 0, { dist: 1 }) },
         ultReady() { arp([523, 659, 784, 1047, 1319], .14, .07, .6); T(60, 130, .6, 'sine', .4, 0, { send: .4 }); RING(2000, .06, .8, .15, { send: .5 }); N(.6, .15, 2000, 9000, .8, 'highpass', .1, { at: .3 }) },
-        ult(i) { N(1.3, .45, 200, 7000, 1.2, 'bandpass', 0, { at: .55, send: .6 }); T(55, 26, 1.6, 'sine', .75, 0, { send: .5 }); T(110, 520, .9, 'sawtooth', .08, 0, { lp: 2200, at: .45, send: .4 }); RING(900, .09, 1.2, .3, { send: .6 }); arp([392, 523, 659, 784, 1047, 1319], .12, .06, .9); T(70, 28, .8, 'sine', .6, .5, { send: .5 }) }
+        ult(i) { N(1.3, .45, 200, 7000, 1.2, 'bandpass', 0, { at: .55, send: .6 }); T(55, 26, 1.6, 'sine', .75, 0, { send: .5 }); T(110, 520, .9, 'sawtooth', .08, 0, { lp: 2200, at: .45, send: .4 }); RING(900, .09, 1.2, .3, { send: .6 }); arp([392, 523, 659, 784, 1047, 1319], .12, .06, .9); T(70, 28, .8, 'sine', .6, .5, { send: .5 }) },
+        /* ===== ritme basic attack (bow & staff): w=senjata, n=hit ke (0..2), k=urutan tembakan dalam hit ===== */
+        beat(w, n, k) {
+          const sc = [523.25, 659.25, 784, 1046.5], f = sc[n == 1 ? (k ? 2 : 1) : n == 2 ? 3 : 0] * (w == 3 ? .5 : 1);
+          if (w == 2) { T(f, f * .985, .2 + n * .08, 'triangle', .09 + n * .02, 0, { send: .3 }); T(f * 2, f * 2, .12, 'sine', .035, 0); if (n == 2) { T(f * .5, f * .5, .4, 'triangle', .07, .02, { send: .4 }); RING(f * 2, .03, .5, .02, { send: .5 }) } }
+          else { T(f, f * 1.01, .3 + n * .1, 'sine', .1 + n * .02, 0, { send: .45 }); T(f * 2.005, f * 2, .22, 'triangle', .04, 0, { send: .3 }); if (n == 2) { arp([f * .5, f * .75, f], .05, .035, .5); RING(f * 2, .04, .7, .04, { send: .6 }) } }
+        },
+        charge(w) {
+          if (w == 2) { T(260, 980, .26, 'triangle', .05, 0, { at: .12, lp: 3000 }); N(.26, .08, 800, 4500, 2, 'bandpass', 0, { at: .2 }) }
+          else { T(180, 760, .3, 'sine', .08, 0, { at: .2, send: .4 }); T(360, 1520, .3, 'triangle', .03, 0, { at: .22, send: .3 }); N(.3, .06, 400, 5000, 1.4, 'bandpass', 0, { at: .24, send: .3 }) }
+        },
+        /* ===== black hole (ultimate staff) ===== */
+        bhOpen() { T(38, 120, 1.4, 'sine', .55, 0, { at: .5, send: .5 }); T(76, 240, 1.4, 'sawtooth', .05, 0, { at: .6, lp: 900, send: .5 }); N(1.2, .25, 120, 2400, 1.2, 'bandpass', 0, { at: .7, send: .6 }); RING(300, .05, 1.2, .2, { send: .6 }) },
+        bhPulse(k) { T(48 + 30 * k, 30, .45, 'sine', .35, 0, { send: .4 }); N(.3, .12, 200 + 800 * k, 80, 1, 'lowpass', 0, { at: .02, send: .5 }) },
+        bhCollapse() { T(90, 2400, .6, 'sawtooth', .09, 0, { lp: 3500, at: .5, send: .4 }); T(45, 400, .6, 'sine', .5, 0, { at: .5 }); N(.6, .3, 200, 9000, 1.5, 'bandpass', 0, { at: .55, send: .6 }) },
+        bhBlast() { EXP(1.9, 1); T(60, 20, 2.2, 'sine', .8, .02, { send: .6 }); RING(500, .08, 1.6, .05, { send: .7 }); N(1.4, .35, 9000, 200, .8, 'highpass', .02, { at: .02, send: .5 }); arp([196, 261.6, 329.6, 392, 523.25], .1, .05, 1.2) }
       }
     })();
     const R = Math.random, ang = (a, b) => Math.atan2(b.y - a.y, b.x - a.x), dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -2770,7 +2785,7 @@
       if (room) for (let j = 0, n = 0; j < 2 * Math.max(0, wave - 7) && n < 400; n++) { const x = 200 + R() * 560, y = 50 + R() * 380; if (!blk(x, y, 9)) { ex.push([['skel', 'mage', 'slime'][j % 3], x, y]); j++ } }   // gelombang 8-10: musuh tambahan
       es = (room ? L2 : L).slice(0, Math.min(8 + EXTRA_ENEMIES, 3 + wave + EXTRA_ENEMIES)).concat(ex).map(([k, x, y], i) => { const e = mk(k, x, y); e.hp = e.mhp = e.hp * (1 + Math.max(0, wave - 5) * .12); e.sd = i * .14; e.st = 1.1 + e.sd; e.sw = e.st; e.sx = 0; return e }); SFX.summon()
     }
-    function reset() { const pot = p ? p.pot : 3; p = { x: lobby ? 320 : 60, y: lobby ? 320 : DY, vx: 0, vy: 0, r: 5, hp: mhp(), st: 100, stT: 0, face: 0, cdA: 0, combo: 0, comboT: 0, dod: 0, dx: 0, dy: 0, inv: 0, hold: 0, sc: [0, 0, 0], skb: 0, spn: 0, fa: 0, spv: 0, dsp: 0, ec: 0, focus: 0, pot, potC: 0, hurt: 0, swing: 0, dead: 0, recoil: 0, sd: 1, sa: 1, al: 0, rmax: .18, hn: 0, wb: 0, wph: 0, idt: 0, dfx: 0, an: null, buf: 0 }; gh = []; dp = []; SQ = []; spawn() }
+    function reset() { const pot = p ? p.pot : 3; p = { x: lobby ? 320 : 60, y: lobby ? 320 : DY, vx: 0, vy: 0, r: 5, hp: mhp(), st: 100, stT: 0, face: 0, cdA: 0, combo: 0, comboT: 0, dod: 0, dx: 0, dy: 0, inv: 0, hold: 0, sc: [0, 0, 0], skb: 0, spn: 0, fa: 0, spv: 0, dsp: 0, ec: 0, focus: 0, pot, potC: 0, hurt: 0, swing: 0, dead: 0, recoil: 0, sd: 1, sa: 1, al: 0, rmax: .18, hn: 0, wb: 0, wph: 0, idt: 0, dfx: 0, an: null, buf: 0 }; gh = []; dp = []; SQ = []; BH.on = 0; BH.t = 0; spawn() }
     const mul = () => { const w = WP[wi]; return (1 + (w.sc.reduce((s, k) => s + A[k], 0) / w.sc.length - 5) * .08) * (p.focus > 0 ? 1.5 : 1) };
     function dn(x, y, s, crit, col) { fx.push({ k: 't', x, y, s, col: col || (crit ? '#ffd34d' : '#fff'), crit, life: .8, max: .8 }) }
     function hurt(d) {
@@ -2826,15 +2841,15 @@
         else if (hn == 1) { kf = [K(0, {}), K(.05, { ro: -s * (a2 + .35), ex: -2, lun: -1.2, lat: -s * 1.5 }, 'ios'), K(.14, { ro: s * (a2 + .12), ex: 6, lun: 3.4, lat: s * .5 }, 'o3'), K(.2, { ro: s * (a2 + .25), ex: 3.5, lun: 2.2 }, 'o2'), K(.3, {}, 'ios')]; hits = [.055]; cd = .26 }
         else { kf = [K(0, {}), K(.07, { ex: -3, lun: -2, lat: -s, sc: 1.02 }, 'o2'), K(.31, { ex: 3, lun: -.5, sr: s * TW * 2, tr: 1, sc: 1.1 }, 'ios'), K(.4, { ex: 30, lun: 11, sr: s * TW * 2, sc: 1.2 }, 'o4'), K(.47, { ex: 28, lun: 10, sr: s * TW * 2, sc: 1.18 }, 'lin'), K(.63, { sr: s * TW * 2 }, 'ios')]; hits = [.315]; cd = .56; lf = .34 }
       }
-      else if (w == 2) {       // BUSUR: tarik - lepas - string bergetar; hit 2 = dua panah beruntun; hit 3 = tarik penuh
-        if (hn == 0) { kf = [K(0, {}), K(.055, { pull: .92, ex: -1.5, ro: -.02 }, 'o2'), K(.065, { pull: 0, rec: 1, ex: 2.5, ro: .05, lun: -1.6 }, 'o3'), K(.14, { rec: .55, ex: 1, ro: .02, lun: -.6 }, 'lin'), K(.3, {}, 'o2')]; hits = [.06]; cd = .26 }
-        else if (hn == 1) { kf = [K(0, {}), K(.04, { pull: .8, ex: -1.2 }, 'o2'), K(.048, { pull: 0, rec: .8, ex: 2, lun: -1.2 }, 'o3'), K(.085, { pull: .8, ex: -1, rec: .2 }, 'o2'), K(.093, { pull: 0, rec: 1, ex: 2.6, ro: .05, lun: -1.8 }, 'o3'), K(.17, { rec: .6, ex: 1, lun: -.6 }, 'lin'), K(.3, {}, 'o2')]; hits = [.045, .09]; cd = .27 }
-        else { kf = [K(0, {}), K(.15, { pull: 1, ex: -2.5, ro: -.05, lun: 1.2 }, 'o2'), K(.16, { pull: 0, rec: 1.4, ex: 5, ro: .08, lun: -3 }, 'o4'), K(.26, { rec: 1, ex: 2.5, lun: -1.5 }, 'o2'), K(.4, { rec: .3, ex: .6 }, 'o2'), K(.52, {}, 'ios')]; hits = [.155]; cd = .46 }
+      else if (w == 2) {       // BUSUR berirama 4/4 (1 ketuk = .24s): hit1 "ta" - hit2 "ta-ta" (dua panah, setengah ketuk) - hit3 "TAAAN" (tarik pelan, tahan bergetar, lepas)
+        if (hn == 0) { kf = [K(0, {}), K(.065, { pull: .9, ex: -1.8, ro: -.02, lun: .6 }, 'o2'), K(.075, { pull: 0, rec: 1, ex: 2.8, ro: .05, lun: -1.8 }, 'o3'), K(.15, { rec: .5, ex: 1, ro: .02, lun: -.6 }, 'lin'), K(.24, {}, 'o2')]; hits = [.075]; cd = .24 }
+        else if (hn == 1) { kf = [K(0, {}), K(.035, { pull: .8, ex: -1.3, lun: .4 }, 'o2'), K(.045, { pull: 0, rec: .8, ex: 2, lun: -1.2 }, 'o3'), K(.15, { pull: .85, ex: -1.2, rec: .1 }, 'ios'), K(.165, { pull: 0, rec: 1, ex: 2.8, ro: .05, lun: -1.9 }, 'o3'), K(.26, { rec: .4, ex: .8, lun: -.5 }, 'lin'), K(.34, {}, 'o2')]; hits = [.045, .165]; cd = .24 }
+        else { kf = [K(0, {}), K(.12, { pull: .55, ex: -1.6, ro: -.03, lun: .5 }, 'ios'), K(.25, { pull: 1, ex: -3, ro: -.05, lun: 1.4, rec: .35 }, 'ios'), K(.26, { pull: 0, rec: 1.5, ex: 5.5, ro: .09, lun: -3.4 }, 'o4'), K(.36, { rec: 1, ex: 2.5, lun: -1.5 }, 'o2'), K(.5, { rec: .3, ex: .6 }, 'o2'), K(.6, {}, 'ios')]; hits = [.26]; cd = .48 }
       }
-      else if (w == 3) {       // TONGKAT: kumpulkan orb, hentak ke depan; hit 3 = putar tongkat lalu ledakkan
-        if (hn == 0) { kf = [K(0, {}), K(.07, { ro: -.4, ex: -2.5, orb: 1, lat: -.8 }, 'o2'), K(.13, { ro: .12, ex: 5.5, orb: .5, lun: 2 }, 'o3'), K(.2, { ro: .04, ex: 3, orb: .3, lun: 1 }, 'o2'), K(.34, {}, 'ios')]; hits = [.075]; cd = .3 }
-        else if (hn == 1) { kf = [K(0, {}), K(.06, { ro: -.7, ex: -1.5, orb: 1, lat: -1 }, 'o2'), K(.14, { ro: .6, ex: 4, orb: .6, lat: 1, lun: 2 }, 'o3'), K(.22, { ro: .25, ex: 2, orb: .2, lun: 1 }, 'o2'), K(.34, {}, 'ios')]; hits = [.085]; cd = .3 }
-        else { kf = [K(0, {}), K(.07, { ro: -.8, ex: -3, orb: 1.2, lat: -1.5 }, 'o2'), K(.24, { ro: -.15, ex: -1, sr: TW, orb: 2.2, tr: 1 }, 'ios'), K(.31, { ro: .1, ex: 8, sr: TW, orb: .9, lun: 3 }, 'o4'), K(.42, { ro: .04, ex: 5, sr: TW, orb: .5, lun: 1.5 }, 'o2'), K(.58, { sr: TW }, 'ios')]; hits = [.245]; cd = .52 }
+      else if (w == 3) {       // TONGKAT berirama (1 ketuk = .3s): hit1 "ta" - hit2 "ta-ta" (dua orb) - hit3 "TAAAN" (orb mengembang, tongkat berputar, ledakan)
+        if (hn == 0) { kf = [K(0, {}), K(.07, { ro: -.4, ex: -2.5, orb: 1, lat: -.8 }, 'o2'), K(.13, { ro: .12, ex: 5.5, orb: .5, lun: 2 }, 'o3'), K(.2, { ro: .04, ex: 3, orb: .3, lun: 1 }, 'o2'), K(.3, {}, 'ios')]; hits = [.075]; cd = .3 }
+        else if (hn == 1) { kf = [K(0, {}), K(.05, { ro: -.7, ex: -1.5, orb: 1, lat: -1 }, 'o2'), K(.1, { ro: .6, ex: 4, orb: .6, lat: 1, lun: 2 }, 'o3'), K(.17, { ro: -.35, ex: -1, orb: 1.1, lat: .5 }, 'o2'), K(.225, { ro: .45, ex: 4.2, orb: .6, lat: -.6, lun: 2.2 }, 'o3'), K(.3, { ro: .15, ex: 2, orb: .2, lun: 1 }, 'ios'), K(.38, {}, 'ios')]; hits = [.09, .22]; cd = .3 }
+        else { kf = [K(0, {}), K(.08, { ro: -.8, ex: -3, orb: 1.2, lat: -1.5 }, 'o2'), K(.28, { ro: -.15, ex: -1, sr: TW, orb: 2.4, tr: 1 }, 'ios'), K(.35, { ro: .1, ex: 8, sr: TW, orb: .9, lun: 3 }, 'o4'), K(.47, { ro: .04, ex: 5, sr: TW, orb: .5, lun: 1.5 }, 'o2'), K(.62, { sr: TW }, 'ios')]; hits = [.285]; cd = .6 }
       }
       else {                   // BELATI: tusuk diagonal, tebas silang, lalu pusaran 360 dengan tangan menyilang
         if (hn == 0) { kf = [K(0, {}), K(.04, { ro: -s * .5, exA: -3, roA: -.35, lun: -1 }, 'ios'), K(.1, { ro: s * .1, exA: 14, exB: 3, roA: .15, lun: 3.4 }, 'o3'), K(.14, { ro: s * .18, exA: 11, exB: 2, lun: 2.6 }, 'o2'), K(.22, {}, 'ios')]; hits = [.045]; cd = .19 }
@@ -2880,23 +2895,25 @@
         })
       }
       else if (wi == 2) {
-        const bs = (o, dm, sp) => shoot(p.face + o, dm, sp, '#8bd17c'), rl = () => { p.recoil = 0 };
-        if (big) at(AN.hits[0], () => { bs(0, d, 340); bs(.1, d, 340); bs(-.1, d, 340); rl(); shake = Math.max(shake, 3) });
-        else if (n == 0) at(AN.hits[0], () => { bs(0, d, 340); rl() });
-        else if (n == 1) { at(AN.hits[0], () => { bs(-.05, d * .5, 380); rl() }); at(AN.hits[1], () => { bs(.05, d * .5, 380); rl() }) }
-        else at(AN.hits[0], () => { bs(0, d, 430); const b = pr[pr.length - 1]; b.pierce = 1; b.big = 1; rl(); shake = Math.max(shake, 3) })
+        const bs = (o, dm, sp) => shoot(p.face + o, dm, sp, '#8bd17c'), rl = () => { p.recoil = 0 }, rn = big ? 2 : n, bt = k => { SFX.beat(2, rn, k); fx.push({ k: 'beat', x: p.x, y: p.y, a: p.face, w: 2, n: rn, life: .5, max: .5 }) };
+        if (!big && n == 2) SFX.charge(2);
+        if (big) at(AN.hits[0], () => { bs(0, d, 340); bs(.1, d, 340); bs(-.1, d, 340); rl(); shake = Math.max(shake, 3); bt(0) });
+        else if (n == 0) at(AN.hits[0], () => { bs(0, d, 340); rl(); bt(0) });
+        else if (n == 1) { at(AN.hits[0], () => { bs(-.05, d * .5, 380); rl(); bt(0) }); at(AN.hits[1], () => { bs(.05, d * .5, 380); rl(); bt(1) }) }
+        else at(AN.hits[0], () => { bs(0, d, 430); const b = pr[pr.length - 1]; b.pierce = 1; b.big = 1; rl(); shake = Math.max(shake, 3); bt(0) })
       }
       else {
-        const ss = (o, dm, ap, sp) => shoot(p.face + o, dm, sp, '#b48cff', ap), rl = () => { p.recoil = 0 };
-        if (big) at(AN.hits[0], () => { ss(0, d, 40, 230); rl() });
-        else if (n == 0) at(AN.hits[0], () => { ss(0, d, 24, 230); rl() });
-        else if (n == 1) at(AN.hits[0], () => { ss(-.14, d * .5, 22, 250); ss(.14, d * .5, 22, 250); rl() });
-        else at(AN.hits[0], () => { ss(0, d, 48, 170); rl(); shake = Math.max(shake, 2.5) })
+        const ss = (o, dm, ap, sp) => shoot(p.face + o, dm, sp, '#b48cff', ap), rl = () => { p.recoil = 0 }, rn = big ? 2 : n, bt = k => { SFX.beat(3, rn, k); fx.push({ k: 'beat', x: p.x, y: p.y, a: p.face, w: 3, n: rn, life: .5, max: .5 }) };
+        if (!big && n == 2) SFX.charge(3);
+        if (big) at(AN.hits[0], () => { ss(0, d, 40, 230); rl(); bt(0) });
+        else if (n == 0) at(AN.hits[0], () => { ss(0, d, 24, 230); rl(); bt(0) });
+        else if (n == 1) { at(AN.hits[0], () => { ss(-.14, d * .5, 22, 250); rl(); bt(0) }); at(AN.hits[1], () => { ss(.14, d * .5, 22, 250); rl(); bt(1) }) }
+        else at(AN.hits[0], () => { ss(0, d, 48, 170); rl(); shake = Math.max(shake, 2.5); bt(0) })
       }
       p.rmax = .18; p.cdA = AN.cd
     }
     // ===== SKILL BARU: 3 per senjata (Z X C) =====
-    let SQ = []; const sk = (n, cd, dur, f) => ({ n, cd, dur, f });
+    let SQ = []; const BH = { on: 0, t: 0, x: 0, y: 0, m: 1, tk: 0, pk: 0, cl: 0, ex: 0 }; const sk = (n, cd, dur, f) => ({ n, cd, dur, f });
     const skLater = (t, f) => SQ.push({ t, f });
     const skNear = (n, rg) => es.filter(e => e.sw <= 0 && dist(p, e) < rg).sort((a, b) => dist(p, a) - dist(p, b)).slice(0, n);
     function skDash(a, sp, d) { p.dod = d; p.dsp = sp; p.dx = Math.cos(a); p.dy = Math.sin(a); p.inv = d + .1; p.dfx = 1; puff(p.x, p.y + 6, 3, '110,100,90', .8) }
@@ -2956,7 +2973,7 @@
       sk('Meteor Storm', 14, 2, (a, m) => { const [tx, ty] = tgt(); for (let i = 0; i < 6; i++)skLater(i * .28, () => { const q = R() * 6.283, d = R() * 60, x = tx + Math.cos(q) * d, y = ty + Math.sin(q) * d; fx.push({ k: 'ring', x, y, r: 32, w: 3.5, life: .5, max: .5, col: '#d6f', fill: 1 }, { k: 'rune', x, y, life: .5, max: .5, sc: 1.7, w: 2 }); for (let j = 0; j < 6; j++)skLater(j * .075, () => { const u = j / 5, hx = x - 34 + 34 * u, hy = y - 120 + 120 * u; dp.push({ k: 'l', x: hx, y: hy, a: 1.3, len: 56, w: 7, cc: '#e6b8ff', life: .18, max: .18 }); fx.push({ k: 'gl', x: hx, y: hy, r: 20, c: '215,150,255', life: .16, max: .16 }) }); skLater(.5, () => boomS(x, y, 36, 22 * m)) }) })
     ], [
       sk('Shadow Dash', 4, .5, (a, m) => { skDash(a, 400, .2); skLater(.04, () => skLine(40, 12, 10 * m)); skLater(.1, () => skLine(40, 12, 10 * m)); skLater(.22, () => melee(30, 2.6, 12 * m, 90, { hn: 0, sd: 1, lg: 40 })); skLater(.32, () => melee(30, 2.6, 12 * m, 90, { hn: 1, sd: -1, lg: 40 })) }),
-      sk('Blade Burst', 8, .45, (a, m) => { skSpin(1, .3); for (let i = 0; i < 10; i++)skLater(i * .03, () => { shoot(p.face, 9 * m, 300, '#ffb48a'); const b = pr[pr.length - 1]; b.pierce = 1; b.kn = 1; b.life = .5 }) }),
+      sk('Blade Burst', 8, .45, (a, m) => { skSpin(1, .3); shrThrow(a, m) }),
       sk('Phantom Flurry', 13, 1.2, (a, m) => {
         const T = skNear(4, 260), L = T.length ? T : [null, null, null]; L.forEach((e, i) => skLater(i * .17, () => {
           const ox = p.x, oy = p.y;
@@ -3272,9 +3289,195 @@
         at(1.6, () => { q({ t: 'dragon', x: p.x, y: p.y, x2: tx, y2: ty, w: 18, amp: 12, hs: 2.8, life: .6 }); q({ t: 'sigil', x: tx, y: ty, r: 130, n: 5, life: 2.2 }) }); at(2.0, () => { qk(tx, ty, 170); fl() })
       }
       else if (i == 2) { q({ t: 'burst', x: p.x, y: p.y, life: .6 }); q({ t: 'sigil', x: tx, y: ty, r: 135, n: 6, life: U - .1 }); at(3.0, () => q({ t: 'fall', s: 2, x: tx, y: ty, H: 330, tf: .5, r: 120, life: .9 })); at(3.45, fl) }
-      else if (i == 3) { q({ t: 'vortex', x: tx, y: ty, r: 140, life: 3.3 }); at(2.7, () => q({ t: 'fall', s: 3, x: tx, y: ty, H: 280, tf: .5, r: 150, life: 1.1 })); at(3.25, fl) }
+      else if (i == 3) { /* black hole: digambar oleh bhFx */ }
       else { q({ t: 'xcut', x: p.x, y: p.y, sc: 1.6, a: .6, life: .4 }); at(3.65, () => { q({ t: 'xcut', x: p.x, y: p.y, sc: 3.2, a: .4, life: .55 }); qk(p.x, p.y, 130); fl() }) }
     }
+    /* ===== BASIC ATTACK BERIRAMA (bow & staff): cincin ketukan + 3 titik tempo di atas kepala ===== */
+    function beatFx(f, k) {
+      const u = 1 - k, pal = f.w == 2 ? ['150,255,120', '225,255,205'] : ['200,120,255', '240,215,255'], n = f.n, R0 = 8 + n * 5;
+      g.save(); g.translate(f.x, f.y + 4); g.globalCompositeOperation = 'lighter';
+      g.save(); g.scale(1, .5);
+      for (let j = 0; j <= n; j++) { const q = Math.min(1, u * 2.2 - j * .15); if (q <= 0) continue; g.strokeStyle = 'rgba(' + (j ? pal[0] : pal[1]) + ',' + (1 - q) * .9 + ')'; g.lineWidth = (3 - j * .6) * (1 - q) + .6; g.beginPath(); g.arc(0, 0, R0 + q * (18 + n * 12) + j * 4, 0, 7); g.stroke() }
+      g.restore();
+      for (let i = 0; i < 3; i++) {
+        const on = i <= n, cur = i == n, r = cur ? 2.2 + 2.4 * k : 1.6;
+        g.fillStyle = on ? 'rgba(' + pal[cur ? 1 : 0] + ',' + (cur ? 1 : .8) * Math.min(1, k * 1.8 + .25) + ')' : 'rgba(' + pal[0] + ',.18)';
+        g.beginPath(); g.arc((i - 1) * 8, -30 - (cur ? 12 * u * (1 - u) : 0), r, 0, 7); g.fill()
+      }
+      g.restore()
+    }
+
+    /* ===== ULTIMATE STAFF: EVENT HORIZON (black hole) =====
+       0 - .8s   : singularitas terbentuk, segel tanah menyala
+       .8 - 3.2s : menghisap musuh & peluru musuh, piringan akresi + jet cahaya, damage berdenyut
+       3.2 - 3.75s: runtuh menjadi satu titik putih
+       3.75s     : supernova - ledakan besar, gelombang kejut, sinar radial
+       Ubah BH_PR (radius hisap) / BH_BR (radius ledakan) / angka damage di bhTick & bhBlast untuk tuning. */
+    const BH_FORM = .8, BH_COL = 3.2, BH_EXP = 3.75, BH_END = 4.6, BH_PR = 175, BH_BR = 215, bhC = (v, a, b) => Math.max(a, Math.min(b, v)), bhE = u => u * u * (3 - 2 * u);
+    function bhStart(x, y, m) {
+      Object.assign(BH, { on: 1, t: 0, x, y, m, tk: 0, pk: 0, cl: 0, ex: 0 });
+      fx.push({ k: 'bh', life: BH_END + .05, max: BH_END + .05 });
+      SFX.bhOpen()
+    }
+    function bhBlast(x, y, m) {
+      SFX.bhBlast(); FLSH = 1; FLSC = '255,255,255'; shake = Math.max(shake, 24); HST = Math.max(HST, .14);
+      es.slice().forEach(e => {
+        if (e.sw > 0) return; const d = Math.hypot(e.x - x, e.y - y);
+        if (d < BH_BR + e.r + HB()) hit(e, 185 * m * (d < BH_BR * .55 ? 1 : 1 - .45 * (d - BH_BR * .55) / (BH_BR * .45)), x, y, 430)
+      });
+      for (let i = 0; i < 90; i++) { const a = R() * 6.283, v = 80 + R() * 330; dp.push({ k: 'p', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .72, life: .55 + R() * .6, max: 1.1, s: 2 + R() * 3.5, c: ['#ffffff', '#ffd9a0', '#e6b8ff', '#a65cff'][i % 4] }) }
+      for (let i = 0; i < 18; i++) { const a = R() * 6.283, v = 90 + R() * 220; dp.push({ k: 'sh', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .75, rot: a, vr: (R() - .5) * 14, life: .7 + R() * .4, max: 1.1, s: 3 + R() * 3, c: i % 3 ? '215,150,255' : '255,240,255' }) }
+      puff(x, y, 12, '40,16,70', 2);
+      fx.push({ k: 'pil', x, y, w: 150, h: 340, c: '230,190,255', life: .8, max: .8 }, { k: 'gl', x, y, r: 280, c: '220,170,255', life: .6, max: .6 },
+        { k: 'ring', x, y, r: 70, w: 6, life: .5, max: .5, col: '#fff' }, { k: 'ring', x, y, r: 130, w: 4, life: .7, max: .7, col: '#e6b8ff' }, { k: 'ring', x, y, r: 200, w: 3, life: .9, max: .9, col: '#a65cff' })
+    }
+    function bhTick(dt) {
+      if (!BH.on) return;
+      if (p.dead > 0) { BH.on = 0; BH.t = 0; return }
+      const T = (BH.t += dt), x = BH.x, y = BH.y, m = BH.m, pr0 = bhC(T / BH_COL, 0, 1), prog = bhE(bhC((T - .35) / .9, 0, 1)), col = T >= BH_COL;
+      if (T < BH_EXP) {
+        shake = Math.max(shake, 1 + 3.2 * pr0 + (col ? 2.5 : 0));
+        const PR = BH_PR * (.6 + .4 * prog);
+        // hisap musuh (dummy & boss tidak ikut tertarik, tapi tetap kena damage)
+        es.forEach(e => {
+          if (e.sw > 0 || e.k == 'dummy' || e.k == 'boss') return;
+          const dx = x - e.x, dy = y - e.y, d = Math.hypot(dx, dy); if (d > PR || d < .5) return;
+          const f = 1 - d / PR, sp = (50 + 330 * Math.pow(f, 1.1)) * prog * (col ? 1.5 : 1), sw = .55 * f, cs = Math.cos(sw), sn = Math.sin(sw), ax = dx / d, ay = dy / d, stp = Math.min(sp * dt, Math.max(0, d - 2));
+          mv(e, (ax * cs - ay * sn) * stp, (ax * sn + ay * cs) * stp); e.stun = Math.max(e.stun || 0, .2); e.wind = 0; e.vx = e.vy = 0; e.bh = t + .25
+        });
+        // peluru musuh ikut tersedot & lenyap di inti
+        pr.forEach(b => { if (b.own != 'e') return; const dx = x - b.x, dy = y - b.y, d = Math.hypot(dx, dy); if (d < PR) { if (d < 14) { b.life = 0; return } b.vx += dx / d * 700 * dt; b.vy += dy / d * 700 * dt } });
+        // damage berdenyut
+        BH.tk -= dt; if (BH.tk <= 0) {
+          BH.tk = .17; const dmg = (7 + 9 * pr0) * m, h0 = HST;
+          es.slice().forEach(e => { if (e.sw > 0) return; if (Math.hypot(e.x - x, e.y - y) < PR + e.r) hit(e, dmg, x, y, 0) }); HST = h0
+        }
+        // detak jantung makin cepat
+        BH.pk -= dt; if (BH.pk <= 0 && T > .5) { BH.pk = .62 - .36 * pr0; SFX.bhPulse(pr0) }
+        if (!BH.cl && col) { BH.cl = 1; SFX.bhCollapse(); HST = Math.max(HST, .08) }
+      }
+      if (!BH.ex && T >= BH_EXP) { BH.ex = 1; bhBlast(x, y, m) }
+      if (T >= BH_END) { BH.on = 0; BH.t = 0 }
+    }
+    function bhFx(f, k) {
+      const T = BH.t; if (T <= 0 || T > BH_END) return;
+      const x = BH.x, y = BH.y, S = Math.sin, Co = Math.cos, C = bhC, E = bhE, PI = Math.PI;
+      const open = E(C(T / BH_FORM, 0, 1)), grow = E(C(T / 1.5, 0, 1)), colT = C((T - BH_COL) / (BH_EXP - BH_COL), 0, 1), col = E(colT), pre = T < BH_EXP;
+      g.save(); g.translate(x, y - 4); g.lineCap = 'round';
+      if (pre) {
+        const rc = (3 + 20 * grow) * (1 - .8 * col), Rd = (18 + 94 * grow) * (1 - .9 * col), PR = BH_PR * (.6 + .4 * open);
+        // 1. tanah menggelap
+        g.save(); g.scale(1, .62);
+        const dk = open * (.6 + .3 * col), dr = BH_PR * 1.2, gd = g.createRadialGradient(0, 0, rc * .5, 0, 0, dr);
+        gd.addColorStop(0, 'rgba(3,0,10,' + dk + ')'); gd.addColorStop(.5, 'rgba(12,2,30,' + dk * .6 + ')'); gd.addColorStop(1, 'rgba(30,6,70,0)');
+        g.fillStyle = gd; g.beginPath(); g.arc(0, 0, dr, 0, 7); g.fill(); g.restore();
+        g.globalCompositeOperation = 'lighter';
+        // 2. segel tanah + cincin lensa yang menyempit
+        g.save(); g.scale(1, .62);
+        g.setLineDash([7, 9]); g.lineDashOffset = -T * 34; g.strokeStyle = 'rgba(190,130,255,' + .55 * open * (1 - col) + ')'; g.lineWidth = 1.6; g.beginPath(); g.arc(0, 0, PR, 0, 7); g.stroke();
+        g.setLineDash([3, 6]); g.lineDashOffset = T * 22; g.strokeStyle = 'rgba(255,200,255,' + .35 * open * (1 - col) + ')'; g.beginPath(); g.arc(0, 0, PR * .72, 0, 7); g.stroke(); g.setLineDash([]);
+        for (let i = 0; i < 5; i++) { const s = (T * .7 + i / 5) % 1, r = rc + PR * (1 - s), a = S(s * PI) * .32 * open; g.strokeStyle = 'rgba(170,110,255,' + a + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(0, 0, r, 0, 7); g.stroke() }
+        g.restore();
+        // 3. aliran partikel spiral menuju inti (makin dekat makin cepat & panas)
+        for (let i = 0; i < 120; i++) {
+          const sp = .38 + (i % 5) * .06, s = (T * sp + i * .61803) % 1, s0 = Math.max(0, s - .04), a0 = i * 2.39996;
+          const pos = q => { const rr = rc * 1.05 + (PR - rc * 1.05) * (1 - Math.pow(q, 1.8)), an = a0 + 6.5 * Math.pow(q, 1.35) + T * .15; return [Co(an) * rr, S(an) * rr * .62] };
+          const p1 = pos(s0), p2 = pos(s), cc = s > .8 ? '255,236,196' : s > .5 ? '255,160,224' : '176,122,255', al = open * (1 - col) * Math.min(1, s * 4) * (.3 + .7 * s) * (s > .97 ? (1 - s) / .03 : 1);
+          g.strokeStyle = 'rgba(' + cc + ',' + al + ')'; g.lineWidth = .8 + s * 1.6; g.beginPath(); g.moveTo(p1[0], p1[1]); g.lineTo(p2[0], p2[1]); g.stroke()
+        }
+        // 4. piringan akresi (setengah belakang -> inti -> setengah depan)
+        const disk = front => {
+          g.save(); g.rotate(-.28);
+          if (!front) { g.save(); g.scale(1, .32); const gg = g.createRadialGradient(0, 0, rc, 0, 0, Rd * 1.15); gg.addColorStop(0, 'rgba(255,210,150,' + .5 * open + ')'); gg.addColorStop(.35, 'rgba(255,120,190,' + .28 * open + ')'); gg.addColorStop(1, 'rgba(110,60,230,0)'); g.fillStyle = gg; g.beginPath(); g.arc(0, 0, Rd * 1.15, 0, 7); g.fill(); g.restore() }
+          for (let j = 0; j < 9; j++) {
+            const u = j / 8, r = rc * 1.3 + (Rd - rc * 1.3) * u, cc = u < .22 ? '255,246,224' : u < .5 ? '255,192,112' : u < .75 ? '244,112,204' : '154,92,255';
+            g.strokeStyle = 'rgba(' + cc + ',' + (.14 + .5 * (1 - u)) * open + ')'; g.lineWidth = 3.4 - u * 2.2; g.beginPath(); g.ellipse(0, 0, r, r * .3, 0, front ? 0 : PI, front ? PI : PI * 2); g.stroke()
+          }
+          for (let j = 0; j < 6; j++) {
+            const u = j / 5, r = rc * 1.3 + (Rd - rc * 1.3) * u, a0 = (T * (4.6 - u * 3) + j * 1.7) % (PI * 2); if ((S(a0 + .5) > 0) !== front) continue;
+            g.strokeStyle = 'rgba(255,250,236,' + .8 * open * (1 - .55 * u) + ')'; g.lineWidth = 3 - u * 1.5; g.beginPath(); g.ellipse(0, 0, r, r * .3, 0, a0, a0 + 1); g.stroke()
+          }
+          g.restore()
+        };
+        disk(false);
+        // 5. jet cahaya kutub
+        const jet = E(C((T - 1) / .6, 0, 1)) * (1 - col);
+        if (jet > 0) {
+          const w = 3 + rc * .22, H0 = 70 + 110 * jet, fl = .8 + .2 * S(T * 31);
+          [-1, 1].forEach(sd => { const hh = H0 * (sd < 0 ? 1 : .55), gj = g.createLinearGradient(0, 0, 0, sd * hh); gj.addColorStop(0, 'rgba(255,255,255,' + .8 * jet * fl + ')'); gj.addColorStop(.5, 'rgba(190,130,255,' + .35 * jet * fl + ')'); gj.addColorStop(1, 'rgba(120,60,255,0)'); g.fillStyle = gj; g.beginPath(); g.moveTo(-w, 0); g.lineTo(-w * .2, sd * hh); g.lineTo(w * .2, sd * hh); g.lineTo(w, 0); g.closePath(); g.fill() })
+        }
+        // 6. inti hitam
+        g.globalCompositeOperation = 'source-over'; g.fillStyle = '#020008'; g.beginPath(); g.arc(0, 0, rc, 0, 7); g.fill(); g.globalCompositeOperation = 'lighter';
+        disk(true);
+        // 7. cincin foton, busur lensa gravitasi, halo
+        const ph = open;
+        const hl = g.createRadialGradient(0, 0, rc, 0, 0, rc * 3.6); hl.addColorStop(0, 'rgba(255,200,150,' + .35 * ph + ')'); hl.addColorStop(.4, 'rgba(180,100,255,' + .2 * ph + ')'); hl.addColorStop(1, 'rgba(90,40,200,0)'); g.fillStyle = hl; g.beginPath(); g.arc(0, 0, rc * 3.6, 0, 7); g.fill();
+        g.strokeStyle = 'rgba(255,170,110,' + .55 * ph + ')'; g.lineWidth = 4.5; g.beginPath(); g.arc(0, 0, rc * 1.16, 0, 7); g.stroke();
+        g.strokeStyle = 'rgba(255,246,230,' + .95 * ph + ')'; g.lineWidth = 1.8; g.beginPath(); g.arc(0, 0, rc * 1.1, 0, 7); g.stroke();
+        g.save(); g.rotate(-.28); g.strokeStyle = 'rgba(255,214,160,' + .6 * ph + ')'; g.lineWidth = 2.6; g.beginPath(); g.ellipse(0, -rc * .12, rc * 1.55, rc * 1.38, 0, PI * 1.06, PI * 1.94); g.stroke();
+        g.strokeStyle = 'rgba(255,170,220,' + .35 * ph + ')'; g.lineWidth = 1.6; g.beginPath(); g.ellipse(0, rc * .1, rc * 1.35, rc * 1.2, 0, PI * .12, PI * .88); g.stroke(); g.restore();
+        // 8. runtuh: cincin menyempit + titik putih-panas
+        if (col > 0) {
+          for (let i = 0; i < 4; i++) { const s = (colT * 1.3 + i * .25) % 1, r = 8 + 120 * Math.pow(1 - s, 1.6); g.save(); g.scale(1, .62); g.strokeStyle = 'rgba(255,' + (200 + i * 14) + ',255,' + s * .8 * col + ')'; g.lineWidth = 2.4 * s + .6; g.beginPath(); g.arc(0, 0, r, 0, 7); g.stroke(); g.restore() }
+          const wr = 14 + 54 * colT * colT, wg = g.createRadialGradient(0, 0, 0, 0, 0, wr); wg.addColorStop(0, 'rgba(255,255,255,' + colT * .95 + ')'); wg.addColorStop(.5, 'rgba(230,180,255,' + colT * .5 + ')'); wg.addColorStop(1, 'rgba(160,90,255,0)'); g.fillStyle = wg; g.beginPath(); g.arc(0, 0, wr, 0, 7); g.fill()
+        }
+      }
+      // 9. supernova
+      if (T >= BH_EXP) {
+        const tt = T - BH_EXP, ex = C(tt / (BH_END - BH_EXP), 0, 1), q1 = E(C(tt / .5, 0, 1)), fa = 1 - ex;
+        g.globalCompositeOperation = 'source-over';
+        g.save(); g.scale(1, .62); const sc = g.createRadialGradient(0, 0, 0, 0, 0, BH_BR * .8); sc.addColorStop(0, 'rgba(6,0,16,' + .6 * fa + ')'); sc.addColorStop(1, 'rgba(20,4,48,0)'); g.fillStyle = sc; g.beginPath(); g.arc(0, 0, BH_BR * .8, 0, 7); g.fill(); g.restore();
+        const fl = Math.max(0, 1 - tt / .32); if (fl > 0) { g.fillStyle = 'rgba(255,250,255,' + fl * .9 + ')'; g.fillRect(-900, -900, 1800, 1800) }
+        g.globalCompositeOperation = 'lighter';
+        const br = 24 + 190 * q1, bg = g.createRadialGradient(0, 0, 0, 0, 0, br); bg.addColorStop(0, 'rgba(255,255,255,' + fa * .95 + ')'); bg.addColorStop(.35, 'rgba(235,190,255,' + fa * .6 + ')'); bg.addColorStop(1, 'rgba(130,60,255,0)'); g.fillStyle = bg; g.beginPath(); g.arc(0, 0, br, 0, 7); g.fill();
+        for (let i = 0; i < 3; i++) { const q = E(C(tt / (.5 + i * .13), 0, 1)); g.save(); g.scale(1, .62); g.strokeStyle = 'rgba(' + (i == 0 ? '255,255,255' : i == 1 ? '232,190,255' : '170,100,255') + ',' + (1 - q) * .95 + ')'; g.lineWidth = (8 - i * 2.2) * (1 - q) + 1; g.beginPath(); g.arc(0, 0, 14 + BH_BR * (.45 + i * .3) * q, 0, 7); g.stroke(); g.restore() }
+        for (let i = 0; i < 28; i++) { const an = i * .2244 + (i % 3) * .03, len = (50 + BH_BR * 1.25 * q1) * (i % 2 ? .62 : 1); g.save(); g.scale(1, .75); g.rotate(an); lens(10, len, 4.2 * fa + .8, i % 3 ? '232,196,255' : '255,255,255', fa * .85); g.restore() }
+      }
+      g.restore()
+    }
+    /* ===== SKILL X BELATI: SURIKEN BERPUTAR MENGELILINGI PEMAIN — muter 1 detik (area damage), lalu kembali menyatu ke pemain ===== */
+    const SHR_SPIN = 1, SHR_ORB = 62, SHR_R = 26, SHR_N = 4;   // SHR_N = jumlah suriken yang mengorbit
+    function shrThrow(a, m) {
+      fx.push({ k: 'shr', x: p.x, y: p.y, oa: a, or: 6, ph: 0, t: 0, rot: 0, m, tk: 0, sn: 0, tr: Array.from({ length: SHR_N }, () => []), life: 8, max: 8 });
+      SFX.swing(4); fx.push({ k: 'ring', x: p.x, y: p.y, r: 14, w: 2, life: .25, max: .25, col: '#ff8a8a' })
+    }
+    function shrTick(dt) {
+      fx.forEach(f => {
+        if (f.k != 'shr' || f.life <= 0) return;
+        f.t += dt; f.rot += dt * 24;
+        if (f.ph == 0) { f.oa += dt * 10; f.or += (SHR_ORB - f.or) * Math.min(1, dt * 14); if (f.t >= .15) { f.ph = 1; f.t = 0; fx.push({ k: 'ring', x: p.x, y: p.y, r: SHR_ORB, w: 3, life: .3, max: .3, col: '#ff6a6a' }) } }
+        else if (f.ph == 1) { f.oa += dt * 11; f.or = SHR_ORB + Math.sin(f.t * 6) * 3; if (f.t >= SHR_SPIN) { f.ph = 2; f.t = 0; SFX.swing(4) } }
+        else { f.oa += dt * 13; f.or = Math.max(6, f.or - dt * (110 + f.t * 500)); if (f.or <= 6) { f.life = 0; fx.push({ k: 'ring', x: p.x, y: p.y, r: 12, w: 3, life: .25, max: .25, col: '#ffd0d0' }, { k: 'gl', x: p.x, y: p.y - 4, r: 28, c: '255,120,120', life: .2, max: .2 }); SFX.pickup(); return } }
+        for (let i = 0; i < SHR_N; i++) {
+          const an = f.oa + i * 6.2832 / SHR_N, sx = p.x + Math.cos(an) * f.or, sy = p.y + Math.sin(an) * f.or * .85; f.tr[i].push([sx, sy]); if (f.tr[i].length > 10) f.tr[i].shift();
+          if (R() < .5) dp.push({ k: 'p', x: sx + (R() - .5) * 8, y: sy + (R() - .5) * 8, vx: (R() - .5) * 50, vy: (R() - .5) * 50, life: .3, max: .3, s: 1.5 + R() * 1.5, c: R() < .5 ? '#ff6a6a' : '#fff' })
+        }
+        f.tk -= dt; if (f.tk <= 0) {
+          f.tk = .1; const h0 = HST, rr = f.or + SHR_R * .6;
+          es.slice().forEach(e => { if (e.sw > 0) return; if (Math.hypot(e.x - p.x, (e.y - p.y) / .85) < rr + e.r + HB()) hit(e, (f.ph == 1 ? 9 : 11) * f.m, p.x, p.y, 45) }); HST = h0
+        }
+        f.sn -= dt; if (f.sn <= 0 && f.ph == 1) { f.sn = .22; SFX.swing(4) }
+      })
+    }
+    function shrFx(f, k) {
+      g.save(); g.globalCompositeOperation = 'lighter';
+      // area damage di sekitar pemain
+      const orr = Math.max(1, f.or); g.save(); g.translate(p.x, p.y + 2); g.scale(1, .85); const al = f.ph == 2 ? Math.min(1, f.or / SHR_ORB) : 1;
+      g.strokeStyle = 'rgba(255,120,120,' + (.3 + .2 * Math.sin(f.t * 30)) * al + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(0, 0, f.or + SHR_R * .6, 0, 7); g.stroke();
+      const dg = g.createRadialGradient(0, 0, orr * .3, 0, 0, orr + SHR_R * .6); dg.addColorStop(0, 'rgba(255,60,80,0)'); dg.addColorStop(1, 'rgba(255,60,80,' + .16 * al + ')'); g.fillStyle = dg; g.beginPath(); g.arc(0, 0, f.or + SHR_R * .6, 0, 7); g.fill(); g.restore();
+      f.tr.forEach(tr => tr.forEach((q, i) => { const a = (i + 1) / tr.length; g.fillStyle = 'rgba(255,90,100,' + a * .3 + ')'; g.beginPath(); g.arc(q[0], q[1] - 2, 3 + a * 5, 0, 7); g.fill() }));
+      for (let n = 0; n < SHR_N; n++) {
+        const an = f.oa + n * 6.2832 / SHR_N; g.save(); g.translate(p.x + Math.cos(an) * f.or, p.y + Math.sin(an) * f.or * .85 - 2);
+        const gr = g.createRadialGradient(0, 0, 0, 0, 0, 22); gr.addColorStop(0, 'rgba(255,120,120,.65)'); gr.addColorStop(1, 'rgba(255,60,80,0)'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 22, 0, 7); g.fill();
+        g.globalCompositeOperation = 'source-over'; g.rotate(f.rot);
+        g.fillStyle = '#d7dde8'; g.strokeStyle = '#2a2234'; g.lineWidth = 1.2; g.beginPath();
+        for (let i = 0; i < 4; i++) { const a = i * 1.5708; g.lineTo(Math.cos(a) * 13, Math.sin(a) * 13); g.lineTo(Math.cos(a + .785) * 3.6, Math.sin(a + .785) * 3.6) }
+        g.closePath(); g.fill(); g.stroke();
+        g.fillStyle = '#c8283e'; g.beginPath(); g.arc(0, 0, 2.4, 0, 7); g.fill(); g.restore()
+      }
+      g.restore()
+    }
+    { const _updBH = upd; upd = function (dt) { const hs = HST > 0; _updBH(dt); if (!hs) { bhTick(dt); shrTick(dt) } } }
     const UL = [
       {
         n: 'Excalibur Judgement', dur: 3.2, f: (a, m) => {
@@ -3320,17 +3523,7 @@
         }
       },
       {
-        n: 'Cataclysm', dur: 3.7, f: (a, m) => {
-          const [tx, ty] = tgt();
-          fx.push({ k: 'rune', x: tx, y: ty, life: 2.6, max: 2.6, sc: 7, w: 3 }, { k: 'ring', x: tx, y: ty, r: 140, w: 4, life: 2.6, max: 2.6, col: '#d6f', fill: 1 }, { k: 'gl', x: tx, y: ty, r: 190, c: '200,120,255', life: 2.4, max: 2.4 });
-          for (let i = 0; i < 13; i++)skLater(.3 + i * .2, () => {
-            const q = R() * 6.283, d = Math.sqrt(R()) * 125, x = tx + Math.cos(q) * d, y = ty + Math.sin(q) * d;
-            fx.push({ k: 'ring', x, y, r: 58, w: 3.5, life: .45, max: .45, col: '#d6f', fill: 1 }, { k: 'rune', x, y, life: .45, max: .45, sc: 2.6, w: 2 }, { k: 'ux', t: 'fall', s: 3, x, y, r: 58, H: 150, tf: .57, life: .7, max: .7, c: '205,125,255', g: '255,255,255' });
-            for (let j = 0; j < 6; j++)skLater(j * .06, () => { const u = j / 5, hx = x - 34 + 34 * u, hy = y - 120 + 120 * u; dp.push({ k: 'l', x: hx, y: hy, a: 1.3, len: 64, w: 10, cc: '#e6b8ff', life: .18, max: .18 }); fx.push({ k: 'gl', x: hx, y: hy, r: 26, c: '215,150,255', life: .16, max: .16 }) });
-            skLater(.4, () => boomS(x, y, 58, 40 * m))
-          });
-          skLater(3.25, () => { boomS(tx, ty, 150, 110 * m); for (let i = 0; i < 3; i++)fx.push({ k: 'ring', x: tx, y: ty, r: 70 + i * 40, w: 5 - i, life: .55 + i * .1, max: .55 + i * .1, col: i % 2 ? '#fff' : '#e6b8ff' }); shake = Math.max(shake, 14); SFX.slam() })
-        }
+        n: 'Event Horizon', dur: BH_END, f: (a, m) => { const [tx, ty] = tgt(); bhStart(tx, ty, m) }
       },
       {
         n: 'Thousand Shadows', dur: 4.1, f: (a, m) => {
@@ -4303,7 +4496,7 @@
         }
         g.fillStyle = '#0006'; g.fillRect(e.x - 10, e.y + 6, 20, 3);
         drawEnemy(e); if (e.k == 'dummy' || e.dying) return;
-        if (e.stun > 0) { g.fillStyle = '#ffd34d'; for (let i = 0; i < 3; i++)g.fillRect(e.x + Math.cos(t * 6 + i * 2.1) * 7 - 1, e.y - e.ht - 4 + Math.sin(t * 6 + i * 2.1) * 2, 2, 2) }
+        if (e.stun > 0 && !(e.bh > t)) { g.fillStyle = '#ffd34d'; for (let i = 0; i < 3; i++)g.fillRect(e.x + Math.cos(t * 6 + i * 2.1) * 7 - 1, e.y - e.ht - 4 + Math.sin(t * 6 + i * 2.1) * 2, 2, 2) }
         bar(e.x - 9, e.y - e.ht - 11, 18, 2, e.hp, e.mhp, '#e44'); bar(e.x - 9, e.y - e.ht - 8, 18, 1, e.stg, e.sg, '#ffd34d')
       });
       gh.forEach(q => {
@@ -4329,7 +4522,7 @@
       });
       fx.forEach(f => {
         const k = f.life / f.max;
-        if (f.k == 'slash') slashFx2(f, 1 - k); else if (f.k == 'muzz') muzzFx2(f, k); else if (f.k == 'pil') pilFx(f, k); else if (f.k == 'pf') pfFx(f, k); else if (f.k == 'ab') abFx(f, k); else if (f.k == 'xm') xmFx(f, k); else if (f.k == 'rune') runeFx(f, k); else if (f.k == 'gl') glFx(f, k); else if (f.k == 'cut') cutFx(f, k); else if (f.k == 'flare') flareFx(f, k); else if (f.k == 'pierce') pierceFx(f, k); else if (f.k == 'ux') uxFx(f, k); else if (f.k == 'arc') { g.fillStyle = 'rgba(255,255,255,' + k * .55 + ')'; g.beginPath(); g.moveTo(f.x, f.y); g.arc(f.x, f.y, f.r, f.a - f.arc / 2, f.a + f.arc / 2); g.fill() }
+        if (f.k == 'slash') slashFx2(f, 1 - k); else if (f.k == 'muzz') muzzFx2(f, k); else if (f.k == 'pil') pilFx(f, k); else if (f.k == 'pf') pfFx(f, k); else if (f.k == 'ab') abFx(f, k); else if (f.k == 'xm') xmFx(f, k); else if (f.k == 'rune') runeFx(f, k); else if (f.k == 'gl') glFx(f, k); else if (f.k == 'cut') cutFx(f, k); else if (f.k == 'flare') flareFx(f, k); else if (f.k == 'pierce') pierceFx(f, k); else if (f.k == 'ux') uxFx(f, k); else if (f.k == 'beat') beatFx(f, k); else if (f.k == 'bh') bhFx(f, k); else if (f.k == 'shr') shrFx(f, k); else if (f.k == 'arc') { g.fillStyle = 'rgba(255,255,255,' + k * .55 + ')'; g.beginPath(); g.moveTo(f.x, f.y); g.arc(f.x, f.y, f.r, f.a - f.arc / 2, f.a + f.arc / 2); g.fill() }
         else if (f.k == 'ring') { g.strokeStyle = f.col; g.globalAlpha = k; g.lineWidth = f.w || 1; g.beginPath(); g.arc(f.x, f.y, f.r * (f.fill ? 1 : 1.6 - k * .6), 0, 7); if (f.fill) { g.fillStyle = f.col; g.globalAlpha = k * .4; g.fill(); g.globalAlpha = k } g.stroke(); g.lineWidth = 1; g.globalAlpha = 1 }
         else { g.font = (f.crit ? 'bold 11px' : 'bold 8px') + ' monospace'; g.globalAlpha = Math.min(1, k * 2); txt(f.s, f.x, f.y, f.col, 'center'); g.globalAlpha = 1 }
       });
