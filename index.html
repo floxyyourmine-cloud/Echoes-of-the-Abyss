@@ -3523,11 +3523,42 @@
         [[250, .2], [500, .12], [750, .07], [1000, .045]].forEach(([f, a], i) => T(f, f * .985, .32 / (1 + i * .4), 'triangle', a * v, 0, { at: .0008 }));
         T(130, 55, .12, 'sine', .38 * v); N(.3, .26 * v, 5200, 1300, 3.5, 'bandpass', .015, { at: .03, pan: (rnd() - .5) * .8 }); N(.18, .12 * v, 9000, 3500, 1, 'highpass', .03, { at: .02 }); RING(2600, .025 * v, .18, .005)
       };
-      return {
-        init, ready: () => !!ac, state: () => ac ? ac.state : 'none', opening, intro, cut, finale() { if (!ac) return; cut(); bigChord(ac.currentTime + .05, newIg()) },
-        vol(v) { vl = v; if (oc) oc.gain.value = v; if (mu) mu.gain.value = .3 * v },
-        mode(m) { md = m; if (m == 'menu') { mt = 0; bi = 0 } if (ml) ml.gain.setTargetAtTime(m == 'menu' ? 1 : 0, ac.currentTime, .4) },
-        isOn: () => on, toggle() { on = !on; if (mg) mg.gain.value = on ? .55 : 0 }, blip(f) { T(f, f * .86, .05, 'square', .028, 0, { lp: 2600 }) },
+      // ===== SFX v3 "EPIC": suara berlapis (sub-bass + badan + retakan + logam + udara + reverb) & orkestra untuk momen besar =====
+      const SUB = (f0, f1, dur, v, dl = 0, o = {}) => { T(f0, f1, dur, 'sine', v, dl, Object.assign({ at: .002, send: .25 }, o)); T(f0 * 2, f1 * 2, dur * .6, 'triangle', v * .35, dl, { at: .002 }) };
+      const WHSH = (dur, v, f0, f1, dl = 0, pan) => { const p0 = pan != null ? pan : (rnd() - .5) * .8; N(dur, v, f0, f1, 1.6, 'bandpass', dl, { at: dur * .35, pan: p0, send: .25 }); N(dur * .8, v * .5, f0 * 2.2, f1 * 1.8, 2.4, 'bandpass', dl + dur * .08, { at: dur * .3, pan: p0 }); N(dur * .7, v * .25, 6000, 11000, .8, 'highpass', dl + dur * .1, { at: dur * .3, pan: p0 }) };
+      const BELL = (f, v, d, dl = 0, o = {}) => [[1, 1], [2.01, .55], [2.76, .38], [4.07, .22], [5.43, .14]].forEach(([m, a], i) => T(f * m, f * m * .998, d / (1 + i * .35), 'sine', v * a, dl, Object.assign({ send: .45 }, o)));
+      const SHING = (f, v, dl = 0, d = .4) => { T(f * .6, f * 1.6, .09, 'triangle', v * 1.4, dl, { at: .004, lp: 9000 }); BELL(f, v, d, dl + .03, { send: .35 }); N(.05, v * 8, 3500, 11000, 2.5, 'bandpass', dl, { at: .0005 }) };
+      const PWR = (f, v, d, dl = 0, lpf = 1800) => [.5, 1, 1.5, 2].forEach((m, i) => { T(f * m, f * m, d, 'sawtooth', v / (1 + i * .5), dl, { at: d * .12, lp: lpf, send: .5 }); T(f * m * 1.007, f * m * 1.007, d, 'sawtooth', v / (1 + i * .5) * .7, dl, { at: d * .12, lp: lpf, send: .5 }) });
+      const HORN = (f, v, d, dl = 0) => { T(f, f, d, 'sawtooth', v, dl, { at: .03, lp: 2200, send: .45 }); T(f * 1.004, f * 1.004, d, 'sawtooth', v * .6, dl, { at: .03, lp: 2200, send: .45 }); T(f * 2, f * 2, d * .8, 'square', v * .22, dl, { at: .03, lp: 3000 }) };
+      const IMP = (z, dl = 0) => { CK(.5 * z, dl); N(.05, .55 * z, 5200, 900, 1.1, 'bandpass', dl, { at: .0006, dist: 1 }); N(.09, .4 * z, 1400, 220, .9, 'bandpass', dl + .004, { dist: 1, send: .15 }); SUB(150, 42, .22 + .1 * z, .55 * z, dl) };
+      const FIRE = (dur, v, dl = 0) => { N(dur, v, 500, 2600, .9, 'bandpass', dl, { at: dur * .25, send: .4, dist: 1 }); N(dur * 1.1, v * .8, 900, 140, .8, 'lowpass', dl, { at: dur * .15, send: .5 }); for (let i = 0; i < Math.ceil(dur * 12); i++)N(.04 + rnd() * .05, v * .35, 2500 + rnd() * 4000, 1800, 2.5, 'highpass', dl + rnd() * dur, { at: .002, pan: rnd() * 2 - 1 }) };
+      const ZAP = (dur, v, dl = 0, n = 5) => { for (let i = 0; i < n; i++) { const t0 = dl + i * dur / n + rnd() * .03; T(2400 + rnd() * 3000, 400 + rnd() * 500, .07, 'sawtooth', v * .5, t0, { lp: 6000, pan: rnd() * 2 - 1 }); N(.05, v * .5, 4000, 9000, 2, 'highpass', t0, { at: .001 }) } };
+      const SHIM = (fs, v, gap, dl = 0, d = .9) => fs.forEach((f, i) => BELL(f, v, d, dl + i * gap));
+      const TWANG = (v = 1, dl = 0, pan) => {
+        const o = pan != null ? { pan } : {};
+        N(.012, .5 * v, 3000, 8000, 1, 'highpass', dl, Object.assign({ at: .0004 }, o));
+        [[196, .26], [392, .15], [588, .09], [784, .06], [1176, .04]].forEach(([f, a], i) => T(f * 1.04, f * .99, .34 / (1 + i * .45), 'triangle', a * v, dl, Object.assign({ at: .0008, send: .25 }, o)));
+        T(120, 50, .1, 'sine', .35 * v, dl, o); N(.3, .26 * v, 5200, 1200, 3.5, 'bandpass', dl + .012, Object.assign({ at: .03 }, o)); N(.2, .12 * v, 9000, 3500, 1, 'highpass', dl + .03, Object.assign({ at: .02 }, o))
+      };
+      const ORB = (v = 1, dl = 0) => { T(220, 1500, .32, 'sawtooth', .06 * v, dl, { lp: 2600, at: .06, send: .4 }); T(440, 3000, .3, 'sine', .07 * v, dl, { at: .05, send: .5 }); N(.34, .28 * v, 2000, 9500, 2, 'bandpass', dl, { at: .06, send: .4 }); SUB(95, 40, .3, .45 * v, dl + .05); BELL(880 + rnd() * 120, .05 * v, .7, dl + .06, { send: .6 }); ZAP(.12, .18 * v, dl + .04, 3) };
+      const BLAST = (z, dl = 0, fire = 0) => {
+        CK(.6 * z, dl); N(.05, .55 * z, 7500, 900, .8, 'bandpass', dl, { at: .0008, dist: 1 });
+        SUB(120, 24, 1.2 * z, .85 * z, dl); T(62, 20, 1.6 * z, 'sine', .55 * z, dl + .03, { send: .4 });
+        N(.9 * z, .6 * z, 2800, 100, .6, 'lowpass', dl, { at: .004, dist: 1, send: .6 }); N(1.8 * z, .28 * z, 520, 50, .5, 'lowpass', dl + .06, { at: .06, send: .8 }); N(.4, .32 * z, 1600, 240, 1, 'bandpass', dl + .03, { dist: 1 });
+        T(220, 70, .35 * z, 'sawtooth', .18 * z, dl, { lp: 900, at: .002 });
+        for (let i = 0; i < 12; i++)N(.03 + rnd() * .05, .11 * z * (.4 + rnd()), 2500 + rnd() * 3500, 900, 2, 'bandpass', dl + .1 + rnd() * .9 * z, { pan: rnd() * 2 - 1, at: .001 });
+        if (fire) FIRE(.9 * z, .22 * z, dl + .04)
+      };
+      let ob; const OB = () => { X(); if (!ob) { ob = ac.createGain(); ob.gain.value = 1; ob.connect(xb); const s = ac.createGain(); s.gain.value = .5; ob.connect(s); s.connect(xw) } return ob };
+      const ORC = {
+        timp: (dl, v, f) => { if (ac && on) timp(ac.currentTime + dl, v, f, OB()) },
+        choir: (f, dl, dur, v) => { if (ac && on) choir(f, ac.currentTime + dl, dur, v, OB()) },
+        str: (f, dl, dur, v) => { if (ac && on) str(f, ac.currentTime + dl, dur, v, OB()) },
+        harp: (f, dl, v) => { if (ac && on) harp(f, ac.currentTime + dl, v, OB()) },
+        cym: (dl, dur, v) => { if (ac && on) cym(ac.currentTime + dl, dur, v, OB()) }
+      };
+      // ===== Pemilih suara berdasarkan pengaturan GRAFIK: PC/LAPTOP = suara epik baru, HP/MOBILE = suara awal =====
+      const OLDM = {
         swing(w) {
           if (w == 4) { N(.07, .4, 3000, 9000, 2, 'bandpass', 0, { at: .01 }); N(.07, .4, 3500, 9000, 2, 'bandpass', .06, { at: .01 }); CK(.15, .12) }
           else if (w == 1) { CK(.22); N(.075, .5, 1800, 8500, 3.2, 'bandpass', 0, { at: .006 }); N(.05, .28, 7000, 12000, 1.1, 'highpass', .01, { at: .002 }); T(1300, 4600, .07, 'triangle', .07, 0, { at: .004, lp: 7000 }); RING(3600, .035, .12, .05) }
@@ -3594,6 +3625,129 @@
         bhPulse(k) { T(48 + 30 * k, 30, .45, 'sine', .35, 0, { send: .4 }); N(.3, .12, 200 + 800 * k, 80, 1, 'lowpass', 0, { at: .02, send: .5 }) },
         bhCollapse() { T(90, 2400, .6, 'sawtooth', .09, 0, { lp: 3500, at: .5, send: .4 }); T(45, 400, .6, 'sine', .5, 0, { at: .5 }); N(.6, .3, 200, 9000, 1.5, 'bandpass', 0, { at: .55, send: .6 }) },
         bhBlast() { EXP(1.9, 1); T(60, 20, 2.2, 'sine', .8, .02, { send: .6 }); RING(500, .08, 1.6, .05, { send: .7 }); N(1.4, .35, 9000, 200, .8, 'highpass', .02, { at: .02, send: .5 }); arp([196, 261.6, 329.6, 392, 523.25], .1, .05, 1.2) }
+      };
+      const NEWM = {
+        swing(w, hn) {
+          if (!ac || !on) return; const b = hn == 2 ? 1 : 0, z = b ? 1.4 : 1, a2 = hn == 1 ? -1 : 1;
+          if (w == 4) {
+            WHSH(.075 * z, .4, 3000, 9500, 0, -.4 * a2); WHSH(.075 * z, .36, 3600, 9500, .055, .4 * a2); CK(.2, .004); BELL(4200, .025, .16, .01, { send: .2 });
+            if (b) { WHSH(.24, .5, 1200, 7500, .02); SUB(120, 46, .22, .4, .06); SHING(3000, .05, .1, .4) }
+          } else if (w == 1) {
+            CK(.26); WHSH(.09 * z, .6, 1800, 9000, 0, .2 * a2); T(1300, 5200, .06, 'triangle', .09, 0, { at: .004, lp: 7500 }); BELL(3600, .035, .2, .04, { send: .3 });
+            if (b) { SUB(100, 36, .38, .55, .06); WHSH(.32, .5, 500, 6500, .1); BELL(2400, .06, .8, .12, { send: .5 }) } else if (hn == 1) WHSH(.15, .32, 900, 5200, 0, -.5)
+          } else {
+            WHSH(.17 * z, .62, 500, 6200, 0, .3 * a2); N(.12, .3, 3500, 10000, .8, 'highpass', .03, { at: .01 }); SHING(2600 - (hn == 1 ? 300 : 0), .05, .035, .4);
+            if (b) { SUB(90, 30, .45, .65, .05); WHSH(.4, .45, 250, 3800, .02, 0); BELL(1500, .07, 1, .08, { send: .6 }); N(.3, .2, 800, 150, .8, 'lowpass', .05, { send: .5 }) }
+          }
+        },
+        chop() { if (!ac || !on) return; WHSH(.16, .55, 400, 3800, 0); IMP(.95, .05); BELL(1300, .05, .45, .05, { send: .4 }); N(.18, .22, 700, 160, .8, 'lowpass', .05, { dist: 1, send: .3 }) },
+        shot(a) { if (!ac || !on) return; if (a) ORB(1, 0); else { TWANG(1, 0); RING(2600, .025, .18, .005) } },
+        eshot() { if (!ac || !on) return; T(520, 1800, .22, 'sawtooth', .07, 0, { lp: 3200, at: .03, send: .4 }); T(260, 900, .22, 'sine', .08, 0, { at: .03, send: .5 }); N(.22, .2, 1500, 6000, 2, 'bandpass', 0, { at: .03, send: .35 }); ZAP(.1, .15, .02, 3); BELL(1100, .035, .4, .05, { send: .5 }) },
+        fireball() { if (!ac || !on) return; FIRE(.5, .34, 0); T(190, 55, .5, 'sawtooth', .14, 0, { lp: 1200, at: .02, send: .3 }); T(900, 140, .26, 'sine', .1, 0, { at: .004 }); SUB(80, 36, .4, .4) },
+        hit(c, kind) {
+          if (!ac || !on || !gt('h', .06, 3)) return; X(); const w = typeof wi == 'number' ? wi : 0, k = 1 - (lim.h.length - 1) * .22;
+          IMP(.8 * k);
+          if (w == 0) { N(.06, .45 * k, 3000, 9000, 2.5, 'bandpass', 0, { at: .0005, dist: 1 }); BELL(2100 + rnd() * 500, .06 * k, .35); T(320, 120, .1, 'triangle', .35 * k) }
+          else if (w == 1) { N(.025, .6 * k, 5000, 12000, 1, 'highpass', 0, { at: .0004 }); T(2400, 1200, .06, 'triangle', .1 * k); BELL(3300, .05 * k, .25); SUB(200, 70, .12, .4 * k) }
+          else if (w == 2) { T(260, 90, .1, 'triangle', .5 * k); N(.05, .4 * k, 1800, 500, 1, 'bandpass'); T(1400, 800, .06, 'square', .04 * k, 0, { lp: 3000 }) }
+          else if (w == 3) { T(700, 200, .18, 'sine', .2 * k, 0, { send: .5 }); N(.15, .25 * k, 6000, 1200, 1.5, 'bandpass', 0, { send: .5 }); BELL(1500 + rnd() * 300, .05 * k, .5) }
+          else { N(.035, .5 * k, 4500, 10000, 2, 'bandpass', 0, { at: .0004 }); N(.035, .4 * k, 3500, 9000, 2, 'bandpass', .03, { at: .0004 }); BELL(3800, .04 * k, .15) }
+          if (kind == 'slime') { T(380, 110, .16, 'sine', .3 * k, 0, { send: .2 }); N(.14, .3 * k, 900, 200, 2.5, 'bandpass', 0, { at: .01 }); T(180, 320, .08, 'sine', .15 * k, .06) }
+          else if (kind == 'skel') { N(.02, .5 * k, 3000, 6000, 3, 'bandpass', 0, { at: .0004 }); T(900, 420, .05, 'triangle', .18 * k); N(.015, .3 * k, 4000, 7000, 3, 'bandpass', .035, { at: .0004 }) }
+          else if (kind == 'mage') { T(500, 160, .2, 'sine', .2 * k, 0, { send: .5 }); BELL(900, .05 * k, .4); N(.12, .2 * k, 6000, 2000, 2, 'bandpass', 0, { send: .4 }) }
+          if (c) { SUB(90, 28, .5, .7); BELL(1800, .1, .9, .01, { send: .6 }); N(.3, .35, 6000, 800, .8, 'bandpass', 0, { send: .5 }); CK(.6); T(1200, 2400, .18, 'sawtooth', .06, 0, { lp: 5000 }); SHIM([1568, 2637], .05, .05, .02, .45) }
+        },
+        boom(r) { if (!ac || !on || !gt('b', .09, 3)) return; BLAST(Math.max(.7, Math.min(1.3, .7 + (r || 40) / 70)), 0, 0); BELL(1300, .04, .7, .02, { send: .5 }) },
+        slam() { if (!ac || !on) return; BLAST(1.4, 0, 1); SUB(70, 26, 1, .55, .05); BELL(700, .06, .9, .05, { send: .5 }); for (let i = 0; i < 6; i++)N(.03, .2, 1800 + rnd() * 2000, 600, 3, 'bandpass', .12 + rnd() * .5, { pan: rnd() * 2 - 1, at: .001 }) },
+        warn(k) {
+          if (!ac || !on) return;
+          if (k == 0) { T(150, 620, .6, 'sawtooth', .06, 0, { at: .3, lp: 1800 }); N(.6, .13, 300, 3000, 1.5, 'bandpass', 0, { at: .4 }); T(390, 930, .6, 'sine', .05, 0, { at: .3 }); SUB(60, 90, .55, .3, 0, { at: .35 }); N(.4, .08, 2000, 7000, 6, 'bandpass', .1, { at: .3 }) }
+          else { T(300, 1300, .6, 'sawtooth', .05, 0, { at: .35, lp: 2800, send: .4 }); N(.5, .12, 300, 6000, 2, 'bandpass', 0, { at: .35, send: .3 }); T(200, 320, .5, 'triangle', .05, 0, { at: .3 }); BELL(1200, .025, .6, .35, { send: .5 }) }
+        },
+        stagger() { if (!ac || !on) return; IMP(1.1); N(.3, .45, 7000, 1500, 1, 'bandpass', 0, { send: .3 }); BELL(1700, .09, .8, .01, { send: .5 }); BELL(2500, .05, .6, .04); for (let i = 0; i < 6; i++)N(.02, .25, 3500 + rnd() * 4000, 2000, 3, 'bandpass', .03 + rnd() * .25, { pan: rnd() * 2 - 1, at: .0004 }) },
+        die(kind) {
+          if (!ac || !on || !gt('d', .14, 3)) return; X();
+          if (kind == 'slime') { N(.28, .5, 1500, 200, 1.4, 'lowpass', 0, { at: .004, dist: 1, send: .3 }); T(340, 90, .22, 'sine', .35, 0, { send: .2 });[0, .06, .12, .19].forEach((d, i) => T(260 + i * 90, 120 + i * 40, .09, 'sine', .14, d)); SUB(110, 40, .3, .4) }
+          else if (kind == 'skel') { N(.03, .55, 3500, 7000, 2.5, 'bandpass', 0, { at: .0005 }); T(1000, 400, .06, 'triangle', .2); for (let q = 0; q < 9; q++) { const d = .02 + q * .035 + rnd() * .03; N(.02, .3, 2500 + rnd() * 3000, 1500, 3, 'bandpass', d, { at: .0004, pan: rnd() * 2 - 1 }); T(700 + rnd() * 700, 300, .04, 'triangle', .1, d, { pan: rnd() * 2 - 1 }) } SUB(100, 34, .3, .45, .02); BELL(1600, .04, .5, .05) }
+          else if (kind == 'mage') { T(900, 150, .5, 'sawtooth', .07, 0, { lp: 3000, at: .02, send: .5 }); N(.45, .35, 5000, 400, 1, 'bandpass', 0, { dist: 1, send: .5 }); SUB(130, 30, .45, .5, .05); SHIM([1760, 1319, 988, 740], .035, .06, .08, .6) }
+          else { N(.3, .4, 3500, 400, .9, 'bandpass', 0, { dist: 1 }); for (let i = 0; i < 6; i++)T(800 + rnd() * 1700, 500, .04, 'square', .05, .02 + rnd() * .25); T(240, 50, .35, 'triangle', .25); T(1200, 200, .5, 'sine', .07, .02, { send: .4 }); SUB(110, 36, .35, .5) }
+        },
+        pain() { if (!ac || !on) return; SUB(170, 50, .3, .8); CK(.35); N(.18, .45, 900, 180, .8, 'lowpass', 0, { dist: 1 }); FM(150, 95, .28, .2, 700, 1150); T(55, 40, .25, 'sine', .5, .16); BELL(500, .03, .5, .02, { send: .5 }) },
+        death() { if (!ac || !on) return; FM(120, 40, 1.4, .28, 500, 900); SUB(55, 30, 1.6, .65); N(1.3, .25, 200, 2200, 1, 'bandpass', 0, { at: .8, send: .6 }); T(60, 40, .25, 'sine', .55, .25); T(60, 40, .25, 'sine', .5, .55); PWR(98, .04, 2.2, .1, 700); BELL(392, .08, 2.2, .3, { send: .8 }); BELL(311, .06, 2.4, .8, { send: .8 }) },
+        dodge() { if (!ac || !on) return; WHSH(.22, .38, 500, 4200, 0); N(.12, .22, 200, 900, 1, 'lowpass', .02); N(.07, .28, 800, 200, 1, 'lowpass', .1); SUB(120, 60, .14, .2, .02) },
+        skill(i) {
+          if (!ac || !on) return; const w = typeof wi == 'number' ? wi : 0; i |= 0;
+          if (w == 0) {
+            if (i == 0) { SHING(2600, .06, 0, .35); SHING(3300, .06, .07, .35); WHSH(.16, .5, 700, 6500, 0, -.5); WHSH(.16, .5, 800, 7000, .07, .5); IMP(.7, .14); SUB(130, 45, .2, .4, .08) }
+            else if (i == 1) { for (let q = 0; q < 4; q++)WHSH(.22, .45, 400 + q * 220, 4200 + q * 600, q * .16, q % 2 ? .6 : -.6); N(.75, .22, 300, 1400, .7, 'bandpass', 0, { at: .3, send: .4 }); SUB(70, 40, .7, .35);[0, 1, 2].forEach(q => SHING(2200 + q * 400, .04, .1 + q * .17, .3)) }
+            else { T(150, 900, .22, 'sawtooth', .1, 0, { lp: 2500, at: .12 }); WHSH(.22, .6, 300, 6000, 0);[220, 330, 440].forEach(f => HORN(f, .07, .9, .2)); BLAST(1.1, .22, 0); BELL(1568, .08, 1.4, .24, { send: .7 }); SHIM([1047, 1319, 1568, 2093], .04, .05, .26, .8); ORC.timp(.2, .45, 62) }
+          } else if (w == 1) {
+            if (i == 0) { WHSH(.3, .55, 300, 5000, 0); for (let q = 0; q < 3; q++)SUB(80, 40, .15, .4, .05 + q * .09); SHING(1500, .07, .22, .5); IMP(.8, .22) }
+            else if (i == 1) { SHING(900, .1, 0, .7); BELL(600, .07, .9, 0, { send: .5 }); SUB(110, 40, .3, .5, .02); WHSH(.14, .5, 1500, 8000, .35); IMP(.9, .38); BELL(2400, .06, .7, .4, { send: .5 }) }
+            else { FM(95, 190, .8, .3, 400, 800); FM(80, 160, .8, .2, 600, 1200, .02); FIRE(1.1, .3, .05); for (let q = 0; q < 4; q++)SUB(65, 30, .22, .5, .1 + q * .13); WHSH(.35, .55, 300, 6000, .4); BELL(1000, .08, 1.2, .5, { send: .6 }); ORC.timp(.3, .5, 58) }
+          } else if (w == 2) {
+            if (i == 0) { for (let q = 0; q < 4; q++)TWANG(.75, q * .07, (q - 1.5) * .35); RING(2600, .03, .3, .05) }
+            else if (i == 1) { WHSH(.28, .45, 400, 4200, 0); SUB(110, 50, .18, .3, .02); for (let q = 0; q < 3; q++)TWANG(.75, .12 + q * .06, (q - 1) * .5) }
+            else { T(260, 980, .4, 'triangle', .06, 0, { at: .25, lp: 3000 }); N(.4, .1, 800, 5500, 2, 'bandpass', 0, { at: .3 }); TWANG(1.25, .4); SUB(80, 34, .5, .5, .4); for (let q = 0; q < 14; q++)N(.12, .13, 6500 - q * 100, 1200, 4, 'bandpass', .75 + q * .09 + rnd() * .04, { at: .03, pan: rnd() * 2 - 1, send: .2 }); BELL(1760, .05, .8, .4, { send: .6 }) }
+          } else if (w == 3) {
+            if (i == 0) { ORB(1.3, 0); BLAST(.6, .12, 0); ZAP(.3, .3, .1, 5); BELL(1320, .06, 1, .12, { send: .7 }) }
+            else if (i == 1) { T(1800, 200, .2, 'sine', .12); WHSH(.25, .4, 6000, 500, 0); BELL(1000, .05, .6, .22, { send: .7 }); SUB(80, 36, .5, .6, .25); N(.5, .25, 500, 9000, 1, 'bandpass', .22, { at: .01, send: .6 }); SHIM([1319, 1760, 2349], .04, .04, .26, .6) }
+            else { PWR(82.4, .05, 2, 0, 1000); FIRE(1.6, .28, .15); T(60, 160, 1.5, 'sine', .5, 0, { at: .8, send: .5 }); N(1.8, .25, 150, 3500, 1, 'bandpass', 0, { at: 1.2, send: .6 }); ORC.timp(.4, .4, 55); ORC.timp(.9, .5, 55); ORC.choir(164.8, .1, 1.8, .06); BELL(660, .06, 1.8, .9, { send: .8 }) }
+          } else {
+            if (i == 0) { T(900, 120, .2, 'sawtooth', .06, 0, { lp: 2400 }); WHSH(.2, .55, 800, 7000, 0); N(.25, .22, 600, 100, 1, 'lowpass', 0, { send: .4 }); SUB(110, 40, .2, .35) }
+            else if (i == 1) { for (let q = 0; q < 6; q++) { const pn = Math.cos(q / 6 * 6.28); WHSH(.09, .35, 3000, 10000, q * .035, pn); } SHING(3200, .06, .05, .4); SUB(100, 40, .3, .55, .04); BELL(2200, .05, .8, .12, { send: .6 }) }
+            else { N(.5, .25, 300, 3000, 1, 'bandpass', 0, { at: .3, send: .5 }); for (let q = 0; q < 12; q++) { WHSH(.08, .32, 3000, 10000, .1 + q * .1, rnd() * 1.6 - .8); if (q % 3 == 0) SHING(2600 + rnd() * 1500, .035, .1 + q * .1, .25) } SHIM([1568, 2093, 1760, 2637], .035, .25, .2, .8); SUB(70, 36, .5, .4, .1) }
+          }
+        },
+        focus() { if (!ac || !on) return; PWR(110, .035, 1, 0, 1600); arp([440, 554, 659, 880, 1109], .12, .06, .8); N(.5, .2, 600, 7000, 1.2, 'bandpass', 0, { at: .3, send: .4 }); SUB(60, 130, .4, .4); BELL(1760, .06, 1, .3, { send: .7 }) },
+        potion() { if (!ac || !on) return; for (let i = 0; i < 4; i++)T(350 + rnd() * 150 + i * 60, 600 + i * 80, .07, 'sine', .2, i * .06); SHIM([1568, 1976, 2349, 3136], .04, .07, .26, .7); T(523, 1046, .5, 'sine', .08, .2, { send: .6 }) },
+        pickup() { if (!ac || !on) return; BELL(1568, .08, .6, 0, { send: .5 }); BELL(2093, .06, .7, .06, { send: .5 }); BELL(2637, .045, .8, .11, { send: .5 }); N(.15, .08, 6000, 12000, .8, 'highpass', .05, { at: .02 }) },
+        ready() { CK(.3); T(1500, 1500, .12, 'sine', .18); T(2250, 2250, .15, 'sine', .12, .05); BELL(1760, .05, .5, .04, { send: .5 }) },
+        point() { T(1318, 1318, .1, 'square', .07); T(1760, 1760, .25, 'square', .07, .07); RING(2800, .03, .3, .07); BELL(2637, .04, .5, .08, { send: .5 }) },
+        sw() { CK(.25); N(.08, .2, 1500, 4000, 1, 'bandpass'); T(500, 700, .05, 'triangle', .08); RING(3000, .03, .15) },
+        level() { if (!ac || !on) return; ORC.timp(0, .45, 65);[523.25, 659.25, 783.99, 1046.5].forEach((f, k) => HORN(f, .1, .5 + k * .1, k * .09)); HORN(1318.5, .11, 1.4, .38); HORN(261.6, .09, 1.5, .38); SHIM([1568, 2093, 2637, 3136], .045, .07, .4, 1.1); ORC.choir(523.25, .35, 2, .07); ORC.choir(659.25, .35, 2, .05); T(131, 131, 1.1, 'sine', .28, 0, { send: .4 }); ORC.cym(.35, .5, .08) },
+        clear() { if (!ac || !on) return; ORC.timp(0, .5, 62); ORC.timp(.25, .45, 82);[392, 494, 587, 784].forEach((f, k) => HORN(f, .1, .55, k * .12)); HORN(987.8, .11, 1.6, .5); HORN(196, .09, 1.6, .5); ORC.choir(392, .4, 2.2, .07); SHIM([1568, 1976, 2349, 3136], .04, .08, .5, 1); ORC.cym(.5, .7, .1) },
+        door() { if (!ac || !on) return; N(1, .5, 300, 100, 1, 'bandpass', 0, { at: .1, send: .5 }); N(.9, .28, 1200, 300, 3, 'bandpass', .05, { dist: 1 }); SUB(55, 30, 1.2, .7); SUB(70, 26, .5, .6, .9); BLAST(.8, .9, 0); ORC.timp(.88, .5, 52); for (let q = 0; q < 8; q++)N(.05, .15, 900 + rnd() * 1500, 400, 3, 'bandpass', .1 + rnd() * .8, { pan: rnd() * 2 - 1 }) },
+        wave() { if (!ac || !on) return; HORN(110, .13, 1.4, 0); HORN(165, .1, 1.4, 0); HORN(98, .11, 1.2, .55); ORC.timp(0, .6, 55); ORC.timp(.35, .6, 55); ORC.timp(.7, .7, 49); N(.9, .12, 200, 2500, 1, 'bandpass', 0, { at: .5, send: .5 }); BELL(440, .05, 1.4, .7, { send: .8 }) },
+        summon() { if (!ac || !on) return;[300, 450, 600].forEach((f, i) => T(f, f * 3, .8, 'sine', .06, i * .05, { at: .4, send: .5 })); N(.8, .08, 500, 6000, 1.5, 'bandpass', 0, { at: .45, send: .4 }); SUB(60, 40, .6, .35, .3); BELL(880, .04, .9, .45, { send: .8 }); ZAP(.3, .12, .4, 4) },
+        appear() { if (!ac || !on) return; SUB(140, 40, .45, .6); CK(.3); BELL(2200, .06, .6, 0, { send: .5 }); N(.22, .22, 3000, 500, 1, 'bandpass', 0, { dist: 1 }); WHSH(.2, .22, 5000, 600, 0) },
+        ultReady() { if (!ac || !on) return; arp([523, 659, 784, 1047, 1319], .14, .07, .7); T(60, 130, .7, 'sine', .45, 0, { send: .4 }); BELL(2000, .07, 1.2, .15, { send: .6 }); N(.7, .16, 2000, 9000, .8, 'highpass', .1, { at: .3 }); ORC.choir(523.25, 0, 1.6, .06); ORC.choir(784, 0, 1.6, .05); ORC.timp(.2, .4, 65) },
+        ult(w) {
+          if (!ac || !on) return; X(); w = typeof w == 'number' ? w : (typeof wi == 'number' ? wi : 0);
+          N(1.3, .5, 200, 8000, 1.2, 'bandpass', 0, { at: .55, send: .6 }); T(110, 900, .95, 'sawtooth', .09, 0, { lp: 2600, at: .5, send: .5 }); T(55, 24, 1.8, 'sine', .8, 0, { send: .5 });
+          [0, .1, .2, .3, .4].forEach((t0, k) => ORC.timp(t0, .3 + k * .07, 58 + k * 3));
+          ORC.choir(220 * (w == 3 ? .75 : 1), .1, 2.4, .09); ORC.choir(330, .1, 2.4, .07);
+          BLAST(1.8, .5, 1); SUB(60, 22, 1.4, .8, .5); BELL(880, .07, 1.6, .55, { send: .7 });
+          if (w == 0) { [293.66, 440, 587.33].forEach((f, k) => HORN(f, .11, 1.2, .52 + k * .03)); SHIM([1175, 1568, 1976, 2349, 2960], .05, .07, .6, 1); SHING(3000, .08, .5, .8) }
+          else if (w == 1) { FIRE(1.6, .4, .45); FM(110, 70, .9, .35, 600, 1000, .5);[196, 293.66].forEach(f => HORN(f, .13, 1.4, .5));[0, .2, .4].forEach(t0 => SUB(70, 30, .4, .5, .55 + t0)) }
+          else if (w == 2) { for (let q = 0; q < 8; q++)TWANG(.6, .15 + q * .08, rnd() * 1.6 - .8); WHSH(.9, .3, 6000, 900, .5, 0);[329.63, 493.88].forEach(f => HORN(f, .09, 1.2, .52)); SHIM([1319, 1760, 2349], .05, .08, .6) }
+          else if (w == 3) { PWR(110, .05, 1.8, .45, 1400); ZAP(.5, .3, .5, 5); BELL(660, .09, 2, .52, { send: .8 }); SHIM([1320, 1568, 1976, 2637], .05, .09, .6, 1.2); T(40, 90, 1.2, 'sine', .5, 0, { at: .5, send: .6 }) }
+          else { for (let q = 0; q < 9; q++) { SHING(2400 + rnd() * 1800, .04, .2 + q * .06, .25); WHSH(.07, .3, 3000, 9500, .2 + q * .06, rnd() * 1.6 - .8) } N(.9, .2, 500, 100, 1, 'lowpass', .4, { at: .3, send: .6 });[146.83, 174.61].forEach(f => HORN(f, .11, 1.4, .5)) }
+        },
+        /* ===== ritme basic attack (bow & staff): w=senjata, n=hit ke (0..2), k=urutan tembakan dalam hit ===== */
+        beat(w, n, k) {
+          if (!ac || !on) return; const sc = [523.25, 659.25, 784, 1046.5], f = sc[n == 1 ? (k ? 2 : 1) : n == 2 ? 3 : 0] * (w == 3 ? .5 : 1);
+          if (w == 2) { T(f, f * .985, .2 + n * .08, 'triangle', .09 + n * .02, 0, { send: .3 }); T(f * 2, f * 2, .12, 'sine', .035, 0); BELL(f * 2, .02 + n * .008, .4, 0, { send: .5 }); if (n == 2) { T(f * .5, f * .5, .4, 'triangle', .07, .02, { send: .4 }); RING(f * 2, .03, .5, .02, { send: .5 }); SUB(f * .25, f * .12, .35, .3, .02); arp([f, f * 1.25, f * 1.5], .04, .04, .5) } }
+          else { T(f, f * 1.01, .3 + n * .1, 'sine', .1 + n * .02, 0, { send: .45 }); T(f * 2.005, f * 2, .22, 'triangle', .04, 0, { send: .3 }); BELL(f * 2, .02 + n * .01, .5, 0, { send: .6 }); if (n == 2) { arp([f * .5, f * .75, f], .05, .035, .5); RING(f * 2, .04, .7, .04, { send: .6 }); SUB(f * .25, f * .1, .5, .35, .02); SHIM([f * 2, f * 3], .03, .06, .05, .8) } }
+        },
+        charge(w) {
+          if (!ac || !on) return;
+          if (w == 2) { T(260, 980, .26, 'triangle', .06, 0, { at: .12, lp: 3000 }); N(.26, .09, 800, 4500, 2, 'bandpass', 0, { at: .2 }); T(160, 520, .26, 'sawtooth', .035, 0, { at: .2, lp: 1400 }); N(.2, .05, 300, 900, 8, 'bandpass', 0, { at: .15 }) }
+          else { T(180, 1100, .32, 'sine', .09, 0, { at: .22, send: .5 }); T(360, 2200, .32, 'triangle', .04, 0, { at: .22, send: .4 }); N(.32, .07, 400, 7000, 1.4, 'bandpass', 0, { at: .26, send: .4 }); BELL(1320, .025, .5, .24, { send: .6 }) }
+        },
+        /* ===== black hole (ultimate staff) ===== */
+        bhOpen() { if (!ac || !on) return; T(38, 120, 1.4, 'sine', .6, 0, { at: .5, send: .5 }); T(76, 240, 1.4, 'sawtooth', .06, 0, { at: .6, lp: 900, send: .5 }); N(1.2, .28, 120, 2400, 1.2, 'bandpass', 0, { at: .7, send: .6 }); RING(300, .05, 1.2, .2, { send: .6 }); PWR(55, .04, 1.6, 0, 600); ORC.choir(110, 0, 1.8, .06) },
+        bhPulse(k) { if (!ac || !on) return; T(48 + 30 * k, 30, .45, 'sine', .4, 0, { send: .4 }); N(.3, .14, 200 + 800 * k, 80, 1, 'lowpass', 0, { at: .02, send: .5 }); BELL(220 + 330 * k, .03, .6, .02, { send: .8 }) },
+        bhCollapse() { if (!ac || !on) return; T(90, 2400, .6, 'sawtooth', .1, 0, { lp: 3500, at: .5, send: .4 }); T(45, 400, .6, 'sine', .55, 0, { at: .5 }); N(.6, .32, 200, 9000, 1.5, 'bandpass', 0, { at: .55, send: .6 }); ORC.timp(.4, .5, 50) },
+        bhBlast() { if (!ac || !on) return; BLAST(2.1, 0, 1); T(60, 20, 2.2, 'sine', .85, .02, { send: .6 }); RING(500, .08, 1.6, .05, { send: .7 }); N(1.4, .35, 9000, 200, .8, 'highpass', .02, { at: .02, send: .5 }); arp([196, 261.6, 329.6, 392, 523.25], .1, .05, 1.2); ORC.timp(0, .7, 45); ORC.choir(98, 0, 2.6, .08); ORC.cym(0, 1, .14);[98, 146.8, 196].forEach(f => HORN(f, .12, 1.6, .05)) }
+      };
+      const GM = {}; Object.keys(Object.assign({}, OLDM, NEWM)).forEach(k => { GM[k] = function () { const hp = typeof GFX !== 'undefined' && GFX.hp; if (sg) sg.gain.value = hp ? 1 : 1.25; const f = hp ? (OLDM[k] || NEWM[k]) : (NEWM[k] || OLDM[k]); return f.apply(null, arguments) } });
+      return {
+        init, ready: () => !!ac, state: () => ac ? ac.state : 'none', opening, intro, cut, finale() { if (!ac) return; cut(); bigChord(ac.currentTime + .05, newIg()) },
+        vol(v) { vl = v; if (oc) oc.gain.value = v; if (mu) mu.gain.value = .3 * v },
+        mode(m) { md = m; if (m == 'menu') { mt = 0; bi = 0 } if (ml) ml.gain.setTargetAtTime(m == 'menu' ? 1 : 0, ac.currentTime, .4) },
+        isOn: () => on, toggle() { on = !on; if (mg) mg.gain.value = on ? .55 : 0 }, blip(f) { T(f, f * .86, .05, 'square', .028, 0, { lp: 2600 }) },
+        ...GM
       }
     })();
     const R = Math.random, ang = (a, b) => Math.atan2(b.y - a.y, b.x - a.x), dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -3613,13 +3767,14 @@
     [696, 110, 28, 28, 'p'], [696, 342, 28, 28, 'p'], [176, 226, 28, 28, 'p'], [596, 226, 28, 28, 'p'], [120, 400, 18, 18, 'c'], [660, 400, 16, 18, 'b']];
     let lobby = true, trn = 0, walls = W0, room = 0, doorO = 0, doorOn = 0, fade = 0;
     const A = { VIT: 5, STR: 5, DEF: 5, AGI: 5, INT: 5 };
-    let p, es = [], pr = [], fx = [], gh = [], dp = [], dr = [], wave = 1, shake = 0, lvl = 1, exp = 0, pts = 0, wi = 0, t = 0, clr = 0, msgS = '', msgT = 0;
+    let WSW = 0, MBD = 0, p, es = [], pr = [], fx = [], gh = [], dp = [], dr = [], wave = 1, shake = 0, lvl = 1, exp = 0, pts = 0, wi = 0, t = 0, clr = 0, msgS = '', msgT = 0;
     let guide = false, SHX = 0, SHY = 0; const mhp = () => 60 + A.VIT * 8;
     const msg = s => { msgS = s; msgT = 3 };
     const blk = (x, y, r) => walls.some(w => x + r > w[0] && x - r < w[0] + w[2] && y + r > w[1] && y - r < w[1] + w[3]);
     function mv(o, dx, dy) { if (!blk(o.x + dx, o.y, o.r)) o.x += dx; if (!blk(o.x, o.y + dy, o.r)) o.y += dy }
     const mk = (k, x, y) => ({ k, x, y, vx: 0, vy: 0, ...ET[k], mhp: ET[k].hp, stg: 0, stun: 0, wind: 0, cd: 1 + R(), tx: 0, ty: 0, fl: 0, an: 0, ph: R() * 6, wk: 0, lx: x, ly: y });
     function spawn() {
+      MBD = 0;
       pr = []; if (lobby) { es = [952, 1008, 1064].map(x => mkDummy(x)); return } const L = [['slime', 360, 130], ['slime', 360, 350], ['skel', 500, 240], ['mage', 650, 120], ['mage', 650, 360], ['skel', 580, 180], ['slime', 480, 370],
       ['slime', 240, 220], ['skel', 330, 70], ['mage', 720, 70], ['skel', 620, 430]];
       const L2 = [['slime', 340, 170], ['slime', 340, 310], ['skel', 500, 190], ['mage', 660, 130], ['mage', 660, 350], ['skel', 580, 290], ['slime', 480, 80], ['mage', 280, 240],
@@ -3636,7 +3791,7 @@
       if (p.hp <= 0) { p.dead = 1.8; SFX.death(); msg('Kau gugur. Kembali ke checkpoint terakhir...') }
     }
     function hit(e, d, sx, sy, kb = 70) {
-      if (e.sw > 0) return; if (e.k == 'dummy') return hitDummy(e, d, sx, sy, kb); const c = R() < .15; d *= c ? 2 : 1; SFX.hit(c); ultGain(Math.min(d, Math.max(0, e.hp))); e.hp -= d; e.stg += d * 1.2; e.fl = .1; const a = Math.atan2(e.y - sy, e.x - sx); e.vx = Math.cos(a) * kb; e.vy = Math.sin(a) * kb;
+      if (e.sw > 0) return; if (e.k == 'dummy') return hitDummy(e, d, sx, sy, kb); const c = R() < .15; d *= c ? 2 : 1; SFX.hit(c, e.k); ultGain(Math.min(d, Math.max(0, e.hp))); e.hp -= d; e.stg += d * 1.2; e.fl = .1; const a = Math.atan2(e.y - sy, e.x - sx); e.vx = Math.cos(a) * kb; e.vy = Math.sin(a) * kb;
       dn(e.x, e.y - 8, Math.round(d), c); impact(e, a, c); impact2(e, a, c); shake = Math.max(shake, c ? 5 : p.hn == 2 ? 4 : 2.5); if (!(wi == 1 && (p.dod > 0 && p.dsp > 0 || SG.rf > 0))) HST = Math.max(HST, c || p.hn == 2 ? .05 : .02);
       if (e.stg >= e.sg && !e.stun) { e.stun = 1.4; e.stg = 0; dn(e.x, e.y - 20, 'STAGGER', 0, '#ffd34d'); SFX.stagger() }
       if (e.hp <= 0) kill(e)
@@ -3644,13 +3799,13 @@
     const _hitCut = hit; hit = function (e, d, sx, sy, kb) { const live = !(e.sw > 0); _hitCut(e, d, sx, sy, kb); if (!live) return; if (wi == 0 || wi == 4) cutMark(e); else if (wi == 1) spearMark(e); else if (wi == 2) arrowMark(e) };
     function freeSpot(x, y) { for (const r of [0, 8, 16, 24, 32]) for (let i = 0; i < 8; i++) { const a = i * .785, q = x + Math.cos(a) * r, w = y + Math.sin(a) * r; if (!blk(q, w, 5)) return { x: q, y: w } } return { x: p.x, y: p.y } }
     function kill(e) {
-      SFX.die(); burst(e); ultAdd(ULT_KILL); es = es.filter(x => x !== e); exp += e.xp; if (R() < .3) { const s = freeSpot(e.x, e.y); dr.push({ x: s.x, y: s.y, ph: R() * 6 }) }
+      SFX.die(e.k); burst(e); ultAdd(ULT_KILL); es = es.filter(x => x !== e); exp += e.xp; if (R() < .3) { const s = freeSpot(e.x, e.y); dr.push({ x: s.x, y: s.y, ph: R() * 6 }) }
       while (exp >= lvl * 40) { exp -= lvl * 40; lvl++; pts += 3; msg('Level ' + lvl + '! +3 poin atribut (tekan 6 7 8 9 0)'); SFX.level() }
     }
     const SH = [[{ hn: 0, sd: 1, r: 30, arc: 1.7, lg: 60 }, { hn: 1, sd: -1, r: 30, arc: 1.7, lg: 60 }, { hn: 2, sd: 1, r: 40, arc: 2.5, lg: 130 }], [{ hn: 0, sd: 1, r: 46, arc: .5, lg: 70 }, { hn: 1, sd: -1, r: 40, arc: 1.5, lg: 50 }, { hn: 2, sd: 1, r: 68, arc: .45, lg: 170 }], [], [], [{ hn: 0, sd: 1, r: 24, arc: .7, lg: 60 }, { hn: 1, sd: -1, r: 24, arc: 1.6, lg: 60 }, { hn: 2, sd: 1, r: 32, arc: 2.6, lg: 90 }]];
     const MELEE_R = 1.25, MELEE_A = 1.2;
     function melee(r, arc, d, kb, sh) {
-      if (!AN_KEEP) p.an = null; r *= MELEE_R; arc = arc >= 6.2 ? arc : arc < 1 ? Math.min(1, arc * 1.5) : Math.min(6.2, arc * MELEE_A); SFX.swing(wi); sh = sh || SH[wi][2] || { hn: 2, sd: 1, lg: 50 }; const a = p.face, sd = sh.sd; const lf = sh.lf || (wi == 0 || wi == 1 || wi == 4 ? .3 : .22); fx.push({ k: 'slash', x: p.x, y: p.y, a, arc, r, life: lf, max: lf, sd, w: wi, hn: sh.hn });
+      if (!AN_KEEP) p.an = null; r *= MELEE_R; arc = arc >= 6.2 ? arc : arc < 1 ? Math.min(1, arc * 1.5) : Math.min(6.2, arc * MELEE_A); SFX.swing(wi, (sh || SH[wi][2] || {}).hn); sh = sh || SH[wi][2] || { hn: 2, sd: 1, lg: 50 }; const a = p.face, sd = sh.sd; const lf = sh.lf || (wi == 0 || wi == 1 || wi == 4 ? .3 : .22); fx.push({ k: 'slash', x: p.x, y: p.y, a, arc, r, life: lf, max: lf, sd, w: wi, hn: sh.hn });
       for (let i = 0; i < 8; i++) { const q = a + sd * (-arc / 2 + arc * i / 7); dp.push({ k: 'p', x: p.x + Math.cos(q) * r * .9, y: p.y + Math.sin(q) * r * .9, vx: -Math.sin(q) * sd * 40 + Math.cos(q) * 20, vy: Math.cos(q) * sd * 40 + Math.sin(q) * 20, life: .2 + R() * .15, max: .35, s: 1 + R() * 1.5, c: wi == 4 ? '#ffb48a' : wi == 1 ? '#ff9a9a' : '#e8f2ff' }) }
       if (sh.hn == 2 && (wi == 0 || wi == 4)) { fx.push({ k: 'ring', x: p.x + Math.cos(a) * r * .6 * (wi == 0), y: p.y + Math.sin(a) * r * .6 * (wi == 0), r: (wi == 0 ? 20 : 26) * MELEE_R, life: .3, max: .3, col: wi == 0 ? '#e8f2ff' : '#ffb48a' }); shake = Math.max(shake, 2) }
       for (let i = 0; i < 10; i++) { const q = a + (R() - .5) * Math.min(arc, 3.5), d2 = r * (.6 + R() * .5); dp.push({ k: 'p', x: p.x + Math.cos(q) * d2, y: p.y + Math.sin(q) * d2, vx: Math.cos(q) * 70, vy: Math.sin(q) * 70, life: .3 + R() * .25, max: .55, s: 1.5 + R() * 2, c: WCOL[wi] }) } shake = Math.max(shake, 2.5); p.swing = .14; p.sd = sd; p.sa = arc; p.hn = sh.hn; p.vx += Math.cos(a) * sh.lg; p.vy += Math.sin(a) * sh.lg;
@@ -4467,7 +4622,8 @@
       p.sc = p.sc.map(v => v - dt);['cdA', 'skb', 'ec', 'focus', 'inv', 'hurt', 'swing', 'potC', 'comboT', 'stT', 'recoil'].forEach(k => p[k] -= dt); if (p.an) { p.an.t += dt; if (p.an.t >= p.an.tot) p.an = null } if (p.buf > 0) p.buf -= dt;
       if (p.comboT <= 0) p.combo = 0; p.al += ((M.d || p.cdA > 0 || p.recoil > 0 || p.an ? 1 : 0) - p.al) * Math.min(1, dt * 12);
       if (p.stT <= 0) p.st = Math.min(100, p.st + 35 * dt);
-      for (let i = 0; i < 5; i++)if (P['Digit' + (i + 1)]) { if (wi != i) SFX.sw(); wi = i; p.combo = 0; p.an = null; p.buf = 0 }
+      WSW = Math.max(0, WSW - dt);   // CD ganti senjata 2 detik
+      for (let i = 0; i < 5; i++)if (P['Digit' + (i + 1)]) { if (wi != i) { if (WSW > 0) dn(p.x, p.y - 14, 'CD ' + WSW.toFixed(1) + 's', 0, '#9ab'); else { SFX.sw(); wi = i; WSW = 2; p.combo = 0; p.an = null; p.buf = 0 } } else { p.combo = 0; p.an = null; p.buf = 0 } }
       [['Digit6', 'VIT'], ['Digit7', 'STR'], ['Digit8', 'DEF'], ['Digit9', 'AGI'], ['Digit0', 'INT']].forEach(([k, s]) => { if (P[k] && pts > 0) { SFX.point(); A[s]++; pts--; if (s == 'VIT') p.hp += 8 } });
       if (window.mobAim && window.mobAim(touchAiming)) { /* HP: auto-lock musuh terdekat / arah joystick */ }
       else if (!touchAiming && touchJoy.active && (Math.abs(touchJoy.x) > 0.1 || Math.abs(touchJoy.y) > 0.1)) { p.face = Math.atan2(touchJoy.y, touchJoy.x) }
@@ -4529,7 +4685,7 @@
       });
       fx = fx.filter(f => { f.life -= dt; if (f.k == 't') f.y -= 20 * dt; return f.life > 0 });
       dp = dp.filter(q => { q.life -= dt; if (q.k == 's') { q.x += q.vx * dt; q.y += q.vy * dt; q.s += dt * 9 } else if (q.k == 'p' || q.k == 'f' || q.k == 'sh' || q.k == 'gf') { q.x += q.vx * dt; q.y += q.vy * dt; const d = Math.pow(.05, dt); q.vx *= d; q.vy *= d; if (q.k == 'f' || q.k == 'gf') q.vy -= 70 * dt; if (q.k == 'sh') q.rot += q.vr * dt } return q.life > 0 }); gh = gh.filter(q => (q.life -= dt) > 0);
-      if (!lobby && room < 2 && !es.length && !clr && !doorOn) { const lastW = room == 0 ? 5 : ROOM2_LAST_WAVE; if (wave >= lastW) { doorOn = 1; msg(room == 0 ? 'Gelombang 5 selesai! Pintu di kanan terbuka — masuk ke ruangan berikutnya.' : 'Gelombang ' + lastW + ' selesai! Pintu BOS di kanan terbuka...'); SFX.door(); SFX.clear() } else { clr = 3.5; msg('Area bersih! Gelombang berikutnya datang...'); SFX.clear() } }
+      if (!lobby && room < 2 && !es.length && !clr && !doorOn) { const lastW = room == 0 ? 5 : ROOM2_LAST_WAVE; if (room == 0 && wave >= lastW && !MBD) { MBD = 1; spawnMinis() } else if (wave >= lastW) { doorOn = 1; msg(room == 0 ? 'Gelombang 5 selesai! Pintu di kanan terbuka — masuk ke ruangan berikutnya.' : 'Gelombang ' + lastW + ' selesai! Pintu BOS di kanan terbuka...'); SFX.door(); SFX.clear() } else { clr = 3.5; msg('Area bersih! Gelombang berikutnya datang...'); SFX.clear() } }
       doorO += ((doorOn ? 1 : 0) - doorO) * Math.min(1, dt * 4); fade = Math.max(0, fade - dt); if (R() < dt * 5) { const b = BR[Math.floor(R() * BR.length)]; if (b) puff(b[0], b[1] - 14, 1, '60,56,70', .8) }
       lobbyTick(dt); if (!lobby && P.KeyB) backTick();
       if (room == 0 && doorOn && p.x > DW - 30 && Math.abs(p.y - DY) < 32) toRoom(1);
@@ -5255,6 +5411,37 @@
       if (room == 2) dd(0, 1); else { dd(DW - 14, 0); if (room == 1) dd(0, 1) }
       if (room < 2 && doorOn) { g.fillStyle = 'rgba(255,223,155,' + (.5 + .4 * Math.sin(t * 6)) + ')'; const ax = DW - 38 + Math.sin(t * 5) * 4; g.beginPath(); g.moveTo(ax, DY - 7); g.lineTo(ax + 11, DY); g.lineTo(ax, DY + 7); g.fill() }
     }
+    /* ===== LANTAI: lapisan detail (noda, bayangan tepi, bingkai, motif tengah, sarang laba-laba / tanah & rumput camp). Dipanggil SEBELUM dinding & properti digambar ===== */
+    function floorPass(b, w, h, o) {
+      let sd = o.seed; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, ri = (a, z) => a + Math.floor(r() * (z - a + 1)), cx = w / 2, cy = h / 2;
+      const hit = (x, y, m) => (o.walls || []).some(q => x > q[0] - m && x < q[0] + q[2] + m && y > q[1] - m && y < q[1] + q[3] + m) || x < 30 || y < 30 || x > w - 30 || y > h - 30;
+      const rad = (x, y, R, rgb, a) => { const q = b.createRadialGradient(x, y, 0, x, y, R); q.addColorStop(0, 'rgba(' + rgb + ',' + a + ')'); q.addColorStop(1, 'rgba(' + rgb + ',0)'); b.fillStyle = q; b.fillRect(x - R, y - R, R * 2, R * 2) };
+      const blob = (x, y, rx, ry, c) => { b.fillStyle = c; b.beginPath(); b.ellipse(x, y, rx, ry, r() * 3, 0, 7); b.fill() };
+      for (let i = 0; i < o.patches; i++) rad(r() * w, r() * h, 40 + r() * 70, i % 2 ? o.lt : '0,0,0', i % 2 ? .07 : .13);   // lantai aus / bernoda besar
+      if (o.frame) {   // bayangan tepi + bingkai batu berukir
+        [[0, 0, 0, 44, 0, 0, w, 44], [0, h, 0, h - 44, 0, h - 44, w, 44], [0, 0, 44, 0, 0, 0, 44, h], [w, 0, w - 44, 0, w - 44, 0, 44, h]].forEach(([x0, y0, x1, y1, rx, ry, rw, rh]) => { const q = b.createLinearGradient(x0, y0, x1, y1); q.addColorStop(0, 'rgba(0,0,0,.4)'); q.addColorStop(1, 'rgba(0,0,0,0)'); b.fillStyle = q; b.fillRect(rx, ry, rw, rh) });
+        b.strokeStyle = o.trim; b.lineWidth = 1; b.strokeRect(24.5, 24.5, w - 49, h - 49); b.strokeRect(28.5, 28.5, w - 57, h - 57);
+        [[34, 34], [w - 34, 34], [34, h - 34], [w - 34, h - 34]].forEach(([x, y]) => { b.fillStyle = o.trim; b.beginPath(); b.moveTo(x, y - 6); b.lineTo(x + 6, y); b.lineTo(x, y + 6); b.lineTo(x - 6, y); b.closePath(); b.fill(); b.fillStyle = o.glow; b.fillRect(x - 1, y - 1, 3, 3) })
+      }
+      b.save(); b.translate(cx, cy); b.scale(1, .74); b.lineWidth = 1.5; b.strokeStyle = o.line;
+      if (o.motif == 'rune') {   // lingkaran rune bersinar
+        rad(0, 0, 110, o.glowRgb, .16); for (const rr of [96, 84, 52]) { b.beginPath(); b.arc(0, 0, rr, 0, 7); b.stroke() } b.setLineDash([4, 5]); b.beginPath(); b.arc(0, 0, 68, 0, 7); b.stroke(); b.setLineDash([]);
+        for (let i = 0; i < 8; i++) { b.rotate(.7854); b.beginPath(); b.moveTo(52, 0); b.lineTo(84, 0); b.stroke(); b.fillStyle = o.glow; b.fillRect(88, -2, 5, 4) }
+        b.beginPath(); for (let i = 0; i < 16; i++) { const a = i * .3927, rr = i % 2 ? 22 : 50; i ? b.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : b.moveTo(rr, 0) } b.closePath(); b.stroke(); b.fillStyle = o.glow; b.fillRect(-2, -2, 4, 4)
+      } else if (o.motif == 'mosaic') {   // mozaik berlian bertingkat
+        for (const [s, c] of [[124, o.m1], [96, o.m2], [68, o.m1], [40, o.m2]]) { b.fillStyle = c; b.beginPath(); b.moveTo(0, -s * .75); b.lineTo(s, 0); b.lineTo(0, s * .75); b.lineTo(-s, 0); b.closePath(); b.fill(); b.stroke() }
+        rad(0, 0, 40, o.glowRgb, .18); b.beginPath(); b.arc(0, 0, 12, 0, 7); b.stroke(); b.fillStyle = o.glow; b.fillRect(-2, -2, 4, 4)
+      }
+      b.restore();
+      for (let i = 0; i < (o.blood || 0); i++) { const x = ri(50, w - 50), y = ri(50, h - 50); if (hit(x, y, 26)) continue; blob(x, y, 9 + r() * 12, 4 + r() * 6, 'rgba(70,10,16,.38)'); for (let j = 0; j < 5; j++) blob(x + ri(-18, 18), y + ri(-9, 9), 1 + r() * 2, 1 + r(), 'rgba(90,14,20,.5)') }
+      if (o.web) [[16, 16, 1, 1], [w - 16, 16, -1, 1], [16, h - 16, 1, -1], [w - 16, h - 16, -1, -1]].forEach(([x, y, sx, sy]) => { b.strokeStyle = 'rgba(225,225,240,.24)'; b.lineWidth = 1; for (let k = 0; k < 6; k++) { const a = k * .3 + .02; b.beginPath(); b.moveTo(x, y); b.lineTo(x + sx * Math.cos(a) * 54, y + sy * Math.sin(a) * 54); b.stroke() } for (let k = 1; k < 5; k++) { b.beginPath(); for (let j = 0; j < 6; j++) { const a = j * .3 + .02, px = x + sx * Math.cos(a) * k * 11, py = y + sy * Math.sin(a) * k * 11; j ? b.lineTo(px, py) : b.moveTo(px, py) } b.stroke() } });
+      if (o.camp) {   // tanah padat, jejak sepatu, kerikil, rumput liar
+        for (let i = 0; i < 16; i++) { const x = ri(40, w - 40), y = ri(30, h - 30); blob(x, y, 26 + r() * 40, 10 + r() * 22, 'rgba(120,92,58,.2)'); blob(x + 3, y + 2, 16 + r() * 24, 6 + r() * 12, 'rgba(150,118,76,.16)') }
+        for (let i = 0; i < 90; i++) { const x = ri(20, w - 20), y = ri(20, h - 20); b.fillStyle = r() < .5 ? 'rgba(0,0,0,.24)' : 'rgba(210,180,130,.22)'; b.fillRect(x, y, ri(1, 3), r() < .3 ? 2 : 1) }
+        for (let i = 0; i < 12; i++) { const x = 70 + i * 22, y = 300 - i * 6 + (i % 2) * 4; b.fillStyle = 'rgba(30,20,10,.3)'; b.fillRect(x, y, 3, 5); b.fillRect(x + 6, y + 2, 3, 5) }
+        for (let i = 0; i < 34; i++) { const x = r() < .5 ? ri(18, 74) : ri(w - 74, w - 18), y = ri(20, h - 20); if ((o.walls || []).some(q => x > q[0] - 6 && x < q[0] + q[2] + 6 && y > q[1] - 6 && y < q[1] + q[3] + 6)) continue; for (let j = 0; j < 5; j++) { b.fillStyle = r() < .5 ? '#46763a' : '#2f5a2f'; b.fillRect(x + j * 2 - 4, y - ri(2, 4), 1, ri(3, 6)) } }
+      }
+    }
     function buildBG2() {
       const b = BG1.getContext('2d'); let sd = 7; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, ri = (a, z) => a + Math.floor(r() * (z - a + 1));
       b.fillStyle = '#49434a'; b.fillRect(0, 0, DW, DH);
@@ -5263,6 +5450,7 @@
         if (v > .9) { b.strokeStyle = 'rgba(20,15,15,.45)'; b.lineWidth = 1; b.beginPath(); b.moveTo(x + 8, y + 9); b.lineTo(x + 14, y + 17); b.lineTo(x + 10, y + 26); b.stroke() }
         for (let i = 0; i < 4; i++) { b.fillStyle = r() < .5 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.15)'; b.fillRect(x + ri(3, 27), y + ri(3, 27), ri(1, 2), 1) }
       }
+      floorPass(b, DW, DH, { seed: 9, walls: W1, patches: 14, lt: '210,190,160', frame: 1, trim: 'rgba(194,160,107,.26)', glow: 'rgba(255,220,140,.8)', glowRgb: '255,200,110', line: 'rgba(194,160,107,.38)', motif: 'mosaic', m1: 'rgba(24,20,28,.38)', m2: 'rgba(130,105,70,.2)', blood: 6, web: 1 });
       b.fillStyle = '#29252d'; WB().forEach(a => b.fillRect(...a));
       b.fillStyle = '#413640'; for (let x = 14; x < DW - 14; x += 24) { b.fillRect(x, 3, 18, 8); b.fillRect(x, DH - 11, 18, 8) } for (let y = 14; y < DH - 14; y += 24) { b.fillRect(3, y, 8, 18); b.fillRect(DW - 11, y, 8, 18) }
       b.fillStyle = '#5a4a58'; b.fillRect(14, 12, DW - 28, 2); b.fillRect(14, DH - 14, DW - 28, 2); b.fillRect(12, 14, 2, DH - 28); b.fillRect(DW - 14, 14, 2, DH - 28);
@@ -5408,6 +5596,7 @@
         b.fillStyle = 'rgba(0,0,0,.28)'; b.fillRect(x + 1, y + 30, 30, 1); b.fillRect(x + 30, y + 1, 1, 30);
         for (let i = 0; i < 7; i++) { b.fillStyle = r() < .5 ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.18)'; b.fillRect(x + ri(3, 27), y + ri(3, 27), ri(1, 2), 1) }
       }
+      floorPass(b, DW, DH, { seed: 5, walls: W0, patches: 14, lt: '150,140,230', frame: 1, trim: 'rgba(120,110,190,.22)', glow: 'rgba(130,190,255,.75)', glowRgb: '110,170,255', line: 'rgba(110,170,255,.34)', motif: 'rune', blood: 7, web: 1 });
       const crack = (x, y, gl) => { b.strokeStyle = gl ? 'rgba(70,150,210,.35)' : 'rgba(5,4,12,.6)'; b.lineWidth = 1; b.beginPath(); b.moveTo(x, y); let cx = x, cy = y; for (let i = 0; i < 5; i++) { cx += ri(-6, 8); cy += ri(3, 8); b.lineTo(cx, cy) } b.stroke() };
       [[200, 60], [390, 140], [80, 250], [560, 200], [250, 330], [430, 40], [600, 300], [110, 340], [300, 120], [680, 90], [740, 200], [700, 330], [520, 430], [200, 440], [620, 420], [400, 300], [150, 420], [470, 230]].forEach(([x, y], i) => crack(x, y, i % 4 == 0));
       [[40, 50], [590, 360], [200, 370], [420, 250], [100, 300], [700, 60], [730, 430], [400, 445], [60, 440], [760, 250]].forEach(([x, y]) => { for (let i = 0; i < 26; i++) { b.fillStyle = r() < .5 ? 'rgba(60,120,80,.5)' : 'rgba(40,90,60,.45)'; b.fillRect(x + ri(-10, 10), y + ri(-7, 7), ri(1, 3), ri(1, 2)) } });
@@ -5997,6 +6186,7 @@
       const b = BGT.getContext('2d'); let sd = 33; const r = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296, ri = (a, z) => a + Math.floor(r() * (z - a + 1));
       b.fillStyle = '#100c08'; b.fillRect(0, 0, MW, MH); const FL = ['#3b3228', '#40362b', '#352d24', '#3d3429', '#322b22'];
       for (let y = 0; y < MH; y += 32)for (let x = 0; x < MW; x += 32) { b.fillStyle = FL[ri(0, 4)]; b.fillRect(x + 1, y + 1, 30, 30); b.fillStyle = 'rgba(255,255,255,.06)'; b.fillRect(x + 1, y + 1, 30, 1); b.fillRect(x + 1, y + 1, 1, 30); b.fillStyle = 'rgba(0,0,0,.28)'; b.fillRect(x + 1, y + 30, 30, 1); b.fillRect(x + 30, y + 1, 1, 30); for (let i = 0; i < 5; i++) { b.fillStyle = r() < .5 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.16)'; b.fillRect(x + ri(3, 27), y + ri(3, 27), ri(1, 2), 1) } }
+      floorPass(b, MW, MH, { seed: 21, walls: WT, patches: 12, lt: '210,180,130', camp: 1 });
       b.fillStyle = 'rgba(0,0,0,.3)'; b.fillRect(16, 188, 230, 32); b.fillStyle = '#5a2a2a'; b.fillRect(14, 184, 230, 32); b.strokeStyle = '#c2a06b'; b.lineWidth = 2; b.strokeRect(17, 187, 224, 26); b.lineWidth = 1; b.strokeRect(22.5, 192.5, 214, 16); b.fillStyle = '#c2a06b'; for (let x = 34; x < 230; x += 24)b.fillRect(x, 198, 6, 4);
       const cx = 430, cy = 206;
       b.fillStyle = 'rgba(0,0,0,.3)'; b.beginPath(); b.ellipse(cx, cy + 4, 100, 66, 0, 0, 7); b.fill();
@@ -7486,11 +7676,11 @@
     const bz = (u, x0, y0, x1, y1, x2, y2) => { const a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, d = u * u; return [a * x0 + b * x1 + d * x2, a * y0 + b * y1 + d * y2] };
 
     function mHorn(side, hd, cp) {   // side 1 = kiri layar, -1 = kanan layar
-      const X = x => side > 0 ? x : 640 - x, M = MNT, tx = 238 + 16 * cp, ty = 96 + hd + 60 * cp;
-      const P = [X(300), 160 + hd, X(228), 166 + hd, X(tx), ty], n = 24;
-      for (let i = 0; i <= n; i++) { const u = i / n, [x, y] = bz(u, ...P), w = 16 - 12 * u; mq(x - w / 2, y - w / 2, w, w, M.hornD) }
-      for (let i = 0; i <= n; i++) { const u = i / n, [x, y] = bz(u, ...P), w = (16 - 12 * u) * .62; mq(x - w / 2 - side, y - w / 2 - 1, w, w, u > .86 ? M.hornT : M.horn) }
-      [.18, .4, .62].forEach(u => { const [x, y] = bz(u, ...P), w = 16 - 12 * u; mq(x - w / 2, y - 1, w, 2, M.hornR) });
+      const X = x => side > 0 ? x : 640 - x, M = MNT, tx = 222 + 16 * cp, ty = 64 + hd + 60 * cp;
+      const P = [X(300), 160 + hd, X(204), 150 + hd, X(tx), ty], n = 24;
+      for (let i = 0; i <= n; i++) { const u = i / n, [x, y] = bz(u, ...P), w = 21 - 15 * u; mq(x - w / 2, y - w / 2, w, w, M.hornD) }
+      for (let i = 0; i <= n; i++) { const u = i / n, [x, y] = bz(u, ...P), w = (21 - 15 * u) * .62; mq(x - w / 2 - side, y - w / 2 - 1, w, w, u > .8 ? '#c01a30' : M.horn) }
+      [.18, .4, .62].forEach(u => { const [x, y] = bz(u, ...P), w = 21 - 15 * u; mq(x - w / 2, y - 1, w, 2, M.hornR) });
     }
     function mArm(sx, sy, hx, hy, w0, w1, ex, vein) {
       const M = MNT, mx = (sx + hx) / 2 + ex, my = (sy + hy) / 2 + 4, n = 10, pts = [];
@@ -7534,6 +7724,10 @@
       g.save();
       if (!MT) { g.fillStyle = 'rgba(0,0,0,.38)'; g.beginPath(); g.ellipse(320, 331, 66, 9, 0, 0, 7); g.fill() }
 
+      if (!MT) {
+        const ac = ph >= 3 ? '255,90,40' : ph == 2 ? '220,40,60' : '170,30,40', q = g.createRadialGradient(320, 250, 10, 320, 250, 160); q.addColorStop(0, 'rgba(' + ac + ',' + (.18 + ph * .05 + .04 * Math.sin(tm * 3)) + ')'); q.addColorStop(1, 'rgba(' + ac + ',0)'); g.fillStyle = q; g.fillRect(140, 90, 360, 270);
+        if (ph >= 2) for (let i = 0; i < 6 + ph * 3; i++) { const u = (tm * .5 + i * .13) % 1; g.fillStyle = 'rgba(255,' + (90 + i * 10) + ',50,' + (1 - u) + ')'; g.fillRect(Math.round(240 + (i * 37) % 160 + Math.sin(tm * 3 + i) * 6), Math.round(270 - u * 200), 3, 3) }
+      }
       // Kaki berkuku
       mLeg(286, Math.max(0, step)); mLeg(326, Math.max(0, -step));
 
@@ -7547,6 +7741,8 @@
       if (ph >= 3) { mm(288, 242, 2, 12, '#ff4a3a'); mm(300, 270, 8, 2, '#ff4a3a'); mm(296, 240, 2, 8, '#ff4a3a') }   // urat membara
       // Harness kulit menyilang + medali emas
       for (let i = 0; i < 12; i++) { const x = 284 + i * 6, y = 214 + i * 4.7; mq(x, y, 8, 7, M.leather); mq(640 - x - 8, y, 8, 7, M.leather); mq(x, y, 8, 2, '#6a3e28'); mq(640 - x - 8, y, 8, 2, '#6a3e28') }
+      for (let i = 0; i < 9; i++) { const nx = 290 + i * 5.6, ny = 214 + Math.sin(i / 8 * PI) * 15; mq(Math.round(nx), Math.round(ny), 4, 7, M.horn); mq(Math.round(nx) + 1, Math.round(ny) + 6, 2, 3, M.hornD) }
+      for (let i = 0; i < 4; i++) { mq(330 + i * 3, 226 + i * 6, 3, 5, '#d0907a') }
       mq(312, 234, 16, 16, M.goldD); mq(313, 235, 14, 14, M.gold); mq(317, 239, 6, 6, '#c8283e'); mq(313, 235, 14, 2, '#f2d27a');
       // Sabuk + cawat
       mq(280, 268, 80, 11, M.leather); mq(280, 268, 80, 2, '#6a3e28'); mq(310, 266, 20, 15, M.gold); mq(314, 270, 12, 7, M.goldD); mm(286, 271, 4, 4, M.ironH); mm(296, 271, 4, 4, M.ironH);
@@ -7556,15 +7752,17 @@
 
       // Lengan: kiri (rantai putus di pergelangan) & kanan (pegang kapak)
       const hlx = 252 - 22 * fz - 6 * cp + Math.sin(tm * 9) * 3 * wk, hly = 292 - 56 * fz - 10 * cp + Math.sin(tm * 2) * 1.5 + Math.cos(tm * 9) * 2 * wk, hrx = 386 - 14 * rz + 4 * cp + Math.sin(tm * 9 + PI) * 3 * wk, hry = 288 - 62 * rz - 4 * cp + Math.sin(tm * 2 + 1) * 1.5 + Math.abs(Math.sin(tm * 9)) * 3 * wk;
-      mArm(266, 234, hlx, hly, 28, 22, -8, ph >= 3);
-      mArm(374, 234, hrx, hry, 28, 22, 8, ph >= 3); if (e.s2 == 'wind' && e.atk == 'fan') bossRockHand(hlx, hly, pp);
+      mArm(266, 234, hlx, hly, 36, 29, -8, ph >= 3);
+      mArm(374, 234, hrx, hry, 36, 29, 8, ph >= 3); if (e.s2 == 'wind' && e.atk == 'fan') bossRockHand(hlx, hly, pp);
       for (let i = 0; i < 4; i++) mq(hlx - 3 + Math.sin(tm * 3 + i) * 2, hly + 12 + i * 5, 5, 4, M.ironH);
       // Pauldron besi bergerigi
       mm(248, 206, 38, 24, M.iron); mm(250, 204, 34, 5, M.ironL); mm(252, 208, 12, 3, M.ironH); mm(248, 226, 38, 4, M.gold);
-      mm(256, 196, 7, 11, M.ironL); mm(270, 192, 7, 15, M.ironL); mm(258, 194, 3, 3, M.ironH); mm(272, 190, 3, 3, M.ironH);
+      mm(256, 196, 7, 11, M.ironL); mm(270, 192, 7, 15, M.ironL); mm(243, 198, 7, 13, M.ironL); mm(262, 180, 7, 14, M.ironL); mm(277, 174, 6, 16, M.ironL); mm(264, 178, 3, 3, M.ironH); mm(279, 172, 3, 3, M.ironH); mm(258, 194, 3, 3, M.ironH); mm(272, 190, 3, 3, M.ironH);
       mm(254, 230, 30, 8, M.furD);
       // Leher + surai
+      mq(272, 197, 96, 22, M.fur); mm(274, 195, 32, 6, M.furL); mm(278, 205, 26, 3, M.furD);
       mq(296, 196, 48, 22, M.furD); mq(300, 200, 8, 16, M.fur); mq(332, 200, 8, 16, M.fur);
+      mq(289, 208, 62, 8, M.iron); mq(289, 208, 62, 2, M.ironH); for (let i = 0; i < 8; i++) mq(291 + i * 7.5 | 0, 200, 4, 9, M.ironL);
 
       // Kepala banteng
       mHorn(1, hd, cp); mHorn(-1, hd, cp);
@@ -7572,12 +7770,16 @@
       mq(294, 150 + hd, 52, 44, M.fur); mq(298, 146 + hd, 44, 8, M.furD); mq(306, 141 + hd, 28, 7, M.furD); mq(314, 137 + hd, 12, 6, M.furD);
       mm(296, 168 + hd, 6, 22, M.furL); mq(300, 152 + hd, 40, 10, M.furL); mq(317, 152 + hd, 6, 30, M.furD);
       for (let i = 0; i < 4; i++) { mq(298 + i * 6, 163 + hd + i * 2, 6, 8, M.furD); mq(640 - (298 + i * 6) - 6, 163 + hd + i * 2, 6, 8, M.furD) }   // alis marah
-      mm(303, 175 + hd, 14, 8, '#150a08'); mm(307, 176 + hd, 8, 5, eyeC); mm(308, 176 + hd, 3, 2, '#ffe6d0');
+      mm(300, 173 + hd, 18, 11, '#0c0405'); mm(303, 175 + hd, 13, 7, eyeC); mm(303, 175 + hd, 13, 2, '#ffd0c0'); mm(309, 175 + hd, 3, 7, '#1a0000');
+      for (let i = 0; i < 6; i++) mm(297 + i * 4, Math.round(167 + hd + i * 1.6), 5, 5, '#24100b');   // alis tebal menukik: wajah murka
+      for (let i = 0; i < 9; i++) mq(Math.round(298 + i * 1.6), 163 + hd + Math.round(i * 2.6), 2, 3, '#e8b8a0');   // bekas luka sobek
+      mm(295, 178 + hd, 3, 13, '#c8283e'); mm(299, 182 + hd, 2, 9, '#c8283e');   // cat perang
+      if (!MT) { g.save(); g.globalCompositeOperation = 'lighter';[309, 331].forEach(x => { const q = g.createRadialGradient(x, 179 + hd, 1, x, 179 + hd, 26); q.addColorStop(0, ph >= 3 ? 'rgba(255,190,70,.9)' : 'rgba(255,60,80,.85)'); q.addColorStop(1, 'rgba(255,40,40,0)'); g.fillStyle = q; g.fillRect(x - 26, 153 + hd, 52, 52) }); g.restore() }
       if (!MT && ph >= 2) { g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,70,50,' + (.2 + .1 * Math.sin(tm * 8)) + ')'; g.fillRect(298, 170 + hd, 24, 18); g.fillRect(318, 170 + hd, 24, 18); g.restore() }
       mq(300, 184 + hd, 40, 26, M.skinD); mq(304, 186 + hd, 32, 21, M.skin); mq(313, 180 + hd, 14, 8, M.skin); mm(311, 193 + hd, 5, 6, '#2a110d');
       mq(317, 199 + hd, 6, 2, M.gold); mq(316, 201 + hd, 2, 9, M.gold); mq(322, 201 + hd, 2, 9, M.gold); mq(317, 209 + hd, 6, 2, M.goldD);   // anting hidung
       mq(306, 208 + hd, 28, jw, '#2a0c10'); if (jw > 6) mq(314, 211 + hd, 12, jw - 3, '#b04050');
-      mm(309, 208 + hd, 4, 4, '#efe4c8'); mq(308, 208 + hd + jw, 24, 6, M.skinD); mm(310, 205 + hd + jw, 3, 3, '#efe4c8');
+      mm(308, 204 + hd, 5, 9, '#efe4c8'); mm(309, 204 + hd, 2, 3, '#ffffff'); mq(308, 208 + hd + jw, 24, 6, M.skinD); mm(310, 205 + hd + jw, 3, 3, '#efe4c8');
       if (!MT) for (let i = 0; i < 4; i++) {   // uap dari hidung
         const u = (tm * 1.3 + i * .27) % 1, side = i % 2, al = (1 - u) * (ph >= 3 ? .75 : .5);
         g.fillStyle = ph >= 3 ? 'rgba(255,150,70,' + al + ')' : 'rgba(235,235,245,' + al + ')'; const s = 3 + u * 5; g.fillRect((side ? 332 : 308) - s / 2 + (side ? 1 : -1) * u * 6, 202 + hd - u * 16, s, s)
@@ -9688,9 +9890,9 @@
     /* ===== Pilihan Level & Kesulitan Dungeon ===== */
     let LVL = 1, DIFF = 1, dselOn = false;
     const DF = [
-      { n: 'MUDAH', hp: .7, dmg: .6, sp: .9, cnt: .7, c: '#8fe8a0', d: 'Musuh lebih sedikit & lemah, damage diterima -40%' },
-      { n: 'BIASA', hp: 1, dmg: 1, sp: 1, cnt: 1, c: '#ffe7ad', d: 'Pengalaman standar' },
-      { n: 'SULIT', hp: 1.5, dmg: 1.5, sp: 1.15, cnt: 1.3, c: '#ff6b6b', d: 'Musuh lebih banyak, kuat & cepat, damage diterima +50%' }];
+      { n: 'MUDAH', hp: 1, dmg: 1, sp: 1, cnt: 1, c: '#8fe8a0', d: 'Pengalaman standar' },
+      { n: 'BIASA', hp: 2, dmg: 1, sp: 1.05, cnt: 1.15, c: '#ffe7ad', d: 'Musuh sangat alot (HP 2x) & sedikit lebih banyak' },
+      { n: 'SULIT', hp: 3, dmg: 1.8, sp: 1.2, cnt: 1.4, c: '#ff6b6b', d: 'Musuh sangat alot (HP 3x), lebih banyak & cepat, damage diterima +80%' }];
     (function () {
       const PX = rows => { let d = ''; rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] == '#') d += 'M' + x + ' ' + y + 'h1v1h-1z' }); return '<svg viewBox="0 0 ' + rows[0].length + ' ' + rows.length + '" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>' };
       const IC = {
@@ -10965,69 +11167,119 @@
       };
     })();
   </script>
-
   <script>
-    /* ===== MINI BOS — Room 1 (Ancient Hall), Wave 5 ===== */
-    const MINI_HP = 520;   // atur kesulitan mini bos di sini
-    const MINI = { fx: [] };
-    const _spawnMini = spawn; spawn = function () {
-      _spawnMini();
-      if (lobby || room !== 0 || wave !== 5 || !es.length || es[0].k === 'dummy') return;
-      let x = 600, y = DY; for (let i = 0; i < 200 && blk(x, y, 16); i++) { x = 520 + R() * 220; y = 90 + R() * 300 }
-      const e = mk('skel', x, y), d = (typeof DF !== 'undefined' && DF[DIFF]) ? DF[DIFF] : { hp: 1, sp: 1 };
-      const lv = (typeof lavaOn === 'function' && lavaOn()) ? 1.15 : 1;
-      e.mini = 1; e.r = 13; e.ht = 44; e.sp = 38 * d.sp; e.sg = 260; e.xp = 140;
-      e.lava = lv > 1 ? 1 : 0; e.hp = e.mhp = Math.round(MINI_HP * d.hp * lv * (e.lava ? 1.25 : 1)); e.pt = 0;
-      e.sd = es.length * .14 + .3; e.st = 1.6 + e.sd; e.sw = e.st; e.sx = 0;
-      e.mt = 3.5; e.dash = 0; e.dcd = 7; e.ring = 0; e.big = 0;
-      es.push(e); msg('⚠ MINI BOS muncul — Wave 5!'); try { SFX.wave() } catch (_) { } shake = Math.max(shake, 6);
+    /* ===== MINI BOS (Wave 5, sebelum pintu terbuka): 2 sekaligus — 1 jarak dekat + 1 jarak jauh, mengikuti tema level (Half / Lava) ===== */
+    function spawnMinis() {
+      const L = lavaOn(), nm = L ? ['LAVA GOLEM', 'BLASH INFERNO'] : ['HALF BRUTE', 'HALF ARCHER'], K = L ? ['skel', 'mage'] : ['slime', 'mage'];
+      const at = (x, y) => (typeof freeSpot == 'function' ? freeSpot(x, y) : { x, y });
+      const mkM = (k, i, x, y) => {
+        const s = at(x, y), e = mk(k, s.x, s.y), rg = i == 1;
+        e.mini = rg ? 'rng' : 'mel'; e.mn = nm[i]; e.msz = 1.65; e.r = Math.round(e.r * 1.6); e.hp = e.mhp = Math.round((rg ? 230 : 340) * (1 + (DF[DIFF].hp - 1) * .6)); e.sp *= (rg ? 1.1 : 1.2) * DF[DIFF].sp; e.sg = 1e9; e.xp = 120;
+        e.sd = i * .5; e.st = 1.4 + e.sd; e.sw = e.st; e.sx = 0; return e
+      };
+      es.push(mkM(K[0], 0, DW * .55, DY - 70), mkM(K[1], 1, DW * .8, DY + 70));
+      SFX.wave(); shake = Math.max(shake, 6); msg('⚠ 2 MINI BOS muncul! Kalahkan keduanya untuk membuka pintu.')
+    }
+    /* ===== ANIMASI MINI BOS: muncul dari lingkaran pemanggil, napas/squash, telegraf serangan, gelombang kejut, mengamuk <50% HP, ledakan saat mati ===== */
+    const _deMB = drawEnemy;
+    drawEnemy = function (e) {
+      if (!e.mini) return _deMB(e);
+      const L = lavaOn(), c = L ? '255,100,20' : '255,210,90', en = e.rg ? 1 : 0, cc = en ? '255,50,30' : c, s0 = e.msz, fy = e.y + 7, ph = t + e.ph, pu = .5 + .5 * Math.sin(t * (en ? 8 : 4) + e.ph);
+      const sp = e.sw > 0 ? Math.max(0, Math.min(1, 1 - e.sw / (e.st || 1.4))) : 1, atk = e.wind > 0 || e.an > 0, ez = 1 - (1 - sp) * (1 - sp);
+      g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(e.x, fy + 1, 13 * s0 * (.4 + .6 * sp), 4.5 * s0, 0, 0, 7); g.fill();
+      g.save(); g.globalCompositeOperation = 'lighter'; const q = g.createRadialGradient(e.x, fy, 2, e.x, fy, 36 + en * 8); q.addColorStop(0, 'rgba(' + cc + ',' + (.3 + .2 * pu + en * .15) + ')'); q.addColorStop(1, 'rgba(' + cc + ',0)'); g.fillStyle = q; g.beginPath(); g.ellipse(e.x, fy, 36 + en * 8, 15, 0, 0, 7); g.fill(); g.restore();
+      if (sp < 1) {   /* lingkaran pemanggil + pilar cahaya */
+        g.save(); g.translate(e.x, fy); g.globalCompositeOperation = 'lighter'; const al = 1 - sp * .6; g.strokeStyle = 'rgba(' + c + ',' + al + ')'; g.lineWidth = 2;
+        g.save(); g.scale(1, .38); g.rotate(t * 2); g.beginPath(); g.arc(0, 0, 32, 0, 7); g.stroke(); g.rotate(-t * 4); g.setLineDash([5, 6]); g.beginPath(); g.arc(0, 0, 23, 0, 7); g.stroke(); g.setLineDash([]);
+        for (let i = 0; i < 6; i++) { const aa = i * 1.0472; g.beginPath(); g.moveTo(Math.cos(aa) * 23, Math.sin(aa) * 23); g.lineTo(Math.cos(aa + 2.0944) * 23, Math.sin(aa + 2.0944) * 23); g.stroke() } g.restore();
+        const hh = 95 * Math.sin(sp * 3.1416), pg = g.createLinearGradient(0, 0, 0, -hh); pg.addColorStop(0, 'rgba(' + c + ',' + .55 * al + ')'); pg.addColorStop(1, 'rgba(' + c + ',0)'); g.fillStyle = pg; g.fillRect(-15, -hh, 30, hh); g.restore()
+      }
+      const br = Math.sin(ph * 3) * .03, ht = e.fl > 0 ? .08 : 0, gr = sp < 1 ? .3 + .7 * ez : 1, ak = atk ? (e.wind > 0 ? 1 - e.wind / .7 : 1 - e.an / .6) : 0;
+      g.save(); g.globalAlpha = Math.min(1, sp * 1.6); g.translate(e.x, fy); g.scale(s0 * gr * (1 - br * .6 + ht + ak * .05), s0 * gr * (1 + br - ht * .6 - ak * .06)); g.translate(-e.x, -fy); _deMB(e); g.restore();
+      if (atk) { g.save(); g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(255,' + (L ? 90 : 60) + ',40,' + (.25 + .5 * ak) + ')'; g.lineWidth = 2; g.beginPath(); g.ellipse(e.x, fy, 14 + ak * 30, 5 + ak * 11, 0, 0, 7); g.stroke(); const hg = g.createRadialGradient(e.x, fy - 14 * s0, 2, e.x, fy - 14 * s0, 30 * s0); hg.addColorStop(0, 'rgba(255,230,160,' + .35 * ak + ')'); hg.addColorStop(1, 'rgba(255,100,40,0)'); g.fillStyle = hg; g.fillRect(e.x - 30 * s0, fy - 44 * s0, 60 * s0, 60 * s0); g.restore() }
+      if (sp >= 1) for (let i = 0; i < 5; i++) { const aa = t * (en ? 3 : 1.6) + i * 1.2566 + e.ph, rr = 17 * s0 + Math.sin(t * 2 + i) * 3; g.fillStyle = 'rgba(' + cc + ',' + (.6 + .3 * Math.sin(t * 6 + i)) + ')'; g.fillRect(Math.round(e.x + Math.cos(aa) * rr), Math.round(fy - 14 * s0 + Math.sin(aa) * rr * .45 - Math.abs(Math.sin(t * 3 + i)) * 6), 2, 2) }
+      if (e.sw <= 0) {
+        e.hv = e.hv == null ? e.hp : e.hv + (e.hp - e.hv) * .1; const w = 48, x = Math.round(e.x - w / 2), y = Math.round(e.y - e.r - 40), k = Math.max(0, e.hp / e.mhp), kv = Math.max(0, e.hv / e.mhp);
+        g.fillStyle = 'rgba(10,8,14,.88)'; g.fillRect(x - 1, y - 1, w + 2, 7); g.fillStyle = '#f2f2f2'; g.fillRect(x, y, Math.round(w * kv), 5); g.fillStyle = en ? (pu > .5 ? '#ff3a2a' : '#c81e14') : L ? '#ff7a1f' : '#e0b84a'; g.fillRect(x, y, Math.round(w * k), 5);
+        g.font = 'bold 8px monospace'; txt((en ? '☠ ' : '') + e.mn, e.x, y - 4, en ? '#ff8a7a' : L ? '#ffb070' : '#ffe9a8', 'center')
+      }
     };
-    const _updMini = upd; upd = function (dt) {
-      _updMini(dt);
-      if (lobby || room !== 0 || p.dead > 0 || HST > 0) return;
+    const _updMA = upd;
+    upd = function (dt) {
+      _updMA(dt); if (lobby || room || !es.length) return;
+      const L = lavaOn(), col = L ? '#ff8a2a' : '#ffd34d', cs = L ? '255,120,30' : '255,210,90';
+      const burst = (e, n, v, y0) => { for (let i = 0; i < n; i++) { const a = R() * 6.283, s = v * (.4 + R() * .8); dp.push({ k: 'p', x: e.x, y: e.y + y0, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .55 - 25, life: .4 + R() * .4, max: .8, s: 1.5 + R() * 2, c: i % 3 ? col : '#fff' }) } };
       es.forEach(e => {
-        if (!e.mini || e.sw > 0 || e.dying) return;
-        if (e.stun > 0) { e.ring = 0; e.dash = 0; return }
-        const a = ang(e, p);
-        // dash menerjang
-        if (e.dash > 0) {
-          e.dash -= dt; mv(e, Math.cos(e.da) * 190 * dt, Math.sin(e.da) * 190 * dt);
-          if (R() < .6) dp.push({ k: 'p', x: e.x, y: e.y, vx: 0, vy: 0, life: .3, max: .3, s: 2, c: '#ff8a5a' });
-          if (e.lava && (e.pt -= dt) <= 0) { e.pt = .09; LZ.push({ x: e.x, y: e.y + 4, r: 34, life: 3 }) }
-          if (dist(e, p) < e.r + p.r + 4 && p.inv <= 0) { hurt(20); p.vx = Math.cos(e.da) * 160; p.vy = Math.sin(e.da) * 160 }
-          if (e.dash <= 0) { e.dcd = 7 + R() * 2 } return
-        }
-        if (e.dwind > 0) { e.dwind -= dt; if (e.dwind <= 0) { e.dash = .55; e.da = ang(e, p); try { SFX.slam() } catch (_) { } } return }
-        // ledakan peluru melingkar
-        if (e.ring > 0) {
-          e.ring -= dt;
-          if (e.ring <= 0) {
-            const n = e.lava ? 16 : 12, off = R() * 6.283; try { SFX.eshot() } catch (_) { }
-            if (e.lava) { LZ.push({ x: e.x, y: e.y + 4, r: 52, life: 4 }); for (let k = 0; k < 6; k++) { const q = off + k / 6 * 6.283; LZ.push({ x: e.x + Math.cos(q) * 70, y: e.y + Math.sin(q) * 55, r: 36, life: 3.5 }) } }
-            for (let i = 0; i < n; i++) { const b = off + i / n * 6.283; pr.push({ x: e.x, y: e.y, vx: Math.cos(b) * 120, vy: Math.sin(b) * 120, d: 11, r: 3, col: '#ff7a5a', own: 'e', life: 3.2 }) }
-            fx.push({ k: 'ring', x: e.x, y: e.y, r: 46, life: .3, max: .3, col: '#ff7a5a' }); shake = Math.max(shake, 5); e.mt = 4.5;
-          } return
-        }
-        e.mt -= dt; e.dcd -= dt;
-        if (e.dcd <= 0 && dist(e, p) > 50) { e.dwind = .7; e.dcd = 99; e.da = a; try { SFX.warn(0) } catch (_) { } fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, life: .7, max: .7, col: '#ffd34d' }) }
-        else if (e.mt <= 0) { e.ring = .8; e.mt = 99; try { SFX.warn(1) } catch (_) { } fx.push({ k: 'ring', x: e.x, y: e.y, r: 50, life: .8, max: .8, col: '#ff5a5a' }) }
-      });
+        if (!e.mini) return;
+        if (e.sw > 0) { e.ws = 1; if (R() < dt * 30) dp.push({ k: 'p', x: e.x + (R() - .5) * 30, y: e.y + 8, vx: (R() - .5) * 10, vy: -40 - R() * 50, life: .6, max: .6, s: 1.5 + R() * 1.5, c: R() < .5 ? col : '#fff' }); return }
+        if (e.ws) { e.ws = 0; fx.push({ k: 'ring', x: e.x, y: e.y + 6, r: 60, w: 4, life: .5, max: .5, col }, { k: 'ring', x: e.x, y: e.y + 6, r: 34, w: 3, life: .35, max: .35, col: '#fff' }); shake = Math.max(shake, 7); SFX.slam(); burst(e, 22, 110, 6) }
+        const fire = (e.pw && e.wind <= 0) || (e.hd && !e.phd); e.pw = e.wind > 0; e.phd = e.hd;
+        if (fire && e.mini == 'mel') { fx.push({ k: 'ring', x: e.x, y: e.y + 6, r: 48, w: 4, life: .35, max: .35, col }, { k: 'ring', x: e.x, y: e.y + 6, r: 28, w: 2, life: .25, max: .25, col: '#fff' }); shake = Math.max(shake, 5); burst(e, 10, 80, 6) }
+        if (fire && e.mini == 'rng') fx.push({ k: 'ring', x: e.x, y: e.y, r: 26, w: 2, life: .25, max: .25, col });
+        if (Math.hypot(e.x - (e.px == null ? e.x : e.px), e.y - (e.py == null ? e.y : e.py)) > .4 && R() < dt * 14) puff(e.x, e.y + 9, 1, L ? '150,80,50' : '120,110,100', .5); e.px = e.x; e.py = e.y;
+        if (!e.rg && e.hp < e.mhp * .5) { e.rg = 1; e.sp *= 1.25; shake = Math.max(shake, 9); SFX.boom(20); FLSH = .5; FLSC = cs; fx.push({ k: 'ring', x: e.x, y: e.y, r: 80, w: 5, life: .55, max: .55, col: '#ff3a2a' }, { k: 'ring', x: e.x, y: e.y, r: 46, w: 3, life: .4, max: .4, col }); burst(e, 26, 130, 0); msg(e.mn + ' mengamuk!') }
+        if (e.rg) { e.cd -= dt * .5; if (R() < dt * 22) dp.push({ k: 'p', x: e.x + (R() - .5) * 22, y: e.y - 6, vx: (R() - .5) * 14, vy: -30 - R() * 30, life: .6, max: .6, s: 1.5 + R(), c: R() < .5 ? '#ff4a2a' : col }) }
+      })
     };
-    const _deMini = drawEnemy; drawEnemy = function (e) {
-      if (!e.mini) return _deMini(e);
-      g.save(); const cy = e.y + 7; g.translate(e.x, cy); g.scale(1.6, 1.6); g.translate(-e.x, -cy);
-      const pu = .5 + .5 * Math.sin(t * 6); if (e.lava) { lavaGlow(e.x, e.y - 6, 46, .45 + .15 * pu); for (let i = 0; i < 4; i++)lavaFlame(e.x - 9 + i * 6, e.y - 14, 3, 11, '#ff5a1f', '#ffd34d', i * 1.7 + e.ph) } g.fillStyle = 'rgba(255,70,50,' + (.12 + .1 * pu) + ')'; g.beginPath(); g.ellipse(e.x, e.y + 6, 15, 7, 0, 0, 7); g.fill();
-      _deMini(e); g.restore();
-      if (e.dwind > 0 || e.ring > 0) { g.save(); g.strokeStyle = 'rgba(255,' + (e.dwind > 0 ? 210 : 90) + ',60,.7)'; g.lineWidth = 1.5; g.beginPath(); g.arc(e.x, e.y, 22 + 6 * Math.sin(t * 20), 0, 7); g.stroke(); g.restore() }
+    const _killMA = kill;
+    kill = function (e) {
+      if (e && e.mini) {
+        const L = lavaOn(), col = L ? '#ff8a2a' : '#ffd34d';
+        fx.push({ k: 'ring', x: e.x, y: e.y, r: 90, w: 5, life: .6, max: .6, col }, { k: 'ring', x: e.x, y: e.y, r: 55, w: 4, life: .45, max: .45, col: '#fff' }, { k: 'ring', x: e.x, y: e.y, r: 30, w: 3, life: .3, max: .3, col }, { k: 'gl', x: e.x, y: e.y, r: 90, c: L ? '255,120,30' : '255,220,110', life: .5, max: .5 });
+        for (let i = 0; i < 40; i++) { const a = R() * 6.283, s = 40 + R() * 150; dp.push({ k: 'p', x: e.x, y: e.y - 6, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .7 - 30, life: .5 + R() * .6, max: 1.1, s: 1.5 + R() * 2.5, c: i % 3 ? col : '#fff' }) }
+        shake = Math.max(shake, 11); HST = Math.max(HST, .12); FLSH = .6; FLSC = L ? '255,130,40' : '255,230,150'; SFX.boom(24); SFX.slam()
+      }
+      return _killMA(e)
+    };  /* serangan: pemanah menembak 3 panah/bola (damage +35%), brute memukul lebih sakit */
+    const _updMB = upd;
+    upd = function (dt) {
+      _updMB(dt); if (lobby || room || !es.length) return;
+      const rg = es.filter(e => e.mini == 'rng' && e.sw <= 0);
+      if (rg.length) pr.forEach(b => {
+        if (b.own != 'e' || b.mb) return; b.mb = 1; const m = rg.find(e => Math.hypot(b.x - e.x, b.y - e.y) < 34); if (!m) return;
+        b.d *= 1.35; m.cd = Math.min(m.cd, 1.5);
+        for (const o of [-.3, .3]) { const cs = Math.cos(o), sn = Math.sin(o); pr.push(Object.assign({}, b, { vx: b.vx * cs - b.vy * sn, vy: b.vx * sn + b.vy * cs, mb: 1 })) }
+      })
     };
-    const _drawMini = draw; draw = function () {
-      _drawMini();
-      if (lobby || room !== 0) return; const e = es.find(x => x.mini && !x.dying); if (!e || e.sw > 0) return;
-      g.save(); const bw = Math.min(220, W - 40), bx = (W - bw) / 2, by = H - 26;
-      g.fillStyle = 'rgba(12,11,20,.9)'; g.fillRect(bx - 3, by - 14, bw + 6, 24);
-      g.font = 'bold 9px monospace'; g.textAlign = 'center'; g.fillStyle = '#ff8aa0'; g.fillText(e.lava ? 'MINI BOS — MAGMA GOLEM' : 'MINI BOS — GOLEM PENJAGA', W / 2, by - 4);
-      g.fillStyle = '#2a1018'; g.fillRect(bx, by, bw, 6); g.fillStyle = e.lava ? '#ff7a1f' : '#e0364a'; g.fillRect(bx, by, bw * Math.max(0, e.hp) / e.mhp, 6);
-      g.strokeStyle = '#ffe9b0'; g.lineWidth = 1; g.strokeRect(bx - .5, by - .5, bw + 1, 7); g.restore();
+    const _toBossDF = toBoss; toBoss = function () { _toBossDF(); const b = es.find(x => x.k == 'boss'); if (b) { b.hp = b.mhp = Math.round(b.mhp * (1 + (DF[DIFF].hp - 1) * .6)) } };
+    const _hurtMB = hurt;
+    hurt = function (d) { if (!lobby && es.some(e => e.mini == 'mel' && e.sw <= 0 && Math.hypot(e.x - p.x, e.y - p.y) < e.r + p.r + 46)) d *= 1.7; return _hurtMB(d) };
+  </script>
+  <script>
+    /* ===== GERBANG DUNGEON (lobby): lengkungan batu besar, plakat "DUNGEON", lorong tangga gelap, lingkaran sihir & cahaya ungu agar jelas ini pintu ke dungeon ===== */
+    (() => {
+      const b = BGL.getContext('2d'), R = (c, x, y, w, h) => { b.fillStyle = c; b.fillRect(x, y, w, h) };
+      /* anak tangga batu di depan gerbang + karpet */
+      R('rgba(0,0,0,.35)', 260, 46, 120, 8);
+      [['#4a4358', 276, 46, 88, 5], ['#3f3950', 270, 51, 100, 5], ['#34304a', 264, 56, 112, 5]].forEach(([c, x, y, w, h]) => { R(c, x, y, w, h); R('#6a6482', x, y, w, 1); R('#1c1828', x, y + h - 1, w, 1) });
+      R('#5a3144', 282, 46, 76, 15); R('#9c7a52', 282, 46, 2, 15); R('#9c7a52', 356, 46, 2, 15);
+      /* lorong gelap + tangga turun */
+      R('#07040f', 286, 12, 68, 36); const gq = b.createLinearGradient(0, 12, 0, 48); gq.addColorStop(0, '#0a0614'); gq.addColorStop(.55, '#3a1a6a'); gq.addColorStop(1, '#8a3ad0'); b.fillStyle = gq; b.fillRect(288, 14, 64, 34);
+      for (let i = 0; i < 5; i++) { const y = 22 + i * 5, w = 26 + i * 10; R('rgba(8,4,18,.6)', 320 - w / 2, y, w, 2); R('rgba(200,140,255,.3)', 320 - w / 2, y + 2, w, 1) }
+      /* pilar batu berukir kiri & kanan */
+      [262, 358].forEach(x => { R('#2b2740', x, 6, 20, 46); R('#3f3a5a', x, 6, 20, 3); R('#4a4568', x + 2, 9, 4, 43); R('#1b1830', x + 15, 9, 5, 43); for (let k = 0; k < 4; k++) R('#1b1830', x, 16 + k * 10, 20, 1); R('#2b2740', x - 3, 48, 26, 6); R('#4f4a80', x - 3, 48, 26, 1); R('#7a2a9a', x + 7, 22, 6, 10); R('#c58aff', x + 8, 24, 4, 6) });
+      /* lengkung atas + batu kunci + gigi gerbang besi yang terangkat */
+      R('#2b2740', 262, 10, 116, 5); R('#8a82b0', 262, 10, 116, 1); R('#4f4a80', 304, 3, 32, 11); R('#3f3a5a', 306, 5, 28, 8);
+      for (let x = 290; x < 352; x += 6) { R('#8d8aa0', x, 15, 2, 8); R('#c9c6d8', x, 15, 1, 7); R('#5a566a', x, 23, 2, 2) } R('#5a566a', 288, 14, 64, 2);
+      /* plakat nama */
+      R('#14101f', 292, 1, 56, 11); R('#c2a06b', 292, 1, 56, 1); R('#c2a06b', 292, 11, 56, 1); R('#c2a06b', 292, 1, 1, 11); R('#c2a06b', 347, 1, 1, 11);
+      b.font = 'bold 8px monospace'; b.textAlign = 'center'; b.fillStyle = '#ffd978'; b.fillText('DUNGEON', 320, 9);
+      /* tanda tengkorak di pilar */
+      [[272, 36], [368, 36]].forEach(([x, y]) => { R('#d8d2c4', x - 4, y, 8, 7); R('#14121f', x - 3, y + 2, 2, 2); R('#14121f', x + 1, y + 2, 2, 2); R('#14121f', x - 1, y + 5, 2, 2) });
+      /* cincin rune redup di lantai */
+      b.strokeStyle = 'rgba(150,100,255,.35)'; b.lineWidth = 1.5; b.beginPath(); b.ellipse(320, 72, 40, 14, 0, 0, 7); b.stroke(); b.lineWidth = 1;
+    })();
+    const _envFxDG = envFx;
+    envFx = function () {
+      _envFxDG(); if (!lobby || !p) return;
+      const dd = Math.hypot(p.x - 320, p.y - 44), nr = Math.max(0, 1 - dd / 150), pu = .5 + .5 * Math.sin(t * 2.4);
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const rg = g.createRadialGradient(320, 34, 4, 320, 40, 70 + 14 * pu + 24 * nr); rg.addColorStop(0, 'rgba(170,90,255,' + (.35 + .2 * pu + .25 * nr) + ')'); rg.addColorStop(1, 'rgba(120,40,220,0)'); g.fillStyle = rg; g.fillRect(220, 0, 200, 130);
+      g.save(); g.translate(320, 72); g.scale(1, .36); g.strokeStyle = 'rgba(190,130,255,' + (.35 + .3 * pu + .3 * nr) + ')'; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, 40, 0, 7); g.stroke(); g.rotate(t * .8); g.setLineDash([6, 8]); g.beginPath(); g.arc(0, 0, 30, 0, 7); g.stroke(); g.setLineDash([]);
+      for (let i = 0; i < 6; i++) { g.rotate(1.0472); g.fillStyle = 'rgba(220,170,255,.8)'; g.fillRect(29, -1.5, 5, 3) } g.restore();
+      for (let i = 0; i < 10; i++) { const u = (t * .4 + i * .1) % 1, x = 320 + Math.sin(i * 5.3 + t * 1.2) * (10 + u * 22), y = 42 + u * 36; g.fillStyle = 'rgba(' + (i % 2 ? '200,140,255' : '255,120,200') + ',' + (.8 * (1 - u)) + ')'; g.fillRect(Math.round(x), Math.round(y), 2, 2) }
+      g.restore();
+      const bob = Math.round(Math.sin(t * 3) * 2); g.font = 'bold 9px monospace'; txt('▲ DUNGEON', 320, 100 + bob, 'rgba(230,200,255,' + (.7 + .3 * pu) + ')', 'center');
     };
   </script>
 </body>
