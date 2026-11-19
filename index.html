@@ -3392,15 +3392,29 @@
     cv.oncontextmenu = e => e.preventDefault();
     // ===== Audio (Web Audio, tanpa file eksternal) =====
     const SFX = (() => {
-      let ac, mg, mu, sg, nb, on = true, nt = 0, st = 0, oc, rv, ml, ig, md = 'menu', vl = 1, mt = 0, bi = 0;
+      let ac, mg, mu, sg, wg, cg, nb, on = true, nt = 0, st = 0, oc, rv, ml, ig, md = 'menu', vl = 1, mt = 0, bi = 0;
       const RT = [55, 43.65, 49, 41.2], SC = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 659.25];
+
+      /* ===== BUS SUARA SENJATA & SKILL: Saturated Bass + Bitcrush + Clipping + Crunch ===== */
+      const buildFx = (ac, out) => {
+        const inp = ac.createGain(), mix = ac.createGain(); mix.gain.value = 1.1; mix.connect(out);
+        const ws = fn => { const n = 2048, c = new Float32Array(n); for (let i = 0; i < n; i++) c[i] = fn(i / (n - 1) * 2 - 1); const w = ac.createWaveShaper(); w.curve = c; w.oversample = 'none'; return w };
+        const bf = (type, fr, gn, q) => { const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = fr; if (gn != null) b.gain.value = gn; if (q) b.Q.value = q; return b };
+        const gx = v => { const n = ac.createGain(); n.gain.value = v; return n };
+        const chain = a => { for (let i = 0; i < a.length - 1; i++) a[i].connect(a[i + 1]); return a[0] };
+        // 1) Saturated Bass: pita bass (<240Hz) dijenuhkan keras -> tebal & padat
+        inp.connect(chain([bf('lowpass', 240, null, .7), gx(3.2), ws(x => Math.tanh(x * 3)), bf('lowshelf', 110, 5), gx(.85), mix]));
+        // 2) Clipping + 3) Bitcrush (kuantisasi ~4-bit) + 4) Crunch (presence tajam & renyah)
+        inp.connect(chain([gx(2.2), ws(x => Math.max(-.72, Math.min(.72, x * 2.4))), ws(x => Math.round(x * 8) / 8), bf('highpass', 150), bf('peaking', 2800, 8, 1.1), bf('highshelf', 5200, 5), gx(.5), mix]));
+        return inp
+      };
       const init = () => {
         if (ac) { if (ac.state == 'suspended') ac.resume(); return }
         try { ac = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'balanced' }) } catch (e) { try { ac = new (window.AudioContext || window.webkitAudioContext)() } catch (e2) { return } }
         ac.onstatechange = () => { if (ac.state == 'suspended' || ac.state == 'interrupted') ac.resume().catch(() => { }) }; document.addEventListener('visibilitychange', () => { if (!document.hidden && ac.state != 'running') ac.resume().catch(() => { }) });
         const cp = ac.createDynamicsCompressor(); cp.connect(ac.destination);
         mg = ac.createGain(); mg.gain.value = on ? .55 : 0; mg.connect(cp);
-        sg = ac.createGain(); sg.connect(mg); mu = ac.createGain(); mu.gain.value = .3 * vl; mu.connect(mg);
+        sg = ac.createGain(); sg.connect(mg); cg = sg; try { wg = buildFx(ac, mg) } catch (e) { wg = null } mu = ac.createGain(); mu.gain.value = .3 * vl; mu.connect(mg);
         rv = ac.createConvolver(); const ib = ac.createBuffer(2, ac.sampleRate * 1.4, ac.sampleRate), rw = ac.createGain();
         for (let c = 0; c < 2; c++) { const d = ib.getChannelData(c); for (let i = 0; i < d.length; i++)d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.5) }
         rv.buffer = ib; rw.gain.value = .3; sg.connect(rv); rv.connect(rw); rw.connect(mg); oc = ac.createGain(); oc.gain.value = vl; oc.connect(mg); oc.connect(rv); ml = ac.createGain(); ml.connect(oc);
@@ -3888,6 +3902,7 @@
         vol(v) { vl = v; if (oc) oc.gain.value = v; if (mu) mu.gain.value = .3 * v },
         mode(m) { md = m; if (m == 'menu') { mt = 0; bi = 0 } if (ml) ml.gain.setTargetAtTime(m == 'menu' ? 1 : 0, ac.currentTime, .4) },
         isOn: () => on, toggle() { on = !on; if (mg) mg.gain.value = on ? .55 : 0 }, blip(f) { T(f, f * .86, .05, 'square', .028, 0, { lp: 2600 }) },
+        bus(w) { if (wg) sg = w ? wg : cg },
         ...GM
       }
     })();
@@ -4813,7 +4828,7 @@
       if (touchJoy.active) { ix = touchJoy.x; iy = touchJoy.y }
       const l = Math.hypot(ix, iy); if (l && !touchJoy.active) { ix /= l; iy /= l }
       if (P.Space && p.st >= 25 && p.dod <= 0 && ULTT <= 0) { p.st -= 25; p.stT = .8; p.an = null; p.buf = 0; p.dod = .2; p.dsp = 0; p.inv = .22; p.dx = l ? ix : Math.cos(p.face); p.dy = l ? iy : Math.sin(p.face); fx.push({ k: 'ring', x: p.x, y: p.y, r: 8, life: .25, max: .25, col: '#9ef' }); p.dfx = 1; dodgeBurst(); SFX.dodge() }
-      if (p.dod > 0) { p.dod -= dt; mv(p, p.dx * (p.dsp || 300) * dt, p.dy * (p.dsp || 300) * dt) }
+      if (p.dod > 0) { p.dod -= dt; { const dk = dashK(); mv(p, p.dx * (p.dsp || 300) * dk * dt, p.dy * (p.dsp || 300) * dk * dt) } }
       else {
         const sp = (K.ShiftLeft || K.ShiftRight || touchJoy.sprint ? 125 : 85) * (1 + (A.AGI - 5) * .015) * (M.d && p.hold > .3 ? .45 : (p.cdA > 0 ? .7 : 1)) * (FOCUS_MELEE() ? FOCUS_CFG.runMelee : FOCUS_RANGED() ? FOCUS_CFG.runRanged : 1) * (window.CHILLM || 1);
         p.vx += (ix * sp - p.vx) * Math.min(1, dt * 10); p.vy += (iy * sp - p.vy) * Math.min(1, dt * 10); mv(p, p.vx * dt, p.vy * dt)
@@ -13101,6 +13116,114 @@
     };
   </script>
   <script>
+    /* ===== KRYOVARTH v2: rig bersendi (leher/ekor/sayap/kaki), gerak halus berinersia, tanpa lompatan kaku ===== */
+    SMR = v => ((lavaOn() && room == 2) || iceBossOn()) ? v : Math.round(v);
+    const _emDG2 = EM.boss;
+    EM.boss = function (pp, at, tm) {
+      if (!iceBossOn()) return _emDG2(pp, at, tm);
+      const e = BOSS_E || {}, fl = !!MT, F = c => fl ? '#fff' : c, ph = BOSS.ph || 1, PI = Math.PI, ez = q => 1 - (1 - q) * (1 - q), cl = (v, a, b) => Math.max(a, Math.min(b, v));
+      const mk0 = e.s2 == 'morph' && e.mtx ? 1 - e.mt / e.mtx : -1, f = mk0 >= 0 && mk0 < .55 ? Math.max(1, ph - 1) : ph;
+      const PAL = [['#173f66', '#3a86c0', '#d6f3ff', '#7fdcff'], ['#102f55', '#2a74b4', '#b4ecff', '#4fe0ff'], ['#16245e', '#4f8fe8', '#f0ffff', '#c6f6ff']][f - 1], D = PAL[0], M = PAL[1], L = PAL[2], G = PAL[3];
+      const S = e.dg || (e.dg = { x: e.x, y: e.y, px: e.x, py: e.y, vx: 0, vy: 0, m: 0, ln: 0, gp: 0, pt: t, roar: 0, wing: 0, hv: 0, nk: {}, ha: {}, op: {} });
+      const dt = cl(t - S.pt, .001, .05), kk = r => 1 - Math.exp(-r * dt), ph0 = S.pt == t; S.pt = t;
+      if (!ph0) { S.vx += ((e.x - S.px) / dt - S.vx) * kk(7); S.vy += ((e.y - S.py) / dt - S.vy) * kk(7); S.px = e.x; S.py = e.y; S.x += (e.x - S.x) * kk(12); S.y += (e.y - S.y) * kk(12) }
+      const sp = Math.hypot(S.vx, S.vy); S.m += (cl(sp / 38, 0, 1) - S.m) * kk(6); S.gp += dt * (3 + 6 * S.m) * (S.m > .04 ? 1 : 0.15);
+      const k = e.atk, w = e.s2 == 'wind' && at, q = ez(pp || 0);
+      let roar = 0, wing = 0, lean = 0, hv = 0;
+      if (w) { if (k == 'nova' || k == 'triad') { roar = q; wing = q } else if (k == 'breath') roar = .85 * q; else if (k == 'lunge') lean = (Math.cos(e.ca || 0) < 0 ? -1 : 1) * .12 * q; else if (k == 'icicles' || k == 'hail') { wing = q; hv = q } else if (k == 'blizzard') { wing = q; roar = .5 * q } else if (k == 'tail') lean = -.07 * q; else roar = .5 * q }
+      else if (e.s2 == 'act') { roar = .9; wing = .5 } else if (e.s2 == 'morph') { roar = 1; wing = 1 }
+      S.roar += (roar - S.roar) * kk(11); S.wing += (wing - S.wing) * kk(9); S.hv += (hv - S.hv) * kk(11); roar = S.roar; wing = S.wing; hv = S.hv;
+      S.ln += (cl(S.vx / 170, -1, 1) * .09 + lean - S.ln) * kk(9);
+      let jx = 0, sc = 1; if (mk0 >= 0) { jx = (R() - .5) * 10 * mk0; if (mk0 > .55) sc = 1 + .2 * (1 - (mk0 - .55) / .45) }
+      const by = Math.sin(tm * 2.3) * 3 + S.m * Math.sin(S.gp * 2) * 2, br = Math.sin(tm * 1.8) * .025, SS = DG_SS[f - 1] * sc;
+      const ox = cl(S.x - e.x, -12, 12) / .4, oy = cl(S.y - e.y, -12, 12) / .4;
+      const poly = (a, c) => { g.fillStyle = F(c); g.beginPath(); a.forEach((v, i) => i ? g.lineTo(v[0], v[1]) : g.moveTo(v[0], v[1])); g.closePath(); g.fill() };
+      const ell = (x, y, rx, ry, c) => { g.fillStyle = F(c); g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill() };
+      const glow = (x, y, r, c, a) => { if (fl) return; g.save(); g.globalCompositeOperation = 'lighter'; const o = g.createRadialGradient(x, y, 0, x, y, r); o.addColorStop(0, 'rgba(' + c + ',' + a + ')'); o.addColorStop(1, 'rgba(' + c + ',0)'); g.fillStyle = o; g.fillRect(x - r, y - r, r * 2, r * 2); g.restore() };
+      const seg = (a, b, lw, c) => { g.strokeStyle = F(c); g.lineWidth = lw; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke() };
+      const limb = (P, lw, c1, c2, tp) => { const n = P.length - 1; for (let i = 0; i < n; i++) { const u = lw * (1 - i / n * (tp || .45)); seg(P[i], P[i + 1], u, c1); seg(P[i], P[i + 1], u * .38, c2) } for (let i = 1; i < n; i++) { const r = lw * (1 - i / n * (tp || .45)) * .5; ell(P[i][0], P[i][1], r, r, c1); ell(P[i][0], P[i][1], r * .5, r * .5, c2) } };
+      const dA = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b)), SSn = .4 * DG_SS[f - 1];
+      g.save(); g.translate(0, Math.abs(Math.sin(tm * 10)) * 7 * (e.wk || 0)); g.lineCap = 'round'; g.lineJoin = 'round'; g.translate(320 + jx + ox, 333 + oy); g.rotate(S.ln); g.scale(SS, SS); g.translate(-320, -333);
+      if (!fl) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(320, 331, 92 - by, 11, 0, 0, 7); g.fill() }
+      glow(320, 230, 200, '110,215,255', .13 + .04 * f + .04 * Math.sin(tm * 3));
+      // sayap: bahu -> siku -> pergelangan -> jari, tiap sendi menyusul dengan jeda (efek cambuk)
+      [-1, 1].forEach(s => {
+        const ff = o => Math.sin(tm * 2.2 + (s > 0 ? 0 : .35) - o) * (1 - wing * .55), d = a => [s * Math.cos(a), Math.sin(a)], add = (P, a, l) => [P[0] + d(a)[0] * l, P[1] + d(a)[1] * l];
+        const sh = [320 + s * 44, 214 + by], A1 = -.5 - .55 * ff(0) - wing * .55, A2 = -.2 - .6 * ff(.7) - wing * .4, A3 = .35 - .55 * ff(1.4) - wing * .2;
+        const E = add(sh, A1, 52 + f * 9), Wr = add(E, A2, 62 + f * 13), nf = f >= 2 ? 4 : 3, T = [];
+        for (let i = 0; i < nf; i++) T.push(add(Wr, A3 + .2 + i * (.62 - ff(1.8 + i * .3) * .08), (96 + f * 16) * (1 - i * .13)));
+        poly([sh, E, Wr, ...T, [320 + s * 26, 268 + by]], M); poly([[sh[0], sh[1] + 10], [E[0], E[1] + 8], ...T.map(v => [Wr[0] + (v[0] - Wr[0]) * .86, Wr[1] + (v[1] - Wr[1]) * .86]), [320 + s * 30, 262 + by]], 'rgba(190,238,255,.45)');
+        T.forEach(v => { seg(Wr, v, 4, D); seg(Wr, v, 1.4, L); ell(v[0], v[1], 2.4, 2.4, L) }); limb([sh, E, Wr], 9, D, L, .35); ell(Wr[0], Wr[1], 5.5, 5.5, G);
+        if (f >= 2) T.forEach(v => poly([[v[0], v[1]], [v[0] + s * 6, v[1] + 16], [v[0] - s * 4, v[1] + 3]], L))
+      });
+      // ekor: 9 ruas, gelombang menjalar + terseret arah gerak
+      {
+        let a = .3 - S.vx / 260 * .5, P = [[350, 296 + by]], x = 350, y = 296 + by; for (let j = 0; j < 9; j++) { a += Math.sin(tm * 1.7 - j * .6) * (.13 + j * .01) - S.ln * .12; x += Math.cos(a) * 21; y += Math.sin(a) * 21 * .8 + .6; P.push([x, y]); if (j % 2 == 0) poly([[x - 4, y - 3], [x + 1, y - 13 - f * 2], [x + 5, y - 3]], j % 4 ? L : G) }
+        limb(P, 25, D, M, .8); const T = P[9], U = P[8], ta = Math.atan2(T[1] - U[1], T[0] - U[0]); g.save(); g.translate(T[0], T[1]); g.rotate(ta); poly([[-4, 6], [30, 0], [-4, -6], [4, 0]], L); poly([[0, 5], [12, 15], [8, 2]], G); poly([[0, -5], [12, -15], [8, -2]], G); g.restore()
+      }
+      // badan bernapas
+      g.save(); g.translate(0, by); g.translate(320, 262); g.scale(1 + br, 1 + br * .9); g.translate(-320, -262);
+      ell(320, 262, 72, 58, D); ell(320, 259, 65, 51, M); ell(320, 252, 44, 38, F(f == 1 ? '#5aa5d8' : f == 2 ? '#4a9ae0' : '#7fb4ff'));
+      for (let i = 0; i < 5; i++) ell(320, 238 + i * 13, 30 - i * 3, 5, L);
+      const ns = 6 + f * 2; for (let i = 0; i < ns; i++) { const x = 262 + i * 116 / (ns - 1) + Math.sin(tm * 2 - i * .5) * 1.5, y = 222 - Math.sin(i / (ns - 1) * PI) * 22; poly([[x - 7, y + 16], [x, y - 8 - f * 3 - (i % 2) * 6], [x + 7, y + 16]], i % 2 ? L : G) }
+      if (f >= 2) { glow(320, 258, 40, '120,230,255', .4 + .25 * Math.sin(tm * 4)); ell(320, 258, 9, 9, L) }
+      if (f == 3) { g.strokeStyle = F('#e8ffff'); g.lineWidth = 1.4; g.beginPath(); g.moveTo(290, 236); g.lineTo(304, 262); g.lineTo(296, 288); g.moveTo(350, 240); g.lineTo(338, 268); g.lineTo(348, 290); g.stroke() }
+      g.restore();
+      // kaki: paha -> lutut -> pergelangan (IK), siklus langkah
+      [-1, 1].forEach(s => {
+        const phs = S.gp + (s > 0 ? PI : 0), lift = Math.max(0, Math.sin(phs)) * S.m, hip = [320 + s * 40, 284 + by * .6], ft = [320 + s * (44 + Math.cos(phs) * 11 * S.m), 335 - lift * 15], r = mIK(hip[0], hip[1], ft[0], ft[1], 30, 30, s);
+        limb([hip, [r[0], r[1]], [r[2], r[3]]], 25, D, M, .3); ell(r[2], r[3] + 1, 17, 6, D);[-10, 0, 10].forEach(o => poly([[r[2] + o - 4, r[3] + 3], [r[2] + o + 4, r[3] + 3], [r[2] + o + s * 2, r[3] + 10]], L))
+      });
+      // leher: rantai 6 sendi (pangkal lambat, kepala cepat) + kepala berengsel rahang
+      DG_HP[f - 1].forEach((hp, i) => {
+        const key = f + '_' + i, hs = f == 1 ? 1.15 : f == 3 && i == 0 ? 1.2 : .95, hx = hp[0] + Math.sin(tm * 1.6 + i * 2.1) * 6, hy = hp[1] + by + Math.sin(tm * 2.1 + i) * 4 - roar * 16 - hv * 6;
+        const mine = e.hd % f == i || k == 'triad' || k == 'nova'; let op = .1 + .07 * Math.sin(tm * 2 + i * 2); if (w && mine) op = .25 + .75 * q; else if (e.s2 == 'act' && mine) op = .9; if (e.s2 == 'morph') op = 1;
+        S.op[key] = S.op[key] == null ? op : S.op[key] + (op - S.op[key]) * kk(13); op = S.op[key];
+        const sx = 320 + (hp[0] - 320) * .3, sy = 238 + by, cx = 320 + (hp[0] - 320) * .8, cy = (hy + sy) / 2 + 24, N = 6, nk = S.nk[key] || (S.nk[key] = []);
+        for (let j = 0; j <= N; j++) { const T = j ? bz(j / N, sx, sy, cx, cy, hx, hy + 8) : [sx, sy]; if (!nk[j]) nk[j] = [T[0], T[1]]; else { const r = kk(j ? 7 + j * 3.6 : 60); nk[j][0] += (T[0] - nk[j][0]) * r; nk[j][1] += (T[1] - nk[j][1]) * r } }
+        limb(nk, 30 * hs, D, M, .5); for (let j = 1; j < N; j++) poly([[nk[j][0] - 5, nk[j][1] + 3], [nk[j][0], nk[j][1] - 10 - (j % 2) * 3], [nk[j][0] + 5, nk[j][1] + 3]], j % 2 ? L : G);
+        const H = nk[N], tx = Math.atan2(p.y - (e.y + 7 + (H[1] - 333) * SSn), p.x - (e.x + (H[0] - 320) * SSn)); let ha = -PI / 2 + (hp[0] - 320) * .004 + Math.sin(tm * 1.3 + i) * .1;
+        ha = roar > .6 ? -PI / 2 + (hp[0] - 320) * .006 : ha + dA(tx, ha) * (op > .25 ? 1 : .35); S.ha[key] = S.ha[key] == null ? ha : S.ha[key] + dA(ha, S.ha[key]) * kk(9); ha = S.ha[key];
+        g.save(); g.translate(H[0], H[1]); g.rotate(ha); g.scale(hs, hs);
+        poly([[-6, -9], [-26, -26], [-42, -24], [-24, -12]], L); poly([[-6, 9], [-26, 26], [-42, 24], [-24, 12]], L);
+        poly([[-16, -13], [8, -12], [30, -6], [37, 0], [30, 5], [8, 9], [-16, 13]], D); poly([[-12, -9], [8, -8], [28, -3], [32, 1], [8, 6], [-12, 9]], M);
+        for (let j = 0; j < 4; j++) poly([[16 + j * 5, 5], [19 + j * 5, 5], [17.5 + j * 5, 10]], '#fff');
+        g.save(); g.translate(-6, 8); g.rotate(op * .75); poly([[0, 0], [34, 3], [39, 9], [4, 14]], D); poly([[3, 3], [32, 5], [35, 8], [5, 11]], M); for (let j = 0; j < 3; j++) poly([[10 + j * 7, 3], [13 + j * 7, 3], [11.5 + j * 7, -3]], '#fff'); ell(0, 2, 4, 4, G); g.restore();
+        for (let j = 0; j < 5; j++) poly([[-10 + j * 6, -12], [-6 + j * 6, -12], [-8 + j * 6, -21 - (j % 2) * 4 + Math.sin(tm * 3 + j) * 1.2]], j % 2 ? G : L);
+        poly([[6, -8], [15, -6], [8, -2]], fl ? '#fff' : f == 3 ? '#ffffff' : '#9ff4ff'); g.restore();
+        const mx = H[0] + Math.cos(ha) * 30 * hs, my = H[1] + Math.sin(ha) * 30 * hs; glow(H[0] + Math.cos(ha) * 8 * hs, H[1] + Math.sin(ha) * 8 * hs - 3, 20, '170,250,255', .7); if (op > .3) glow(mx, my, 30 * op, '150,235,255', .6 * op)
+      });
+      glow(320, 330, 120, '140,225,255', .08);
+      if (!fl) { g.save(); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 16; i++) { const u = (tm * .25 + i * .0625) % 1; g.fillStyle = 'rgba(225,248,255,' + (1 - u) * .8 + ')'; g.fillRect(Math.round(320 + Math.sin(i * 12.9) * 150 + Math.sin(tm + i) * 8), Math.round(330 - u * 270), 3, 3) } g.restore() }
+      g.restore();
+    };
+    /* musuh es biasa: ayun badan berinersia (condong ke arah gerak + goyang langkah), berputar di kaki */
+    const _iceDrawSm = iceDraw;
+    iceDraw = function (e) {
+      if (e.rx == null) return _iceDrawSm(e); const m = e.mz || 0, a = (e.vxs || 0) / 400 * m + Math.sin((e.gp || 0)) * .03 * m + Math.sin(t * 1.7 + (e.ph || 0)) * .012;
+      e.sw2 = (e.sw2 || 0) + (a - (e.sw2 || 0)) * .18; g.save(); g.translate(e.rx, e.ry + 7); g.rotate(e.sw2); g.translate(-e.rx, -(e.ry + 7)); try { _iceDrawSm(e) } finally { g.restore() }
+    };
+    /* ===== DASH/GULING v2: akselerasi cepat lalu mengerem halus, squash & stretch, lompatan kecil, jejak bercahaya ===== */
+    function dashU() { if (p.dod > (p._pd || 0) + .001) p.dmx = p.dod; p._pd = p.dod; return p.dmx > 0 ? Math.min(1, Math.max(0, 1 - p.dod / p.dmx)) : 1 }
+    function dashK() { if (p.dsp) return 1; const u = dashU(); return 1.6 - 1.2 * u }   /* rata-rata ≈ 1 → jarak tetap sama */
+    function dashXf(x, y) {
+      if (!(p.dod > 0) || p.dsp) return 0; const u = dashU(), s = Math.pow(1 - u, 1.4), a = Math.atan2(p.dy, p.dx);
+      g.translate(x, y - Math.sin(Math.PI * Math.min(1, u * 1.15)) * 4); g.rotate(a); g.scale(1 + .3 * s, 1 - .2 * s); g.rotate(-a); g.rotate(p.dx * .16 * (1 - u * .6)); g.translate(-x, -y); return 1
+    }
+    const _dhDash = drawHero; drawHero = function (x, y, ghost, ph, lx, ly) { if (ghost) return _dhDash(x, y, ghost, ph, lx, ly); g.save(); dashXf(x, y); try { return _dhDash(x, y, ghost, ph, lx, ly) } finally { g.restore() } };
+    const _daDash = drawArmed; drawArmed = function (wp) { g.save(); dashXf(p.x, p.y); try { return _daDash(wp) } finally { g.restore() } };
+    const _dtDash = dodgeTrail; dodgeTrail = function () {
+      _dtDash(); const u = dashU(), a = Math.atan2(p.dy, p.dx);
+      fx.push({ k: 'gl', x: p.x - Math.cos(a) * 8, y: p.y - Math.sin(a) * 8, r: 20 + 10 * (1 - u), c: '255,140,165', life: .2, max: .2 });
+      if (R() < .8) dp.push({ k: 'p', x: p.x + (R() - .5) * 8, y: p.y + 9, vx: -Math.cos(a) * 30 + (R() - .5) * 20, vy: -8 - R() * 14, life: .35, max: .35, s: 2 + R() * 2, c: '#9a8f86' })
+    };
+    const _deDash = dodgeEnd; dodgeEnd = function () { _deDash(); const a = Math.atan2(p.dy, p.dx); for (let i = 0; i < 8; i++) dp.push({ k: 'p', x: p.x, y: p.y + 9, vx: Math.cos(a) * (30 + R() * 50) + (R() - .5) * 30, vy: -6 - R() * 16, life: .35 + R() * .2, max: .55, s: 2 + R() * 2, c: '#9a8f86' }) };
+    /* ===== HITBOX BOS: radius disesuaikan dengan ukuran badan (Morvath, bos lava, Kryovarth per fase) ===== */
+    const bossHR = () => iceBossOn() ? Math.round(28.8 * DG_SS[Math.min(2, Math.max(0, (BOSS.ph || 1) - 1))]) : 28;
+    const _btHB = bossTick; bossTick = function (e, dt) { if (e && e.k == 'boss') e.r = bossHR(); return _btHB(e, dt) };
+    const _tbHB = toBoss; toBoss = function () { _tbHB(); const b = es.find(x => x.k == 'boss'); if (b) b.r = bossHR() };
+  </script>
+  <script>
     function bossNm() { return LVL == 3 ? 'Kryovarth' : LVL == 2 ? 'Pyrovarth' : 'Morvath' }
     /* ===== LEVEL 3 REDESIGN: Frost Hall = gua es + danau beku, Glacier Crypt = makam es, Ruang Bos = Takhta Kryovarth =====
        Semua dibungkus try/catch: kalau ada error, desain es lama otomatis dipakai lagi. */
@@ -13514,6 +13637,12 @@
       if (ENDLESS) { walls = WE; TO = TOE; BR = BRE; p.x = DW / 2; p.y = DY; window.EBGC = EBGS[LVL] || (EBGS[LVL] = buildEndBG(LVL)) }
     };
     const _updAR = upd; upd = function (dt) { if (window.ENDM && !lobby) { walls = WE; TO = TOE; BR = BRE } _updAR(dt) };
+
+    /* ===== Suara senjata & skill lewat bus FX (bitcrush / saturated bass / crunch / clipping) ===== */
+    ['swing', 'chop', 'shot', 'hit', 'fireball', 'skill', 'charge', 'beat', 'ult', 'bhOpen', 'bhPulse', 'bhCollapse', 'bhBlast'].forEach(n => {
+      const o = SFX[n]; if (typeof o != 'function') return;
+      SFX[n] = function () { SFX.bus(true); try { return o.apply(this, arguments) } finally { SFX.bus(false) } }
+    });
   </script>
 </body>
 
