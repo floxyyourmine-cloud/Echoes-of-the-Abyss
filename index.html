@@ -9963,6 +9963,8 @@
   <style>
     /* ===== PIXEL UI: Pilih Dungeon & Kesulitan ===== */
     #dsel {
+      --tb: #5fb87e;
+      --g: rgba(40, 100, 80, .5);
       position: fixed;
       inset: 0;
       z-index: 99999;
@@ -9971,7 +9973,7 @@
       justify-content: center;
       background:
         repeating-linear-gradient(0deg, rgba(0, 0, 0, .25) 0 2px, transparent 2px 4px),
-        radial-gradient(ellipse at 50% 35%, rgba(70, 45, 120, .5), rgba(4, 3, 10, .95) 75%);
+        radial-gradient(ellipse at 50% 30%, var(--g), rgba(4, 3, 10, .95) 75%);
       font-family: 'Press Start 2P', 'Courier New', monospace;
       color: #e6e3f4;
       padding: env(safe-area-inset-top, 0) 16px env(safe-area-inset-bottom, 0);
@@ -9980,13 +9982,28 @@
       font-smooth: never
     }
 
+    #dsel[data-th="2"] {
+      --tb: #e0763a;
+      --g: rgba(170, 55, 20, .55)
+    }
+
+    #dsel[data-th="3"] {
+      --tb: #6cc4ee;
+      --g: rgba(40, 100, 160, .55)
+    }
+
+    #dsel[data-th="e"] {
+      --tb: #e2b44f;
+      --g: rgba(130, 90, 20, .5)
+    }
+
     #dsel.on {
       display: flex
     }
 
     #dsel .bx {
-      --b: #7a6fc8;
-      width: min(800px, 94vw);
+      --b: var(--tb);
+      width: min(860px, 94vw);
       max-height: 92vh;
       overflow: auto;
       margin: 4px;
@@ -10000,7 +10017,11 @@
         inset 4px 4px 0 rgba(255, 255, 255, .08), inset -4px -4px 0 rgba(0, 0, 0, .45),
         0 14px 0 0 rgba(0, 0, 0, .5);
       scrollbar-width: thin;
-      scrollbar-color: #7a6fc8 #14122c
+      scrollbar-color: var(--b) #14122c
+    }
+
+    #dsel.on .bx {
+      animation: dsPop .24s steps(4) both
     }
 
     #dsel h2 {
@@ -10026,24 +10047,26 @@
       content: "";
       flex: 1;
       height: 4px;
-      background: repeating-linear-gradient(90deg, #4a4488 0 8px, transparent 8px 12px)
+      background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--tb) 55%, #1a1838) 0 8px, transparent 8px 12px)
     }
 
     #dsel .row {
-      display: flex;
-      gap: clamp(10px, 2vw, 16px);
-      justify-content: center;
-      flex-wrap: wrap;
-      padding: 4px
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(10px, 2vw, 18px);
+      padding: 6px
     }
 
-    /* kartu */
+    #dsel .row.m {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    /* kartu dasar */
     #dsel .cd {
       --c: #cfc8ff;
       --bc: #3d3875;
       position: relative;
-      flex: 1 1 210px;
-      max-width: 360px;
       cursor: pointer;
       padding: clamp(10px, 2vh, 16px) clamp(10px, 1.6vw, 14px);
       background: #1b1940;
@@ -10051,6 +10074,7 @@
       display: flex;
       gap: 12px;
       align-items: center;
+      image-rendering: pixelated;
       box-shadow:
         0 -4px 0 0 var(--bc), 0 4px 0 0 var(--bc), -4px 0 0 0 var(--bc), 4px 0 0 0 var(--bc),
         inset 4px 4px 0 rgba(255, 255, 255, .06), inset -4px -4px 0 rgba(0, 0, 0, .4);
@@ -10074,7 +10098,7 @@
 
     #dsel .cd .ic svg {
       display: block;
-      width: clamp(28px, 7vh, 48px);
+      width: clamp(28px, 7vh, 44px);
       height: auto
     }
 
@@ -10106,28 +10130,112 @@
       color: #bdb9e0
     }
 
-    /* kartu level */
+    /* kartu level: banner pemandangan di atas */
+    #dsel .cd.lv {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      padding: 0
+    }
+
     #dsel .cd.l1 {
       --c: #8fe8a0
     }
 
     #dsel .cd.l2 {
       --c: #ff8a3a;
-      background: linear-gradient(#3a1812, #230e0c)
+      background: linear-gradient(#34150f, #200d0b)
     }
 
     #dsel .cd.l3 {
       --c: #8fe0ff;
-      background: linear-gradient(#10243a, #0a1624)
+      background: linear-gradient(#0f2238, #0a1624)
+    }
+
+    #dsel .lv .bn {
+      position: relative;
+      aspect-ratio: 48 / 20;
+      margin: 4px 4px 0;
+      overflow: hidden;
+      filter: saturate(.5) brightness(.65);
+      transition: filter .12s steps(2)
+    }
+
+    #dsel .lv .bn svg {
+      display: block;
+      width: 100%;
+      height: 100%
+    }
+
+    #dsel .lv .bn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, .16) 0 1px, transparent 1px 3px),
+        linear-gradient(transparent 50%, rgba(0, 0, 0, .55))
+    }
+
+    #dsel .lv .bn .ic {
+      position: absolute;
+      left: 8px;
+      bottom: 6px;
+      z-index: 1
+    }
+
+    #dsel .lv .bn .ic svg {
+      width: clamp(20px, 4.6vh, 30px);
+      height: auto
+    }
+
+    #dsel .lv .tx {
+      padding: clamp(8px, 1.6vh, 12px) clamp(10px, 1.4vw, 14px) clamp(10px, 1.8vh, 14px)
+    }
+
+    #dsel .cd.lv:hover .bn,
+    #dsel .cd.lv.sel .bn {
+      filter: none
+    }
+
+    /* kartu mode */
+    #dsel .cd.md {
+      gap: 14px
+    }
+
+    #dsel .cd.md .ic svg {
+      width: clamp(26px, 5.4vh, 38px)
+    }
+
+    #dsel .cd.md[data-m="1"] {
+      --c: #ffd98a
+    }
+
+    #dsel .cd.md[data-m="0"] {
+      --c: #cfc8ff
     }
 
     /* kartu kesulitan */
     #dsel .df {
-      flex: 1 1 140px;
-      max-width: 230px;
       flex-direction: column;
       text-align: center;
-      gap: 6px
+      gap: 6px;
+      padding-top: clamp(14px, 2.6vh, 20px)
+    }
+
+    #dsel .df::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 4px;
+      background: var(--c);
+      opacity: .5
+    }
+
+    #dsel .df.sel::before {
+      opacity: 1
     }
 
     #dsel .df .st {
@@ -10168,7 +10276,8 @@
       box-shadow:
         0 -4px 0 0 var(--bc), 0 4px 0 0 var(--bc), -4px 0 0 0 var(--bc), 4px 0 0 0 var(--bc),
         inset 4px 4px 0 rgba(255, 255, 255, .12), inset -4px -4px 0 rgba(0, 0, 0, .4),
-        0 0 0 8px rgba(0, 0, 0, .35)
+        0 0 0 8px rgba(0, 0, 0, .35);
+      filter: drop-shadow(0 0 8px color-mix(in srgb, var(--c) 45%, transparent))
     }
 
     #dsel .cd.l1.sel {
@@ -10179,26 +10288,25 @@
       background: linear-gradient(#5a2412, #331410)
     }
 
-    #dsel .cd.sel::before {
+    #dsel .cd.l3.sel {
+      background: linear-gradient(#17406a, #0e2a46)
+    }
+
+    #dsel .cd.sel::after {
       content: "";
       position: absolute;
-      top: 8px;
-      left: 8px;
-      width: 9px;
-      height: 9px;
-      background: var(--c);
-      clip-path: polygon(0 0, 100% 50%, 0 100%);
-      animation: dsBlink .8s steps(2) infinite
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      width: 22px;
+      height: 22px;
+      background: var(--c) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' shape-rendering='crispEdges'%3E%3Cpath fill='%23101020' d='M5 0h2v1h-2zM4 1h2v1h-2zM0 2h2v1h-2zM3 2h2v1h-2zM1 3h3v1h-3zM2 4h1v1h-1z'/%3E%3C/svg%3E") center / 14px 10px no-repeat;
+      image-rendering: pixelated;
+      box-shadow: 0 -2px 0 #000, 0 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000
     }
 
     #dsel .cd.sel .ic {
       animation: dsBob .5s steps(2) infinite alternate
-    }
-
-    @keyframes dsBlink {
-      50% {
-        opacity: 0
-      }
     }
 
     @keyframes dsBob {
@@ -10207,12 +10315,65 @@
       }
     }
 
+    @keyframes dsPop {
+      from {
+        transform: translateY(14px) scale(.96);
+        opacity: 0
+      }
+    }
+
+    /* mode endless: level diacak */
+    #dsel.endm .lv {
+      opacity: .35;
+      pointer-events: none;
+      filter: grayscale(.85)
+    }
+
+    #dsel.endm .lv.sel::after {
+      display: none
+    }
+
+    #dsel.endm .lvr::after {
+      content: "TEMA ACAK";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      font: 400 clamp(12px, 3vh, 20px) 'Press Start 2P', monospace;
+      letter-spacing: .12em;
+      color: #ffd98a;
+      text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000
+    }
+
+    /* ringkasan pilihan */
+    #dsel .sum {
+      margin-top: clamp(12px, 2.6vh, 22px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      font: 400 clamp(8px, 1.7vh, 11px)/1.4 'Press Start 2P', monospace
+    }
+
+    #dsel .sum span {
+      text-shadow: 2px 2px 0 #000
+    }
+
+    #dsel .sum i {
+      width: 6px;
+      height: 6px;
+      background: #7f7baa;
+      transform: rotate(45deg)
+    }
+
     /* tombol */
     #dsel .go {
       display: flex;
       gap: 16px;
       justify-content: center;
-      margin-top: clamp(14px, 3vh, 26px)
+      margin-top: clamp(8px, 1.8vh, 14px)
     }
 
     #dsel button {
@@ -10249,6 +10410,12 @@
         inset 4px 4px 0 rgba(0, 0, 0, .4), inset -4px -4px 0 rgba(255, 255, 255, .12)
     }
 
+    #dsel button:focus-visible,
+    #dsel .cd:focus-visible {
+      outline: 3px dashed #fff;
+      outline-offset: 5px
+    }
+
     #dsel .hint {
       margin-top: clamp(10px, 2vh, 18px);
       font: 400 clamp(12px, 2.2vh, 16px)/1 'VT323', monospace;
@@ -10262,26 +10429,86 @@
       }
     }
 
+    /* layar sempit: kartu jadi baris */
+    @media (max-width: 640px) {
+
+      #dsel .row,
+      #dsel .row.m {
+        grid-template-columns: 1fr
+      }
+
+      #dsel .cd.lv {
+        flex-direction: row;
+        align-items: stretch
+      }
+
+      #dsel .lv .bn {
+        aspect-ratio: auto;
+        flex: none;
+        width: clamp(92px, 30vw, 128px);
+        margin: 4px 0 4px 4px
+      }
+
+      #dsel .lv .tx {
+        align-self: center;
+        padding: 8px 12px 8px 4px
+      }
+
+      #dsel .df {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: left
+      }
+
+      #dsel .df b {
+        flex: 1
+      }
+
+      #dsel .df .st,
+      #dsel .df small {
+        flex-basis: 100%
+      }
+
+      #dsel.endm .lvr::after {
+        font-size: 12px
+      }
+    }
+
+    /* layar landscape pendek (HP) */
     @media (max-height: 460px) {
+      #dsel .lv .bn {
+        aspect-ratio: auto;
+        height: clamp(34px, 16vh, 52px)
+      }
+
+      #dsel .lv small,
+      #dsel .df small,
       #dsel .df .st {
         display: none
       }
 
       #dsel .df {
         flex-direction: row;
-        text-align: left;
-        max-width: 230px
+        justify-content: center;
+        padding: 8px
       }
 
       #dsel .sub {
-        margin: 8px 0 6px
+        margin: 8px 0 4px
       }
     }
 
-    @media (max-width: 560px) {
+    @media (prefers-reduced-motion: reduce) {
+
+      #dsel.on .bx,
+      #dsel .cd.sel .ic {
+        animation: none
+      }
+
       #dsel .cd {
-        flex-basis: 100%;
-        max-width: none
+        transition: none
       }
     }
   </style>
@@ -10311,24 +10538,55 @@
         snow: PX(['...##...', '#..##..#', '.#.##.#.', '..####..', '########', '..####..', '.#.##.#.', '#..##..#']),
         heart: PX(['.##..##.', '########', '########', '########', '.######.', '..####..', '...##...', '........']),
         sword: PX(['......##', '.....###', '....###.', '#..###..', '.####...', '..##....', '.#.##...', '#...#...']),
-        skull: PX(['.######.', '########', '##.##.##', '##.##.##', '########', '.######.', '.#.##.#.', '.######.'])
+        skull: PX(['.######.', '########', '##.##.##', '##.##.##', '########', '.######.', '.#.##.#.', '.######.']),
+        door: PX(['..####..', '.######.', '.#....#.', '.#....#.', '.#...##.', '.#....#.', '.#....#.', '########']),
+        inf: PX(['............', '.###....###.', '#...#..#...#', '#....##....#', '#...#..#...#', '.###....###.'])
       };
       const DIC = [IC.heart, IC.sword, IC.skull];
       const seg = v => { const n = Math.max(1, Math.min(5, Math.round(v * 3))); let s = ''; for (let i = 0; i < 5; i++) s += '<i' + (i < n ? ' class="on"' : '') + '></i>'; return '<span class="sg">' + s + '</span>' };
+      window.DSIC = IC;
+      const SC = (bg, r) => '<svg viewBox="0 0 48 20" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" aria-hidden="true"><rect width="48" height="20" fill="' + bg + '"/>' + r.map(([x, y, w, h, c, o]) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + c + '"' + (o ? ' opacity="' + o + '"' : '') + '/>').join('') + '</svg>';
+      const SCN = [null,
+        /* Ancient Halls: aula batu berlumut, obor, gerbang */
+        SC('#1b2d26', [[0, 4, 48, 1, '#22382f'], [0, 9, 48, 1, '#22382f'], [0, 14, 48, 1, '#22382f'], [6, 0, 1, 4, '#22382f'], [30, 0, 1, 4, '#22382f'], [18, 5, 1, 4, '#22382f'], [42, 5, 1, 4, '#22382f'], [12, 10, 1, 4, '#22382f'], [36, 10, 1, 4, '#22382f'],
+        [0, 15, 48, 5, '#2e4a3e'], [0, 15, 48, 1, '#4f7a64'], [0, 18, 48, 1, '#243b31'], [10, 16, 1, 2, '#243b31'], [26, 16, 1, 2, '#243b31'], [40, 16, 1, 2, '#243b31'],
+        [4, 2, 5, 13, '#4c6f5e'], [4, 2, 1, 13, '#6f9a84'], [8, 2, 1, 13, '#344f43'], [3, 1, 7, 2, '#5d8570'], [3, 13, 7, 2, '#5d8570'],
+        [39, 2, 5, 13, '#4c6f5e'], [39, 2, 1, 13, '#6f9a84'], [43, 2, 1, 13, '#344f43'], [38, 1, 7, 2, '#5d8570'], [38, 13, 7, 2, '#5d8570'],
+        [17, 6, 2, 9, '#4c6f5e'], [29, 6, 2, 9, '#4c6f5e'], [19, 5, 1, 1, '#4c6f5e'], [28, 5, 1, 1, '#4c6f5e'], [20, 4, 2, 1, '#4c6f5e'], [26, 4, 2, 1, '#4c6f5e'], [22, 3, 4, 1, '#5d8570'],
+        [19, 6, 10, 9, '#070d0b'], [20, 5, 8, 1, '#070d0b'], [22, 4, 4, 1, '#070d0b'], [22, 10, 4, 5, '#8fe8a0', .25],
+        [10, 4, 9, 9, '#ff9a2a', .12], [31, 4, 9, 9, '#ff9a2a', .12],
+        [13, 9, 1, 3, '#7a4a20'], [12, 6, 3, 3, '#ff9a2a'], [13, 5, 1, 1, '#ffd34d'], [13, 7, 1, 2, '#ffe08a'],
+        [34, 9, 1, 3, '#7a4a20'], [33, 6, 3, 3, '#ff9a2a'], [34, 5, 1, 1, '#ffd34d'], [34, 7, 1, 2, '#ffe08a']]),
+        /* Lava Depths: gua batu, sungai lava, pulau bara */
+        SC('#240c0a', [[0, 0, 48, 2, '#120504'], [3, 2, 4, 1, '#120504'], [4, 3, 2, 1, '#120504'], [5, 4, 1, 1, '#120504'], [15, 2, 3, 1, '#120504'], [16, 3, 1, 2, '#120504'], [27, 2, 5, 1, '#120504'], [28, 3, 3, 1, '#120504'], [29, 4, 1, 2, '#120504'], [40, 2, 4, 1, '#120504'], [41, 3, 2, 1, '#120504'], [42, 4, 1, 1, '#120504'],
+        [0, 10, 48, 5, '#4a1608'], [0, 12, 48, 3, '#7a240c'],
+        [14, 9, 20, 6, '#3a1812'], [15, 8, 18, 1, '#4a1c10'], [14, 12, 20, 3, '#2a100c'], [20, 11, 1, 3, '#ff7a1f'], [27, 10, 1, 4, '#ff7a1f'],
+        [22, 6, 4, 2, '#ff7a1f'], [23, 4, 2, 2, '#ff9a2a'], [23, 3, 1, 1, '#ffd34d'],
+        [0, 14, 48, 6, '#d22a0a'], [0, 14, 48, 2, '#ff7a1f'], [4, 16, 6, 1, '#ffd34d'], [20, 17, 9, 1, '#ffb347'], [36, 15, 5, 1, '#ffd34d'], [12, 18, 4, 1, '#ff9a2a'], [30, 19, 6, 1, '#ff9a2a'],
+        [8, 7, 1, 1, '#ffb050'], [10, 5, 1, 1, '#ff7a1f'], [38, 6, 1, 1, '#ffb050'], [42, 9, 1, 1, '#ff7a1f'], [6, 11, 1, 1, '#ffd34d'], [34, 4, 1, 1, '#ffd34d']]),
+        /* Frost Crypt: gua es, stalaktit, kristal */
+        SC('#0d1f36', [[0, 0, 48, 6, '#0a1830'], [19, 3, 10, 12, '#8fe0ff', .12],
+        [5, 4, 1, 1, '#fff', .8], [11, 8, 1, 1, '#fff', .7], [17, 3, 1, 1, '#dff6ff'], [31, 5, 1, 1, '#fff', .8], [38, 9, 1, 1, '#fff', .7], [44, 4, 1, 1, '#dff6ff'], [8, 11, 1, 1, '#fff', .6], [27, 10, 1, 1, '#fff', .6],
+        [0, 0, 48, 2, '#16345a'], [2, 2, 2, 1, '#a8e0ff'], [2, 3, 1, 2, '#a8e0ff'], [9, 2, 3, 1, '#a8e0ff'], [10, 3, 1, 3, '#a8e0ff'], [20, 2, 2, 1, '#a8e0ff'], [20, 3, 1, 2, '#a8e0ff'], [34, 2, 3, 1, '#a8e0ff'], [35, 3, 1, 4, '#a8e0ff'], [42, 2, 2, 1, '#a8e0ff'], [42, 3, 1, 2, '#a8e0ff'],
+        [0, 15, 48, 5, '#cdeeff'], [0, 15, 48, 1, '#ffffff'], [0, 17, 48, 3, '#8fc3e3'], [0, 19, 48, 1, '#6aa3c9'],
+        [22, 6, 4, 9, '#8fe0ff'], [22, 6, 1, 9, '#d6f6ff'], [23, 4, 2, 2, '#d6f6ff'], [23, 3, 1, 1, '#fff'], [25, 7, 1, 8, '#5aa9d6'],
+        [14, 10, 3, 5, '#6cc4ee'], [14, 10, 1, 5, '#bfeaff'], [15, 8, 1, 2, '#bfeaff'], [32, 9, 3, 6, '#6cc4ee'], [32, 9, 1, 6, '#bfeaff'], [33, 7, 1, 2, '#bfeaff'],
+        [28, 12, 2, 3, '#6cc4ee'], [8, 12, 2, 3, '#6cc4ee'], [38, 12, 2, 3, '#6cc4ee']])];
+      const LV = [['1', 'Ancient Halls', 'Aula kuno dan Torch Dungeon, lalu bos Morvath.', 'castle'], ['2', 'Lava Depths', 'Kolam lava melukai yang berdiri di atasnya. Musuh +15% HP.', 'flame'], ['3', 'Frost Crypt', 'Ruang es beku. Serangan musuh membuatmu membeku (melambat). Musuh +20% HP.', 'snow']];
       const el = document.createElement('div'); el.id = 'dsel';
       el.innerHTML = '<div class="bx"><h2>PILIH DUNGEON</h2>'
-        + '<div class="sub">LEVEL</div><div class="row">'
-        + '<div class="cd l1" data-l="1"><i class="ic">' + IC.castle + '</i><div class="tx"><em>LEVEL 1</em><b>Ancient Halls</b><small>Aula kuno dan Torch Dungeon, lalu bos Morvath.</small></div></div>'
-        + '<div class="cd l2" data-l="2"><i class="ic">' + IC.flame + '</i><div class="tx"><em>LEVEL 2</em><b>Lava Depths</b><small>Kolam lava melukai yang berdiri di atasnya. Musuh +15% HP.</small></div></div>'
-        + '<div class="cd l3" data-l="3"><i class="ic">' + IC.snow + '</i><div class="tx"><em>LEVEL 3</em><b>Frost Crypt</b><small>Ruang es beku. Serangan musuh membuatmu membeku (melambat). Musuh +20% HP.</small></div></div></div>'
-        + '<div class="sub">KESULITAN</div><div class="row">'
-        + DF.map((d, i) => '<div class="cd df" data-d="' + i + '" style="--c:' + d.c + '"><i class="ic">' + DIC[i] + '</i><b>' + d.n + '</b>'
+        + '<div class="sub sl">LEVEL</div><div class="row lvr" role="radiogroup" aria-label="Level">'
+        + LV.map(([n, nm, ds, ic]) => '<div class="cd lv l' + n + '" data-l="' + n + '" role="radio" aria-checked="false"><div class="bn">' + SCN[n] + '<i class="ic">' + IC[ic] + '</i></div><div class="tx"><em>LEVEL ' + n + '</em><b>' + nm + '</b><small>' + ds + '</small></div></div>').join('')
+        + '</div><div class="sub">KESULITAN</div><div class="row" role="radiogroup" aria-label="Kesulitan">'
+        + DF.map((d, i) => '<div class="cd df" data-d="' + i + '" role="radio" aria-checked="false" style="--c:' + d.c + '"><i class="ic">' + DIC[i] + '</i><b>' + d.n + '</b>'
           + '<div class="st"><div>JUMLAH' + seg(d.cnt) + '</div><div>NYAWA' + seg(d.hp) + '</div><div>BAHAYA' + seg(d.dmg) + '</div></div>'
           + '<small>' + d.d + '</small></div>').join('')
-        + '</div><div class="go"><button id="dsBack">BATAL</button><button class="p" id="dsGo">MASUK ▶</button></div>'
-        + '<div class="hint">← → KESULITAN · 1 2 3 LEVEL · ENTER MASUK · ESC BATAL</div></div>';
+        + '</div><div class="sum" id="dsSum"></div><div class="go"><button id="dsBack">BATAL</button><button class="p" id="dsGo">MASUK ▶</button></div>'
+        + '<div class="hint">← → KESULITAN · 1 2 3 LEVEL · E ENDLESS · ENTER MASUK · ESC BATAL</div></div>';
       document.body.appendChild(el);
-      const sync = () => { el.querySelectorAll('[data-l]').forEach(n => n.classList.toggle('sel', +n.dataset.l == LVL)); el.querySelectorAll('[data-d]').forEach(n => n.classList.toggle('sel', +n.dataset.d == DIFF)) };
+      const LNM = ['', 'Ancient Halls', 'Lava Depths', 'Frost Crypt'], LCC = ['', '#8fe8a0', '#ff8a3a', '#8fe0ff'], sumEl = el.querySelector('#dsSum');
+      window.dsSum = () => { let en = 0; try { en = ESEL } catch (e) { } el.dataset.th = en ? 'e' : LVL; sumEl.innerHTML = '<span style="color:' + (en ? '#ffd98a' : LCC[LVL]) + '">' + (en ? 'ENDLESS · tema acak' : LNM[LVL]) + '</span><i></i><span style="color:' + DF[DIFF].c + '">' + DF[DIFF].n + '</span>' };
+      const sync = () => { el.querySelectorAll('[data-l]').forEach(n => { const on = +n.dataset.l == LVL; n.classList.toggle('sel', on); n.setAttribute('aria-checked', on) }); el.querySelectorAll('[data-d]').forEach(n => { const on = +n.dataset.d == DIFF; n.classList.toggle('sel', on); n.setAttribute('aria-checked', on) }); window.dsSum() };
       el.addEventListener('click', e => { const c = e.target.closest('.cd'); if (!c) return; if (c.dataset.l) LVL = +c.dataset.l; if (c.dataset.d) DIFF = +c.dataset.d; sync() });
       const clr = () => { try { Object.keys(K).forEach(k => K[k] = 0); M.d = 0; for (const k in P) delete P[k]; touchJoy.active = false; touchAttack.active = false } catch (e) { } };
       const close = () => { el.classList.remove('on'); dselOn = false; clr(); playing = true; cv.focus() };
@@ -13592,10 +13850,11 @@
   </script>
   <script>
     /* ===== MODE ENDLESS: gelombang tanpa akhir di arena pertama, makin banyak & kuat, mini bos tiap 5 gelombang ===== */
-    let ENDLESS = 0, ESEL = 0, EDEAD = 0, EBEST = 0; try { EBEST = +localStorage.getItem('eoa_endless_best') || 0 } catch (er) { }
+    let ENDLESS = 0, ESEL = 0, EDEAD = 0, EBEST = 0, ELW = -1, ELV = 0, ELS = 0; const ETH = ['', 'ANCIENT HALLS', 'LAVA DEPTHS', 'FROST CRYPT']; try { EBEST = +localStorage.getItem('eoa_endless_best') || 0 } catch (er) { }
     const _txtEN = txt; txt = function (s, x, y, c, al) { if (ENDLESS && !lobby && typeof s == 'string' && s.indexOf('Gelombang ') == 0) s = s.replace('/5', ''); return _txtEN(s, x, y, c, al) };
-    const _enterEN = enterDungeon; enterDungeon = function () { ENDLESS = ESEL ? 1 : 0; EDEAD = 0; _enterEN(); if (ENDLESS) msg('♾ ENDLESS · Colosseum Abyss — bertahan selama mungkin! Rekor: Gelombang ' + EBEST) };
+    const _enterEN = enterDungeon; enterDungeon = function () { ENDLESS = ESEL ? 1 : 0; EDEAD = 0; ELW = -1; ELV = 0; if (ENDLESS && !ELS) ELS = LVL; _enterEN(); if (ENDLESS) msg('♾ ENDLESS · Colosseum Abyss — bertahan selama mungkin! Rekor: Gelombang ' + EBEST) };
     const _spawnEN = spawn; spawn = function () {
+      if (ENDLESS && !lobby && room == 0) { if (wave != ELW) { let v; do { v = 1 + (R() * 3 | 0) } while (v == ELV); ELV = v; ELW = wave; if (wave > 1) msg('♾ Gelombang ' + wave + ' — musuh ' + ETH[v]) } LVL = ELV; try { window.EBGC = EBGS[LVL] || (EBGS[LVL] = buildEndBG(LVL)) } catch (er) { } }
       _spawnEN(); if (!ENDLESS || lobby || room != 0) return;
       const n = Math.min(Math.max(0, Math.floor((wave - 3) * .8)), 14), hm = (1 + Math.max(0, wave - 5) * .12) * DF[DIFF].hp * (LVL == 2 ? 1.15 : LVL == 3 ? 1.2 : 1);
       for (let j = 0, c = 0; j < n && c < 400; c++) { const x = 200 + R() * 560, y = 50 + R() * 380; if (!blk(x, y, 9)) { const e = mk(['slime', 'skel', 'mage'][R() * 3 | 0], x, y); e.hp = e.mhp = e.hp * hm; e.sd = j * .1; e.st = 1.1 + e.sd; e.sw = e.st; e.sx = 0; es.push(e); j++ } }
@@ -13614,17 +13873,17 @@
       }
       _updEN(dt)
     };
-    const _drawEN = draw; draw = function () { _drawEN(); if (ENDLESS && !lobby && room == 0) { g.save(); g.font = 'bold 10px monospace'; txt('♾ ENDLESS  ·  GELOMBANG ' + wave + '  ·  REKOR ' + EBEST, W / 2, 14, '#ffd98a', 'center'); g.restore() } };
+    const _drawEN = draw; draw = function () { _drawEN(); if (ENDLESS && !lobby && room == 0) { g.save(); g.font = 'bold 10px monospace'; txt('♾ ENDLESS  ·  GELOMBANG ' + wave + '  ·  ' + ETH[LVL] + '  ·  REKOR ' + EBEST, W / 2, 14, '#ffd98a', 'center'); g.restore() } };
     (function () {
       const el = document.getElementById('dsel'); if (!el) return;
-      const css = document.createElement('style'); css.textContent = '#dsel .cd.md{cursor:pointer;display:flex;align-items:center;padding:10px 14px;border:2px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(0,0,0,.35);color:#ddd;flex:1;min-width:150px;box-sizing:border-box}#dsel .cd.md b{display:block;font-size:14px;color:#fff}#dsel .cd.md small{display:block;font-size:10px;opacity:.75;margin-top:2px}#dsel .cd.md.sel{border-color:#ffd98a;box-shadow:0 0 14px rgba(255,217,138,.55);background:rgba(90,60,10,.45)}'; document.head.appendChild(css);
-      const ref = el.querySelectorAll('.sub')[1], s = document.createElement('div'), r = document.createElement('div'); s.className = 'sub'; s.textContent = 'MODE'; r.className = 'row';
-      r.innerHTML = '<div class="cd md" data-m="0"><div class="tx"><b>NORMAL</b><small>5 gelombang → ruangan berikutnya → bos.</small></div></div><div class="cd md" data-m="1"><div class="tx"><b>♾ ENDLESS</b><small>Arena khusus 1 ruangan (Colosseum Abyss), gelombang tanpa akhir. Mini bos tiap 5 gelombang. Kejar rekor! [E]</small></div></div>';
+
+      const ref = el.querySelector('.sub.sl'), s = document.createElement('div'), r = document.createElement('div'); s.className = 'sub'; s.textContent = 'MODE'; r.className = 'row m'; r.setAttribute('role', 'radiogroup');
+      r.innerHTML = '<div class="cd md" data-m="0" role="radio"><i class="ic">' + DSIC.door + '</i><div class="tx"><b>NORMAL</b><small>5 gelombang, ruangan berikutnya, lalu bos.</small></div></div><div class="cd md" data-m="1" role="radio"><i class="ic">' + DSIC.inf + '</i><div class="tx"><b>ENDLESS</b><small>Satu arena (Colosseum Abyss), gelombang tanpa akhir. Musuh campur acak tiap gelombang. Mini bos tiap 5 gelombang. [E]</small></div></div>';
       ref.parentNode.insertBefore(s, ref); ref.parentNode.insertBefore(r, ref);
-      const sync = () => r.querySelectorAll('.md').forEach(n => n.classList.toggle('sel', +n.dataset.m == ESEL));
+      const sync = () => { r.querySelectorAll('.md').forEach(n => { const on = +n.dataset.m == ESEL; n.classList.toggle('sel', on); n.setAttribute('aria-checked', on) }); el.classList.toggle('endm', !!ESEL); const ls = el.querySelector('.sub.sl'); if (ls) ls.textContent = ESEL ? 'LEVEL: DIACAK TIAP GELOMBANG' : 'LEVEL'; if (window.dsSum) window.dsSum() };
       r.addEventListener('click', e => { const c = e.target.closest('.md'); if (c) { ESEL = +c.dataset.m; sync() } });
       document.addEventListener('keydown', e => { if (dselOn && e.code == 'KeyE') { ESEL = ESEL ? 0 : 1; sync() } });
-      const _o = window.openDungeonSelect; window.openDungeonSelect = function () { _o(); sync() };
+      const _o = window.openDungeonSelect; window.openDungeonSelect = function () { if (ELS) { LVL = ELS; ELS = 0 } _o(); sync() };
       document.getElementById('dsGo').addEventListener('click', () => { if (ESEL) msg('♾ ENDLESS · Colosseum Abyss — bertahan selama mungkin! Rekor: Gelombang ' + EBEST) });
       sync();
     })();
