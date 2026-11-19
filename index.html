@@ -12324,7 +12324,7 @@
   </script>
 
   <script>
-    /* ===== BOLA RACUN (Half): glow, jejak, dan orb pengisian mini bos ===== */
+    /* ==== BOLA RACUN (Half): glow, jejak, dan orb pengisian mini bos ==== */
     const _updPB = upd; upd = function (dt) {
       _updPB(dt); pr.forEach(b => { if (b.pb && R() < dt * 45) dp.push({ k: 'p', x: b.x + (R() - .5) * 4, y: b.y + (R() - .5) * 4, vx: (R() - .5) * 10, vy: -6 - R() * 10, life: .35, max: .35, s: 1.5 + R() * 1.5, c: R() < .5 ? '#7dff5a' : '#2f8a2a' }) })
     };
