@@ -7810,7 +7810,7 @@
           try { g.letterSpacing = (4 + (1 - ta) * 14) + 'px' } catch (e) { } g.shadowColor = '#b0152d'; g.shadowBlur = 18; g.fillStyle = '#e8d6c0'; g.fillText('KAU GUGUR', W / 2, H * .47); g.shadowBlur = 0;
           try { g.letterSpacing = '0px' } catch (e) { }
           const lw = W * .22 * ta; g.fillStyle = 'rgba(176,21,45,.9)'; g.fillRect(W / 2 - lw / 2, H * .47 + f * .35, lw, 2);
-          if (at > 2.1) { g.globalAlpha = E((at - 2.1) / .6) * .75; g.font = 'bold ' + Math.round(f * .3) + 'px monospace'; g.fillStyle = '#b9b4c8'; g.fillText(D.ck ? 'Morvath masih menunggumu...' : 'Jiwamu kembali ke lobby...', W / 2, H * .47 + f * .95) } g.restore()
+          if (at > 2.1) { g.globalAlpha = E((at - 2.1) / .6) * .75; g.font = 'bold ' + Math.round(f * .3) + 'px monospace'; g.fillStyle = '#b9b4c8'; g.fillText(D.ck ? (bossNm() + ' masih menunggumu...') : 'Jiwamu kembali ke lobby...', W / 2, H * .47 + f * .95) } g.restore()
         }
         const fo = E((D.t - (DEATH_TIME - .55)) / .55); if (fo > 0) { g.fillStyle = 'rgba(0,0,0,' + fo + ')'; g.fillRect(0, 0, W, H) }
       }
@@ -8332,7 +8332,7 @@
       p.pot = 5;
       const e = mk('boss', DW / 2, DY); e.hp = e.mhp = BOSS_HP; e.sd = 0; e.st = e.sw = 1.4; e.sx = 0; es = [e];
       Object.assign(BOSS, { on: 1, hz: [], q: [], ph: 1, intro: .9, dead: 0, vt: 0, ban: 3.2 });
-      SFX.door(); SFX.summon(); SFX.bossVo(bossVid(), 'intro'); msg('Ruangan Bos — Morvath menunggumu. Tidak ada jalan kembali!');
+      SFX.door(); SFX.summon(); SFX.bossVo(bossVid(), 'intro'); msg('Ruangan Bos — ' + bossNm() + ' menunggumu. Tidak ada jalan kembali!');
     }
 
     function bossFan(e) {
@@ -8346,7 +8346,7 @@
       for (let i = 0; i < n; i++) { const q = b + (i - (n - 1) / 2) * .2; pr.push({ x: ox, y: oy, vx: Math.cos(q) * sp, vy: Math.sin(q) * sp, d: 13, r: 4, col: '#8c8896', own: 'e', life: 3, rock: 1, rot: R() * 6.283, vr: (R() - .5) * 16, sd: R() * 50 }) }
     }
     function bossPhase(e, ph) {
-      msg(ph == 2 ? 'Fase 2 — Morvath memanggil pasukannya!' : 'Fase 3 — AMUK!');
+      msg(ph == 2 ? 'Fase 2 — ' + bossNm() + ' memanggil pasukannya!' : 'Fase 3 — AMUK!');
       SFX.wave(); SFX.bossVo('mino', 'phase', ph); FLSH = 1; FLSC = '255,60,80'; shake = Math.max(shake, 10); HST = Math.max(HST, .12);
       fx.push({ k: 'ring', x: e.x, y: e.y, r: 60, w: 5, life: .6, max: .6, col: '#ff5a78' }, { k: 'gl', x: e.x, y: e.y, r: 120, c: '255,60,90', life: .5, max: .5 });
       BOSS.hz = []; BOSS.q = []; e.s2 = 'rest'; e.tm = .9; e.an = 0;
@@ -8410,7 +8410,7 @@
     upd = function (dt) {
       const B = BOSS;
       if (B.on && (lobby || room != 2)) { B.on = 0; B.hz = []; B.q = []; B.vt = 0; B.dead = 0 }
-      if (B.on && P.KeyB) { delete P.KeyB; msg(B.dead ? 'Kau akan segera ditarik kembali ke lobby...' : 'Tidak ada jalan kabur dari Morvath!') }
+      if (B.on && P.KeyB) { delete P.KeyB; msg(B.dead ? 'Kau akan segera ditarik kembali ke lobby...' : 'Tidak ada jalan kabur dari ' + bossNm() + '!') }
       _updB(dt);
       if (B.on && !lobby && room == 2) {
         if (p.dead > 0) { B.hz = []; B.q = [] } else if (!(HST > 0)) bossFx(dt);
@@ -8427,14 +8427,14 @@
     const _deB = drawEnemy; drawEnemy = function (e) { if (e.k == 'boss') { bossGround(e); BOSS_E = e } _deB(e) };
     function bossHud() {
       const B = BOSS, e = es.find(x => x.k == 'boss');
-      g.fillStyle = 'rgba(12,11,20,.92)'; g.fillRect(W - 172, 6, 168, 44); g.font = 'bold 9px monospace'; txt('BOSS CHAMBER', W - 10, 18, '#ff8aa0', 'right'); txt('Morvath', W - 10, 44, '#778', 'right');
+      g.fillStyle = 'rgba(12,11,20,.92)'; g.fillRect(W - 172, 6, 168, 44); g.font = 'bold 9px monospace'; txt('BOSS CHAMBER', W - 10, 18, '#ff8aa0', 'right'); txt(bossNm(), W - 10, 44, '#778', 'right');
       if (e && e.sw <= 0 && !e.dying) {
         const bw = Math.min(W * .5, 360), x = W / 2 - bw / 2, y = 76; g.fillStyle = '#000b'; g.fillRect(x - 2, y - 2, bw + 4, 10);
         g.fillStyle = B.ph >= 3 ? '#ff3b4d' : '#c8283e'; g.fillRect(x, y, bw * Math.max(0, e.hp) / e.mhp, 6);
         g.fillStyle = '#fff6';[.6, .3].forEach(k => g.fillRect(x + bw * k, y - 2, 1, 10));
-        g.font = 'bold 9px monospace'; txt(lavaOn() ? 'MORVATH · ' + LFORMS[Math.min(2, Math.max(0, B.ph - 1))] : 'MORVATH, SANG MINOTAUR', W / 2, y - 5, lavaOn() ? '#ffb070' : '#ffd0da', 'center')
+        g.font = 'bold 9px monospace'; txt(lavaOn() ? bossNm().toUpperCase() + ' · ' + LFORMS[Math.min(2, Math.max(0, B.ph - 1))] : 'MORVATH, SANG MINOTAUR', W / 2, y - 5, lavaOn() ? '#ffb070' : '#ffd0da', 'center')
       }
-      if (B.ban > 0) { const al = Math.max(0, Math.min(1, B.ban / .5, (3.2 - B.ban) / .4)); g.save(); g.globalAlpha = al; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(0, 100, W, 44); g.fillStyle = 'rgba(255,60,90,.9)'; g.fillRect(0, 100, W, 1); g.fillRect(0, 143, W, 1); g.font = '8px monospace'; txt('— B O S S —', W / 2, 113, '#fff', 'center'); g.font = 'bold 18px monospace'; txt('MORVATH', W / 2, 136, '#ff6a8a', 'center'); g.restore() }
+      if (B.ban > 0) { const al = Math.max(0, Math.min(1, B.ban / .5, (3.2 - B.ban) / .4)); g.save(); g.globalAlpha = al; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(0, 100, W, 44); g.fillStyle = 'rgba(255,60,90,.9)'; g.fillRect(0, 100, W, 1); g.fillRect(0, 143, W, 1); g.font = '8px monospace'; txt('— B O S S —', W / 2, 113, '#fff', 'center'); g.font = 'bold 18px monospace'; txt(bossNm().toUpperCase(), W / 2, 136, '#ff6a8a', 'center'); g.restore() }
     }
     const _drawB = draw; draw = function () { _drawB(); if (BOSS.on && room == 2 && !lobby && p.dead <= 0) { g.font = '9px monospace'; bossHud() } };
 
@@ -8957,7 +8957,7 @@
           if (T > END && T < VIC) {
             const al = cl(Math.min((T - END) / .6, (VIC - T) / .6), 0, 1), by = Math.round(H * .27);
             g.globalAlpha = al; g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(0, by, W, 52); g.fillStyle = 'rgba(216,184,120,.9)'; g.fillRect(0, by, W, 1); g.fillRect(0, by + 51, W, 1);
-            g.font = '8px monospace'; txt('— V I C T O R Y —', W / 2, by + 14, '#f8dfaa', 'center'); g.font = 'bold 20px monospace'; txt('MORVATH TUMBANG', W / 2, by + 39, '#ffd34d', 'center');
+            g.font = '8px monospace'; txt('— V I C T O R Y —', W / 2, by + 14, '#f8dfaa', 'center'); g.font = 'bold 20px monospace'; txt(bossNm().toUpperCase() + ' TUMBANG', W / 2, by + 39, '#ffd34d', 'center');
           }
         }
         if (PULL.on) {
@@ -8994,7 +8994,7 @@
         closeUi(); clearIn(); DEATHFX.off();
         reset(); toBoss();
         HST = 0; FLSH = 0; shake = 0; PS.length = 0; BD.on = 0; p.inv = 1.2;
-        msg('Checkpoint dimuat — HP pulih penuh. Lawan Morvath kembali!');
+        msg('Checkpoint dimuat — HP pulih penuh. Lawan ' + bossNm() + ' kembali!');
       }
       function pickLobby() {        // kembali ke lobby: pahlawan dibangunkan lalu ditarik portal
         closeUi(); clearIn(); DEATHFX.off();
@@ -10645,7 +10645,7 @@
       if (e.rx != null) { g.rotate(e.zr || 0); g.scale(e.zx || 1, e.zy || 1); if (e.k == 'slime') g.translate(0, -(e.hh || 0) * .215) }
       if (e.k == 'slime') {          /* SKELETON BERARMOR ES: tengkorak, helm & zirah es, pedang es + perisai */
         const pg = e.an > 0 ? Math.min(1, 1 - e.an / .6) : 0, bone = F('#e6f0f4'), bone2 = F('#a9bcc8'), dk = F('#0f2038'), ia = F(v ? '#5f9ad6' : '#8fd0f0'), ia2 = F(v ? '#a6d0f4' : '#d4f4ff'), ia3 = F(v ? '#2f5f9a' : '#4a8fc8'), eye = F('#c8f6ff');
-        const lg = Math.sin(pg * Math.PI) * 5; g.translate(ux * lg, uy * lg * .5); g.scale(.88, .88);
+        const lg = Math.sin(pg * Math.PI) * 5; g.translate(ux * lg, uy * lg * .5); g.scale(1.25, 1.25);
         iceGlow(0, -11, 26, .2 + .08 * Math.sin(tt * 4), '130,205,255');
         for (const sd of [-1, 1]) { const lf = Math.max(0, Math.sin(gp + (sd > 0 ? Math.PI : 0))) * 1.8 * m; g.fillStyle = bone; g.fillRect(sd * 2.6 - .8, -10, 1.6, 10 - lf); g.fillStyle = ia; g.fillRect(sd * 2.6 - 1.7, -6.5 - lf, 3.4, 4.2); g.fillStyle = ia3; g.fillRect(sd * 2.6 - 2.2 + sg * .8, -2.2 - lf, 4.4, 2.2) }
         g.fillStyle = bone2; g.fillRect(-4.5, -19, 9, 8); g.fillStyle = dk; g.fillRect(-5, -12, 10, 2.4);
@@ -10750,7 +10750,7 @@
       _spawnI(); if (!iceR()) return; const m = room ? 1.2 : 1;
       es.forEach(e => {
         if (e.mini) return;
-        if (e.k == 'slime') { e.sp *= 1.05; e.r = 8; e.ht = 32; e.hp = e.mhp = Math.round(e.hp * 1.35 * m) }
+        if (e.k == 'slime') { e.sp *= 1.05; e.r = 10; e.ht = 42; e.hp = e.mhp = Math.round(e.hp * 1.35 * m) }
         else if (e.k == 'skel') { e.sp *= .8; e.r = 10; e.ht = 44; e.hp = e.mhp = Math.round(e.hp * 1.25 * m) }
         else if (e.k == 'mage') { e.hp = e.mhp = Math.round(e.hp * .95 * m) }
       })
@@ -12912,7 +12912,7 @@
     const iceBossOn = () => LVL == 3 && room == 2 && !lobby;
     let dgH = [], dgQ = [], dgB = [], dgR = [];   // hazard bulat, antrean, beam napas, cincin kejut
     const DGN = ['NAGA SALJU', 'NAGA GLASIAL · 2 KEPALA', 'RAJA ES · 3 KEPALA'];
-    const DG_HP = [[[320, 150]], [[262, 160], [378, 160]], [[320, 112], [232, 168], [408, 168]]], DG_SS = [.82, .92, 1.02];
+    const DG_HP = [[[320, 150]], [[262, 160], [378, 160]], [[320, 112], [232, 168], [408, 168]]], DG_SS = [1.12, 1.26, 1.4];
     const dgHead = (e, i) => { const f = BOSS.ph || 1, h = DG_HP[f - 1][i % f], s = .4 * DG_SS[f - 1]; return [e.x + (h[0] - 320) * s, e.y + 7 + (h[1] - 333) * s] };
     const dgAdd = (x, y, r, t0, d, k) => dgH.push({ x: lcl(x, 34, DW - 34), y: lcl(y, 34, DH - 34), r, t: t0, mx: t0, d, k });
     const dgFire = (x, y, a, sp, d) => pr.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, d, r: 3.5, col: '#9fe4ff', own: 'e', life: 4, rock: 1, ic: 1, rot: 0, vr: 0, sd: R() * 50 });
@@ -13043,7 +13043,7 @@
       } else { e.an = 0; e.tm -= dt; if (e.tm <= 0) { e.s2 = 'move'; e.cd = Math.max(.15, (1.5 - ph * .28) * (.3 + R() * 1.1)) } }
     }
     const _bossTickDG = bossTick; bossTick = function (e, dt) { if (iceBossOn()) return dgTick(e, dt); return _bossTickDG(e, dt) };
-    const _toBossDG = toBoss; toBoss = function () { _toBossDG(); if (!iceBossOn()) return; dgH = []; dgQ = []; dgB = []; dgR = []; const b = es.find(x => x.k == 'boss'); if (b) { b.hp = b.mhp = Math.round(b.mhp * 1.5); b.sp = 36 } msg('Ruangan Bos — Kryovarth, Naga Es Purba, membekukan segalanya!') };
+    const _toBossDG = toBoss; toBoss = function () { _toBossDG(); if (!iceBossOn()) return; dgH = []; dgQ = []; dgB = []; dgR = []; const b = es.find(x => x.k == 'boss'); if (b) { b.hp = b.mhp = Math.round(b.mhp * 1.5); b.sp = 36; b.r = 20; b.ht = 70 } msg('Ruangan Bos — Kryovarth, Naga Es Purba, membekukan segalanya!') };
 
     /* ---------- update: hazard, beam napas, cincin kejut, beku ---------- */
     const _updDG = upd; upd = function (dt) {
@@ -13099,6 +13099,352 @@
       if (e && e.sw <= 0 && !e.dying) { const bw = Math.min(W * .5, 360), x = W / 2 - bw / 2, y = 76; g.fillStyle = '#000b'; g.fillRect(x - 2, y - 2, bw + 4, 10); g.fillStyle = B.ph >= 3 ? '#e8ffff' : B.ph == 2 ? '#7fe3ff' : '#5fb8f0'; g.fillRect(x, y, bw * Math.max(0, e.hp) / e.mhp, 6); g.fillStyle = '#fff6';[.66, .33].forEach(k => g.fillRect(x + bw * k, y - 2, 1, 10)); g.font = 'bold 9px monospace'; txt('KRYOVARTH · ' + DGN[Math.min(2, Math.max(0, B.ph - 1))], W / 2, y - 5, '#cdf4ff', 'center') }
       if (B.ban > 0) { const al = Math.max(0, Math.min(1, B.ban / .5, (3.2 - B.ban) / .4)); g.save(); g.globalAlpha = al; g.fillStyle = 'rgba(0,10,30,.65)'; g.fillRect(0, 100, W, 44); g.fillStyle = 'rgba(160,230,255,.9)'; g.fillRect(0, 100, W, 1); g.fillRect(0, 143, W, 1); g.font = '8px monospace'; txt('— B O S S —', W / 2, 113, '#fff', 'center'); g.font = 'bold 18px monospace'; txt('KRYOVARTH', W / 2, 136, '#9fe4ff', 'center'); g.restore() }
     };
+  </script>
+  <script>
+    function bossNm() { return LVL == 3 ? 'Kryovarth' : LVL == 2 ? 'Pyrovarth' : 'Morvath' }
+    /* ===== LEVEL 3 REDESIGN: Frost Hall = gua es + danau beku, Glacier Crypt = makam es, Ruang Bos = Takhta Kryovarth =====
+       Semua dibungkus try/catch: kalau ada error, desain es lama otomatis dipakai lagi. */
+    (function () {
+      const TAU = Math.PI * 2, rg = s => { let d = s; return () => (d = (d * 1664525 + 1013904223) >>> 0) / 4294967296 };
+      const mkC = () => { const c = document.createElement('canvas'); c.width = DW; c.height = DH; return c };
+      const LG = (b, x0, y0, x1, y1, st) => { const q = b.createLinearGradient(x0, y0, x1, y1); st.forEach(([o, c]) => q.addColorStop(o, c)); return q };
+      const RG = (b, x, y, r0, r1, st) => { const q = b.createRadialGradient(x, y, r0, x, y, r1); st.forEach(([o, c]) => q.addColorStop(o, c)); return q };
+      const poly = (b, p) => { b.beginPath(); p.forEach((q, i) => i ? b.lineTo(q[0], q[1]) : b.moveTo(q[0], q[1])); b.closePath(); b.fill() };
+      const glowB = (b, x, y, r, c, a) => { b.save(); b.globalCompositeOperation = 'lighter'; b.fillStyle = RG(b, x, y, 0, r, [[0, 'rgba(' + c + ',' + a + ')'], [1, 'rgba(' + c + ',0)']]); b.fillRect(x - r, y - r, r * 2, r * 2); b.restore() };
+      const shadow = (b, x, y, rx) => { b.fillStyle = 'rgba(0,8,24,.5)'; b.beginPath(); b.ellipse(x, y, rx, 6, 0, 0, TAU); b.fill() };
+
+      /* ---------- tata letak (tabrakan) tiap ruangan ---------- */
+      const IW = [
+        [...WB(), [250, 130, 30, 30], [520, 130, 30, 30], [250, 320, 30, 30], [520, 320, 30, 30], [370, 210, 60, 60, 'm'], [150, 98, 38, 28, 'r'], [612, 354, 38, 28, 'r']],
+        [...WB(), [352, 210, 96, 60, 'a'], [290, 130, 26, 26, 'p'], [484, 130, 26, 26, 'p'], [290, 324, 26, 26, 'p'], [484, 324, 26, 26, 'p'], [110, 150, 26, 56, 's'], [110, 274, 26, 56, 's'], [664, 150, 26, 56, 's'], [664, 274, 26, 56, 's']],
+        [...WB(), [346, 14, 108, 74, 't'], [160, 112, 34, 34, 'o'], [160, 334, 34, 34, 'o'], [606, 112, 34, 34, 'o'], [606, 334, 34, 34, 'o']]
+      ];
+      /* lampu: c = kristal bercahaya, f = obor api biru, B = perapian biru besar */
+      const LP = [
+        [[7, 130, 'c'], [7, 350, 'c'], [793, 130, 'c'], [793, 350, 'c'], [250, 8, 'c'], [550, 8, 'c'], [250, 472, 'c'], [550, 472, 'c']],
+        [100, 200, 300, 400, 500, 600, 700].flatMap(x => [[x, 8, 'f'], [x, DH - 7, 'f']]).concat([[36, 60, 'B'], [764, 60, 'B'], [36, 420, 'B'], [764, 420, 'B']]),
+        [[40, 60, 'B'], [760, 60, 'B'], [40, 420, 'B'], [760, 420, 'B']].concat([150, 250, 550, 650].flatMap(x => [[x, 8, 'f'], [x, DH - 7, 'f']]))
+      ];
+
+      /* ---------- util gambar ---------- */
+      const cracks = (b, r, n, c1, c2, step) => {
+        b.lineCap = b.lineJoin = 'round'; const L = [];
+        for (let i = 0; i < n; i++) { let x = r() * DW, y = r() * DH, a = r() * TAU; const p = [[x, y]]; for (let k = 0, m = 3 + (r() * 5 | 0); k < m; k++) { a += (r() - .5) * 1.3; x += Math.cos(a) * step * (.5 + r()); y += Math.sin(a) * step * (.5 + r()); p.push([x, y]) } L.push(p) }
+        [[3, c1], [1.1, c2]].forEach(([w, c]) => { b.strokeStyle = c; b.lineWidth = w; L.forEach(p => { b.beginPath(); p.forEach((q, i) => i ? b.lineTo(q[0], q[1]) : b.moveTo(q[0], q[1])); b.stroke() }) })
+      };
+      const flake = (b, x, y, R_, col, lw) => {
+        b.strokeStyle = col; b.lineWidth = lw;
+        for (let k = 0; k < 6; k++) { const a = k * TAU / 6; b.beginPath(); b.moveTo(x, y); b.lineTo(x + Math.cos(a) * R_, y + Math.sin(a) * R_);[.45, .7].forEach(q => { const px = x + Math.cos(a) * R_ * q, py = y + Math.sin(a) * R_ * q;[-1, 1].forEach(s => { b.moveTo(px, py); b.lineTo(px + Math.cos(a + s * .9) * R_ * .2, py + Math.sin(a + s * .9) * R_ * .2) }) }); b.stroke() }
+      };
+      function wallBand(b, r, o) {
+        b.fillStyle = o.f; WB().forEach(q => b.fillRect(...q));
+        for (let i = 0; i < 300; i++) { const x = r() * DW, y = r() * DH; if (x > 14 && x < DW - 14 && y > 14 && y < DH - 14) continue; b.fillStyle = r() < .5 ? o.a : o.b; b.fillRect(x, y, 2 + r() * 8 | 0, 2 + r() * 4 | 0) }
+        b.fillStyle = o.e; b.fillRect(14, 12, DW - 28, 2); b.fillRect(14, DH - 14, DW - 28, 2); b.fillRect(12, 14, 2, DH - 28); b.fillRect(DW - 14, 14, 2, DH - 28);
+        const sp = (x, y, dx, dy, L, w) => { b.fillStyle = o.i; poly(b, [[x - dy * w, y + dx * w], [x + dx * L, y + dy * L], [x + dy * w, y - dx * w]]); b.fillStyle = o.il; poly(b, [[x - dy * w, y + dx * w], [x + dx * L, y + dy * L], [x, y]]) };
+        for (let x = 20; x < DW - 16; x += 10 + r() * 14) { if (o.skip && o.skip(x)) continue; sp(x, 14, 0, 1, 6 + r() * o.L, 2 + r() * 2.5); if (r() < .8) sp(x + 3, DH - 14, 0, -1, 5 + r() * o.L * .8, 2 + r() * 2.5) }
+        for (let y = 24; y < DH - 20; y += 14 + r() * 18) { if (Math.abs(y - DY) < 44) continue; sp(14, y, 1, 0, 5 + r() * 10, 2 + r() * 2); sp(DW - 14, y, -1, 0, 5 + r() * 10, 2 + r() * 2) }
+      }
+      const vig = b => { b.fillStyle = RG(b, DW / 2, DY, 220, 480, [[0, 'rgba(2,8,22,0)'], [1, 'rgba(2,8,22,.6)']]); b.fillRect(0, 0, DW, DH) };
+
+      /* ---------- properti ---------- */
+      function crystals(b, x, y, w, h, r, sc) {
+        const cx = x + w / 2, by = y + h - 2; shadow(b, cx + 3, by + 3, w * .8);
+        b.fillStyle = 'rgba(230,248,255,.8)'; b.beginPath(); b.ellipse(cx, by + 1, w * .62, h * .2, 0, 0, TAU); b.fill();
+        [-2, 2, -1, 1, 0].forEach(k => {
+          const bx = cx + k * w * .22, hh = (30 + r() * 18) * sc * (1 - Math.abs(k) * .16), ww = (5 + r() * 2.5) * sc, yy = by - Math.abs(k);
+          b.fillStyle = '#2f6ab0'; poly(b, [[bx - ww, yy], [bx - ww * .7, yy - hh * .7], [bx, yy - hh], [bx + ww * .7, yy - hh * .7], [bx + ww, yy]]);
+          b.fillStyle = '#8fdcff'; poly(b, [[bx - ww, yy], [bx - ww * .7, yy - hh * .7], [bx, yy - hh], [bx, yy]]);
+          b.fillStyle = 'rgba(255,255,255,.9)'; b.fillRect(bx - ww * .4, yy - hh * .75, 1.5, hh * .4)
+        });
+        glowB(b, cx, by - 16 * sc, 36 * sc, '120,210,255', .2)
+      }
+      function monolith(b, x, y, w, h) {
+        const cx = x + w / 2; shadow(b, cx + 4, y + h + 2, w * .66);
+        b.fillStyle = LG(b, x, y, x + w, y + h, [[0, '#7fcdf2'], [.5, '#3f86c8'], [1, '#1d4f92']]); b.fillRect(x, y + 14, w, h - 14);
+        b.fillStyle = '#c6efff'; poly(b, [[x, y + 14], [x + 9, y], [x + w - 9, y], [x + w, y + 14]]);
+        b.fillStyle = 'rgba(255,255,255,.55)'; b.fillRect(x + 3, y + 18, 2, h - 24);
+        b.fillStyle = 'rgba(8,24,60,.78)'; b.beginPath(); b.arc(cx, y + 28, 5, 0, TAU); b.fill(); b.fillRect(cx - 7, y + 33, 14, 16); b.fillRect(cx - 12, y + 35, 4, 12); b.fillRect(cx + 8, y + 35, 4, 10); b.fillRect(cx - 5, y + 48, 4, 8); b.fillRect(cx + 1, y + 48, 4, 8); b.fillRect(cx + 11, y + 22, 2, 22);
+        glowB(b, cx, y + 36, 34, '140,225,255', .22);
+        b.strokeStyle = 'rgba(255,255,255,.7)'; b.lineWidth = 1; b.beginPath(); b.moveTo(x + 4, y + 20); b.lineTo(x + 14, y + 34); b.lineTo(x + 8, y + 50); b.stroke()
+      }
+      function boulder(b, x, y, w, h) {
+        shadow(b, x + w / 2 + 3, y + h, w * .6);
+        b.fillStyle = '#35506e'; poly(b, [[x, y + h], [x + 3, y + 8], [x + w * .35, y], [x + w * .75, y + 3], [x + w, y + 12], [x + w - 2, y + h]]);
+        b.fillStyle = '#4a6a8c'; poly(b, [[x + 3, y + 8], [x + w * .35, y], [x + w * .5, y + h * .5], [x + 4, y + h * .7]]);
+        b.fillStyle = 'rgba(240,250,255,.95)'; poly(b, [[x + 1, y + 11], [x + 5, y + 6], [x + w * .35, y - 1], [x + w * .75, y + 2], [x + w + 1, y + 13], [x + w * .7, y + 9], [x + w * .5, y + 12], [x + w * .3, y + 8], [x + 8, y + 13]])
+      }
+      function column(b, x, y, w, h) {
+        const cx = x + w / 2; shadow(b, cx + 3, y + h, w * .7);
+        b.fillStyle = '#0f2a50'; b.fillRect(x - 2, y + h - 8, w + 4, 8);
+        b.fillStyle = LG(b, x, 0, x + w, 0, [[0, '#6fb4e6'], [.55, '#2f6aa8'], [1, '#17396e']]); b.fillRect(x + 3, y - 34, w - 6, h + 26);
+        b.fillStyle = 'rgba(235,250,255,.8)'; for (let i = 0; i < 3; i++) b.fillRect(x + 3, y - 20 + i * 14, w - 6, 2);
+        b.fillStyle = '#9fdcf8'; b.fillRect(x - 2, y - 38, w + 4, 6);
+        for (let i = -1; i <= 1; i++) { b.fillStyle = '#dff6ff'; poly(b, [[cx + i * 7 - 3, y - 38], [cx + i * 7, y - 38 - (i ? 6 : 10)], [cx + i * 7 + 3, y - 38]]) }
+        glowB(b, cx, y - 40, 22, '140,225,255', .25)
+      }
+      function altar(b, x, y, w, h) {
+        const cx = x + w / 2, cy = y + h / 2; b.fillStyle = 'rgba(0,8,24,.5)'; b.fillRect(x + 4, y + h - 2, w, 8);
+        b.fillStyle = '#10264a'; b.fillRect(x, y, w, h); b.fillStyle = '#2c5c98'; b.fillRect(x + 4, y + 4, w - 8, h - 8); b.fillStyle = '#4a82c0'; b.fillRect(x + 4, y + 4, w - 8, 3); b.fillStyle = '#1d437a'; b.fillRect(x + 12, y + 12, w - 24, h - 24);
+        b.save(); b.shadowColor = '#7fe0ff'; b.shadowBlur = 6; flake(b, cx, cy + 2, 17, 'rgba(210,248,255,.95)', 1.5); b.restore();
+        [[-12, 26, 5], [12, 22, 4.5], [0, 44, 7]].forEach(([ox, hh, ww]) => { const bx = cx + ox, by = cy - 4; b.fillStyle = '#2f6ab0'; poly(b, [[bx - ww, by], [bx - ww * .7, by - hh * .7], [bx, by - hh], [bx + ww * .7, by - hh * .7], [bx + ww, by]]); b.fillStyle = '#9fe4ff'; poly(b, [[bx - ww, by], [bx - ww * .7, by - hh * .7], [bx, by - hh], [bx, by]]); b.fillStyle = 'rgba(255,255,255,.9)'; b.fillRect(bx - ww * .4, by - hh * .7, 1.5, hh * .4) });
+        glowB(b, cx, cy - 20, 52, '130,220,255', .3)
+      }
+      function sarco(b, x, y, w, h) {
+        b.fillStyle = 'rgba(0,8,24,.5)'; b.fillRect(x + 3, y + h - 2, w, 6); b.fillStyle = '#12284c'; b.fillRect(x, y + h - 10, w, 10);
+        b.fillStyle = '#2a528a'; poly(b, [[x + 3, y + h - 10], [x, y + 8], [x + w * .5, y], [x + w, y + 8], [x + w - 3, y + h - 10]]);
+        b.fillStyle = '#4a82c0'; poly(b, [[x + 3, y + h - 10], [x, y + 8], [x + w * .5, y], [x + w * .5, y + h - 10]]);
+        b.fillStyle = 'rgba(220,246,255,.35)'; b.fillRect(x + 2, y + 10, w - 4, 8); b.fillStyle = '#9fe4ff'; b.fillRect(x + w / 2 - 1, y + 8, 2, h - 24); b.fillRect(x + w / 2 - 5, y + 16, 10, 2);
+        glowB(b, x + w / 2, y + h / 2, 22, '130,220,255', .2)
+      }
+      function throne(b, x, y, w, h) {
+        const cx = x + w / 2; b.fillStyle = 'rgba(0,6,20,.6)'; b.fillRect(x + 4, y + h - 2, w, 8);
+        b.fillStyle = '#16335e'; b.fillRect(x, y + h - 14, w, 14); b.fillStyle = '#3a72b0'; b.fillRect(x + 2, y + h - 14, w - 4, 3); b.fillStyle = '#1d4378'; b.fillRect(x + 12, y + h - 28, w - 24, 14); b.fillStyle = '#4a82c0'; b.fillRect(x + 14, y + h - 28, w - 28, 3);
+        b.fillStyle = '#10264c'; poly(b, [[cx - 34, y + h - 28], [cx - 38, y + 14], [cx - 24, y + 2], [cx + 24, y + 2], [cx + 38, y + 14], [cx + 34, y + h - 28]]);
+        b.fillStyle = '#2c5c98'; poly(b, [[cx - 28, y + h - 28], [cx - 31, y + 16], [cx - 20, y + 6], [cx + 20, y + 6], [cx + 31, y + 16], [cx + 28, y + h - 28]]);
+        for (let i = -3; i <= 3; i++) { b.fillStyle = '#cdf0ff'; poly(b, [[cx + i * 9 - 4, y + 4], [cx + i * 9, y - 12 + Math.abs(i) * 3], [cx + i * 9 + 4, y + 4]]) }
+        b.fillStyle = '#e6fbff'; poly(b, [[cx, y + 14], [cx + 7, y + 24], [cx, y + 34], [cx - 7, y + 24]]);
+        b.fillStyle = '#d6f2ff'; b.fillRect(x + 4, y + h - 42, 12, 14); b.fillRect(x + w - 16, y + h - 42, 12, 14);
+        glowB(b, cx, y + 24, 48, '130,225,255', .5)
+      }
+      function obelisk(b, x, y, w, h) {
+        const cx = x + w / 2; shadow(b, cx + 3, y + h, w * .7);
+        b.fillStyle = '#0f2a50'; b.fillRect(x, y + h - 12, w, 12); b.fillStyle = '#3a72b0'; b.fillRect(x, y + h - 12, w, 2);
+        b.fillStyle = '#1a3f78'; poly(b, [[x + 5, y + h - 12], [x + w - 5, y + h - 12], [x + w - 9, y - 32], [cx, y - 48], [x + 9, y - 32]]);
+        b.fillStyle = '#3b78c0'; poly(b, [[x + 5, y + h - 12], [cx, y + h - 12], [cx, y - 48], [x + 9, y - 32]]);
+        b.fillStyle = '#9fe8ff'; for (let i = 0; i < 5; i++) b.fillRect(cx - 1, y - 26 + i * 10, 2, 5);
+        glowB(b, cx, y - 36, 30, '140,225,255', .3)
+      }
+      function lampBase(b, [x, y, k]) {
+        if (k == 'c') { b.fillStyle = '#1a4a80'; poly(b, [[x - 4, y + 4], [x, y - 7], [x + 4, y + 4]]); b.fillStyle = '#c8f4ff'; poly(b, [[x - 4, y + 4], [x, y - 7], [x, y + 4]]); return }
+        if (k == 'f') { b.fillStyle = '#0a1a34'; b.fillRect(x - 3, y - 1, 6, 8); b.fillStyle = '#7fc0ee'; b.fillRect(x - 4, y - 3, 8, 3); return }
+        shadow(b, x, y + 5, 12); b.fillStyle = '#10284c'; b.fillRect(x - 3, y - 4, 6, 10); b.fillStyle = '#5a9ad4'; b.fillRect(x - 9, y - 8, 18, 4); b.fillStyle = '#9fdcf8'; poly(b, [[x - 8, y - 8], [x + 8, y - 8], [x + 5, y - 4], [x - 5, y - 4]]);
+        for (let i = -1; i <= 1; i += 2) { b.fillStyle = '#dff6ff'; poly(b, [[x + i * 8 - 2, y - 8], [x + i * 8, y - 14], [x + i * 8 + 2, y - 8]]) }
+      }
+      function drawObs(b, W, r, cr) {
+        W.slice(4).sort((p, q) => p[1] + p[3] - q[1] - q[3]).forEach(([x, y, w, h, k]) => {
+          const cx = x + w / 2;
+          if (k == 'm') { monolith(b, x, y, w, h); cr.push([cx, y + 30]) } else if (k == 'r') boulder(b, x, y, w, h);
+          else if (k == 'p') { column(b, x, y, w, h); cr.push([cx, y - 38]) } else if (k == 'a') { altar(b, x, y, w, h); cr.push([cx, y + 8]) }
+          else if (k == 's') sarco(b, x, y, w, h); else if (k == 't') throne(b, x, y, w, h);
+          else if (k == 'o') { obelisk(b, x, y, w, h); cr.push([cx, y - 40]) } else { crystals(b, x, y, w, h, r, 1); cr.push([cx, y + 2]) }
+        })
+      }
+
+      /* ---------- ruangan 0: FROST HALL (gua es & danau beku) ---------- */
+      function build0() {
+        const c = mkC(), b = c.getContext('2d'), r = rg(31), cx = DW / 2, cy = DY, cr = [];
+        b.fillStyle = RG(b, cx, cy, 30, 540, [[0, '#2c6fae'], [.5, '#1c5086'], [1, '#0a2142']]); b.fillRect(0, 0, DW, DH);
+        for (let i = 0; i < 34; i++) { b.save(); b.translate(r() * DW, r() * DH); b.rotate(r() * 3); b.fillStyle = 'rgba(' + (r() < .5 ? '170,225,255' : '10,40,90') + ',' + (.05 + r() * .06) + ')'; b.beginPath(); b.ellipse(0, 0, 30 + r() * 70, 14 + r() * 34, 0, 0, TAU); b.fill(); b.restore() }
+        cracks(b, r, 44, 'rgba(6,24,56,.5)', 'rgba(200,240,255,.5)', 34);
+        b.fillStyle = RG(b, cx, cy, 10, 156, [[0, 'rgba(210,246,255,.34)'], [.8, 'rgba(150,215,250,.16)'], [1, 'rgba(150,215,250,0)']]); b.beginPath(); b.arc(cx, cy, 156, 0, TAU); b.fill();
+        [150, 118, 86].forEach((rr, i) => { b.strokeStyle = 'rgba(220,248,255,' + (.42 - i * .08) + ')'; b.lineWidth = i ? 1.5 : 2.5; b.setLineDash(i == 1 ? [8, 6] : []); b.beginPath(); b.arc(cx, cy, rr, 0, TAU); b.stroke() }); b.setLineDash([]);
+        flake(b, cx, cy, 142, 'rgba(225,250,255,.5)', 1.5);
+        for (let i = 0; i < 44; i++) {
+          const e = r() * 4 | 0, u = r(), x = e < 2 ? 20 + u * (DW - 40) : e == 2 ? 20 : DW - 20, y = e == 0 ? 20 : e == 1 ? DH - 20 : 30 + u * (DH - 60);
+          if (Math.abs(y - DY) < 40 && (x < 40 || x > DW - 40)) continue; const rx = 12 + r() * 24, ry = 5 + r() * 7;
+          b.fillStyle = 'rgba(10,40,90,.35)'; b.beginPath(); b.ellipse(x + 2, y + 3, rx, ry, 0, 0, TAU); b.fill(); b.fillStyle = 'rgba(238,250,255,.9)'; b.beginPath(); b.ellipse(x, y, rx, ry, 0, 0, TAU); b.fill(); b.fillStyle = 'rgba(190,225,250,.8)'; b.beginPath(); b.ellipse(x + 2, y + ry * .35, rx * .8, ry * .55, 0, 0, TAU); b.fill()
+        }
+        wallBand(b, r, { f: '#0b2038', a: '#12304f', b: '#071628', e: '#8fd8ff', i: '#bfe9ff', il: '#f2fcff', L: 22 });
+        for (let i = 0; i < 8; i++) { const x = 70 + i * 90 + r() * 30, top = i % 2 == 0; iceCrystalB(b, x, top ? 32 : DH - 16, .9 + r() * .4, r); cr.push([x, top ? 22 : DH - 26]) }
+        drawObs(b, IW[0], r, cr); LP[0].forEach(q => lampBase(b, q)); vig(b);
+        return { c, cr }
+      }
+
+      /* ---------- ruangan 1: GLACIER CRYPT (makam es berlorong karpet beku) ---------- */
+      function build1() {
+        const c = mkC(), b = c.getContext('2d'), r = rg(57), cx = DW / 2, cy = DY, cr = [], T = ['#142a4e', '#17305a', '#12254a', '#1a3562'];
+        for (let y = 0; y < DH; y += 32) for (let x = 0; x < DW; x += 32) { b.fillStyle = T[r() * 4 | 0]; b.fillRect(x, y, 32, 32); b.fillStyle = 'rgba(160,215,255,.09)'; b.fillRect(x, y, 32, 1); b.fillRect(x, y, 1, 32); b.fillStyle = 'rgba(0,6,20,.5)'; b.fillRect(x, y + 31, 32, 1); b.fillRect(x + 31, y, 1, 32); if (r() < .12) { b.fillStyle = 'rgba(210,240,255,.12)'; b.fillRect(x + 3, y + 3, 26, 26) } }
+        b.fillStyle = 'rgba(18,60,120,.85)'; b.fillRect(14, DY - 30, DW - 28, 60); b.strokeStyle = 'rgba(150,215,255,.7)'; b.lineWidth = 2; b.strokeRect(18, DY - 26, DW - 36, 52); b.lineWidth = 1; b.strokeRect(24, DY - 20, DW - 48, 40);
+        b.fillStyle = 'rgba(170,225,255,.45)'; for (let x = 36; x < DW - 36; x += 28) poly(b, [[x, DY], [x + 7, DY - 7], [x + 14, DY], [x + 7, DY + 7]]);
+        [[0, 0], [DW, 0], [0, DH], [DW, DH]].forEach(([x, y]) => { b.fillStyle = RG(b, x, y, 0, 210, [[0, 'rgba(225,248,255,.5)'], [.6, 'rgba(160,215,250,.14)'], [1, 'rgba(160,215,250,0)']]); b.fillRect(Math.max(0, x - 210), Math.max(0, y - 210), 420, 420) });
+        for (let i = 0; i < 160; i++) { b.fillStyle = 'rgba(235,250,255,' + (.2 + r() * .4) + ')'; b.fillRect(r() * DW | 0, r() * DH | 0, 1 + (r() < .3), 1) }
+        cracks(b, r, 14, 'rgba(2,10,30,.5)', 'rgba(190,235,255,.45)', 30);
+        b.save(); b.shadowColor = '#6fd0ff'; b.shadowBlur = 8; b.strokeStyle = 'rgba(140,220,255,.7)';
+        [96, 74].forEach((rr, i) => { b.lineWidth = i ? 1.5 : 2.5; b.beginPath(); b.arc(cx, cy, rr, 0, TAU); b.stroke() }); b.lineWidth = 1.5;
+        for (let i = 0; i < 24; i++) { const a = i * TAU / 24, e = i % 2 ? 86 : 96; b.beginPath(); b.moveTo(cx + Math.cos(a) * 74, cy + Math.sin(a) * 74); b.lineTo(cx + Math.cos(a) * e, cy + Math.sin(a) * e); b.stroke() } b.restore();
+        wallBand(b, r, { f: '#0a1730', a: '#13284a', b: '#060f22', e: '#6fb8e8', i: '#9fd8f5', il: '#e6fbff', L: 14 });
+        b.fillStyle = '#0d1f3e'; b.fillRect(14, 14, DW - 28, 22); b.fillStyle = 'rgba(120,190,240,.4)'; b.fillRect(14, 35, DW - 28, 1);
+        for (let x = 52; x < DW - 40; x += 60) { b.fillStyle = '#040a18'; b.fillRect(x, 17, 34, 17); b.fillStyle = '#cfe6f2'; b.fillRect(x + 13, 21, 8, 7); b.fillRect(x + 15, 28, 4, 3); b.fillStyle = '#040a18'; b.fillRect(x + 14, 23, 2, 2); b.fillRect(x + 18, 23, 2, 2); b.fillStyle = 'rgba(190,235,255,.28)'; b.fillRect(x, 17, 34, 17); b.fillStyle = 'rgba(230,250,255,.7)'; b.fillRect(x, 17, 34, 1) }
+        drawObs(b, IW[1], r, cr); LP[1].forEach(q => lampBase(b, q)); vig(b);
+        return { c, cr }
+      }
+
+      /* ---------- ruangan 2: TAKHTA KRYOVARTH (aula agung, dais mandala, takhta es) ---------- */
+      function build2() {
+        const c = mkC(), b = c.getContext('2d'), r = rg(91), cx = DW / 2, cy = DY, cr = [], T = ['#0f2548', '#12294f', '#0c1e3d'];
+        for (let y = 0; y < DH; y += 40) for (let x = 0; x < DW; x += 40) { b.fillStyle = T[r() * 3 | 0]; b.fillRect(x, y, 40, 40); b.fillStyle = 'rgba(150,215,255,.13)'; b.fillRect(x, y, 40, 1); b.fillRect(x, y, 1, 40); b.fillStyle = 'rgba(0,4,16,.6)'; b.fillRect(x, y + 39, 40, 1); b.fillRect(x + 39, y, 1, 40); if (r() < .3) { b.fillStyle = 'rgba(200,240,255,.07)'; poly(b, [[x + 6, y + 34], [x + 20, y + 6], [x + 28, y + 6], [x + 14, y + 34]]) } }
+        b.fillStyle = RG(b, cx, cy, 20, 208, [[0, '#2a65a4'], [.7, '#183f72'], [1, '#0f2c55']]); b.beginPath(); b.arc(cx, cy, 206, 0, TAU); b.fill();
+        b.strokeStyle = '#8fd8ff'; b.lineWidth = 3; b.beginPath(); b.arc(cx, cy, 206, 0, TAU); b.stroke(); b.strokeStyle = 'rgba(0,6,20,.6)'; b.lineWidth = 4; b.beginPath(); b.arc(cx, cy, 211, 0, TAU); b.stroke();
+        const rw = cx - 206 - 8; b.fillStyle = 'rgba(14,52,110,.9)'; b.fillRect(14, DY - 28, rw, 56); b.strokeStyle = 'rgba(200,240,255,.75)'; b.lineWidth = 2; b.strokeRect(16, DY - 26, rw - 4, 52);
+        b.fillStyle = 'rgba(190,235,255,.5)'; for (let x = 28; x < rw - 6; x += 22) poly(b, [[x, DY], [x + 6, DY - 6], [x + 12, DY], [x + 6, DY + 6]]);
+        b.save(); b.shadowColor = '#7fd8ff'; b.shadowBlur = 10; b.strokeStyle = 'rgba(150,226,255,.75)';
+        [196, 150, 104, 60].forEach((rr, i) => { b.lineWidth = i % 2 ? 1.5 : 2.5; b.setLineDash(i == 1 ? [10, 6] : []); b.beginPath(); b.arc(cx, cy, rr, 0, TAU); b.stroke() }); b.setLineDash([]); b.lineWidth = 1.4;
+        for (let i = 0; i < 12; i++) { const a = i * TAU / 12; b.beginPath(); b.moveTo(cx + Math.cos(a) * 60, cy + Math.sin(a) * 60); b.lineTo(cx + Math.cos(a) * 196, cy + Math.sin(a) * 196); b.stroke() }
+        [[150, 12, 5], [104, 8, 3]].forEach(([R_, n, s]) => { b.beginPath(); for (let i = 0; i <= n; i++) { const a = i * s * TAU / n - Math.PI / 2, X = cx + Math.cos(a) * R_, Y = cy + Math.sin(a) * R_; i ? b.lineTo(X, Y) : b.moveTo(X, Y) } b.stroke() });
+        flake(b, cx, cy, 58, 'rgba(230,252,255,.9)', 2); b.restore();
+        for (let i = 0; i < 36; i++) { const a = i * TAU / 36; b.fillStyle = '#cdf4ff'; b.fillRect(Math.round(cx + Math.cos(a) * 178) - 1, Math.round(cy + Math.sin(a) * 178) - 1, 3, 3) }
+        glowB(b, cx, cy, 130, '120,210,255', .25); cracks(b, r, 10, 'rgba(0,6,20,.5)', 'rgba(190,235,255,.4)', 28);
+        wallBand(b, r, { f: '#07142a', a: '#0f2447', b: '#050d1e', e: '#a8e4ff', i: '#b4e8ff', il: '#f4fdff', L: 16, skip: x => x > 330 && x < 470 });
+        b.fillStyle = '#0a1c38'; b.fillRect(14, 14, DW - 28, 26); b.fillStyle = 'rgba(150,220,255,.5)'; b.fillRect(14, 39, DW - 28, 2);
+        for (let x = 34; x < DW - 20; x += 44) { b.fillStyle = 'rgba(90,150,210,.28)'; b.fillRect(x, 14, 6, 25); b.fillStyle = 'rgba(220,248,255,.35)'; b.fillRect(x, 14, 1, 25) }
+        if (typeof banner == 'function') [180, 270, 530, 620].forEach(x => banner(b, x, 14, '#1c4f94', '#d6f4ff'));
+        drawObs(b, IW[2], r, cr); LP[2].forEach(q => lampBase(b, q)); vig(b);
+        return { c, cr }
+      }
+
+      /* ---------- pasang desain baru ke sistem es yang sudah ada ---------- */
+      const _ib = iceBuild, _ibb = iceBuildBoss;
+      iceBuild = function () { try { const a = build0(), b = build1(); IB = [a.c, b.c]; ICR[0] = a.cr; ICR[1] = b.cr } catch (er) { console.warn(er); _ib() } };
+      iceBuildBoss = function () { try { const a = build2(); IBB = a.c; ICR[2] = a.cr } catch (er) { console.warn(er); _ibb() } };
+      IB = null; IBB = null;
+
+      const on = () => LVL == 3 && !lobby && room <= 2 && !window.ENDM;
+      const apply = () => { if (on()) { walls = IW[room]; TO = []; BR = [] } };
+      const fix = () => { try { if (!on()) return; es.forEach(e => { if (e.k != 'boss' && blk(e.x, e.y, 10)) for (let i = 0; i < 300; i++) { const x = 100 + R() * 600, y = 40 + R() * 400; if (!blk(x, y, 12)) { e.x = x; e.y = y; break } } }) } catch (er) { } };
+      const _spawn = spawn; spawn = function () { apply(); _spawn(); fix() };
+      const _upd = upd; upd = function (dt) { apply(); _upd(dt); apply() };
+      const _toRoom = toRoom; toRoom = function (n) { _toRoom(n); apply(); fix() };
+      const _toBoss = toBoss; toBoss = function () { _toBoss(); apply() };
+      const _enter = enterDungeon; enterDungeon = function () { _enter(); apply(); fix() };
+
+      /* ---------- animasi: api biru, kristal, danau berkilau, kabut makam, aurora & cincin rune bos ---------- */
+      function lampFx(q, i) {
+        const x = q[0], y = q[1], k = q[2], f = 1 + Math.sin(t * 9 + i * 2.3) * .08 + Math.sin(t * 17 + i) * .05;
+        if (k == 'c') { iceGlow(x, y, 34 * f, .3 + .12 * Math.sin(t * 1.7 + i * 1.3), '140,225,255'); return }
+        const B = k == 'B', s = B ? 1.5 : .8, h = 2 + Math.sin(t * 13 + i * 2) * 1.3 + Math.sin(t * 23 + i), fy = B ? y - 8 : y - 2;
+        iceGlow(x, y - 8, (B ? 130 : 72) * f, B ? .34 : .26, '90,190,255');
+        [['#2a8fe8', 1, 0], ['#8fe6ff', .6, 1.5]].forEach(([c0, m, dy]) => { g.fillStyle = c0; g.beginPath(); g.moveTo(x - 5 * s * m, fy - dy); g.quadraticCurveTo(x - 6 * s * m, fy - (6 + h) * s * m - dy, x, fy - (12 + h) * s * m - dy); g.quadraticCurveTo(x + 6 * s * m, fy - (6 + h) * s * m - dy, x + 5 * s * m, fy - dy); g.fill() });
+        g.fillStyle = '#fff'; g.fillRect(x - s, fy - 7 * s, 2 * s, 4 * s)
+      }
+      function lake() {
+        g.save(); g.beginPath(); g.arc(DW / 2, DY, 150, 0, TAU); g.clip(); g.globalCompositeOperation = 'lighter';
+        for (let k = 0; k < 4; k++) { const x = ((t * 26 + k * 190) % (DW + 260)) - 130; g.fillStyle = LG(g, x - 30, 0, x + 30, 0, [[0, 'rgba(200,245,255,0)'], [.5, 'rgba(200,245,255,' + (.07 + .04 * Math.sin(t + k)) + ')'], [1, 'rgba(200,245,255,0)']]); g.beginPath(); g.moveTo(x - 30, DY + 160); g.lineTo(x + 10, DY - 160); g.lineTo(x + 40, DY - 160); g.lineTo(x, DY + 160); g.closePath(); g.fill() }
+        g.restore()
+      }
+      function crypt() {
+        const cx = DW / 2, cy = DY, pu = .5 + .5 * Math.sin(t * 1.6);
+        g.save(); g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(150,226,255,' + (.25 + .25 * pu) + ')'; g.lineWidth = 2; g.setLineDash([5, 7]); g.lineDashOffset = -t * 14; g.beginPath(); g.arc(cx, cy, 96, 0, TAU); g.stroke(); g.lineDashOffset = t * 10; g.beginPath(); g.arc(cx, cy, 74, 0, TAU); g.stroke(); g.setLineDash([]); g.restore();
+        iceGlow(cx, cy - 22, 60 + 12 * pu, .22 + .12 * pu, '130,220,255');
+        g.save(); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 4; i++) { const x = ((t * 9 + i * 240) % (DW + 300)) - 150, y = DH - 70 + Math.sin(t * .5 + i) * 14; g.fillStyle = RG(g, x, y, 0, 120, [[0, 'rgba(150,210,255,.1)'], [1, 'rgba(150,210,255,0)']]); g.fillRect(x - 120, y - 60, 240, 120) } g.restore()
+      }
+      function bossAmb() {
+        const pu = .5 + .5 * Math.sin(t * 1.3); g.save(); g.globalCompositeOperation = 'lighter';
+        for (let k = 0; k < 4; k++) { const x = DW * (.15 + k * .23) + Math.sin(t * .25 + k * 1.7) * 40, w = 90 + Math.sin(t * .4 + k) * 20; g.fillStyle = LG(g, x, 14, x, 300, [[0, 'rgba(120,255,225,0)'], [.25, 'rgba(120,255,230,' + (.07 + .03 * Math.sin(t * .9 + k)) + ')'], [1, 'rgba(110,140,255,0)']]); g.beginPath(); g.moveTo(x - w / 2, 14); g.lineTo(x + w / 2, 14); g.lineTo(x + w * .9 + Math.sin(t * .6 + k) * 30, 300); g.lineTo(x - w * .4 + Math.sin(t * .5 + k) * 30, 300); g.closePath(); g.fill() }
+        g.restore(); iceGlow(DW / 2, 38, 60 + 10 * pu, .25 + .15 * pu, '130,225,255')
+      }
+      function bossFx() {
+        const ph = BOSS.ph || 1, cx = DW / 2, cy = DY, pu = .5 + .5 * Math.sin(t * (1.4 + ph * .8));
+        g.save(); g.globalCompositeOperation = 'lighter';
+        g.fillStyle = RG(g, cx, cy, 20, 210, [[0, 'rgba(90,200,255,' + (.05 + .05 * ph * pu) + ')'], [1, 'rgba(90,200,255,0)']]); g.fillRect(cx - 210, cy - 210, 420, 420);
+        [[184, 3, 9, -10], [142, 2, 6, 14], [98, 2, 4, -18]].forEach(([rr, lw, gp, sp]) => { g.strokeStyle = 'rgba(150,225,255,' + (.2 + .14 * ph * pu) + ')'; g.lineWidth = lw; g.setLineDash([gp, gp * 2]); g.lineDashOffset = t * sp; g.beginPath(); g.arc(cx, cy, rr, 0, TAU); g.stroke() }); g.setLineDash([]);
+        for (let i = 0; i < 12; i++) { const a = i * TAU / 12 + t * .12, x = cx + Math.cos(a) * 166, y = cy + Math.sin(a) * 166; g.fillStyle = 'rgba(200,245,255,' + (.35 + .35 * Math.sin(t * 2 + i)) + ')'; g.beginPath(); g.moveTo(x, y - 4); g.lineTo(x + 3, y); g.lineTo(x, y + 4); g.lineTo(x - 3, y); g.closePath(); g.fill() }
+        const w = (t * .35) % 1; g.strokeStyle = 'rgba(190,240,255,' + ((1 - w) * .22 * ph).toFixed(3) + ')'; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 30 + w * 190, 0, TAU); g.stroke();
+        for (let i = 0; i < (ph >= 3 ? 28 : 16); i++) { const b0 = LP[2][i % 4], life = (t * .3 + i * .151) % 1, x = b0[0] + Math.sin(i * 1.7 + t * .8 + life * 5) * 14 * (1 + life), y = b0[1] - 12 - life * 100; g.fillStyle = 'rgba(200,240,255,' + ((1 - life) * .8).toFixed(2) + ')'; g.fillRect(Math.round(x), Math.round(y), 2, 2) }
+        g.restore()
+      }
+      const _env = envFx; envFx = function () { _env(); if (!on()) return; try { LP[room].forEach(lampFx); if (room == 0) lake(); else if (room == 1) crypt(); else bossAmb() } catch (er) { } };
+      const _bef = bossEnvFx; bossEnvFx = function () { if (!(LVL == 3 && !lobby)) return _bef(); try { bossFx() } catch (er) { } };
+    })();
+  </script>
+  <script>
+    /* ===== MODEL NAGA KRYOVARTH v2: ramping & bertulang, sayap kelelawar bergerigi, leher S berduri, kepala tengkorak bertanduk panjang =====
+       Posisi kepala (DG_HP) & titik serangan tidak berubah, hanya tampilannya. Kalau error, model lama dipakai lagi. */
+    (function () {
+      const _dd = EM.boss;
+      EM.boss = function (pp, at, tm) {
+        if (!iceBossOn()) return _dd(pp, at, tm);
+        try { drawDrg(pp, at, tm) } catch (er) { console.warn(er); return _dd(pp, at, tm) }
+      };
+      function drawDrg(pp, at, tm) {
+        const e = BOSS_E || {}, fl = !!MT, F = c => fl ? '#fff' : c, ez = q => 1 - (1 - q) * (1 - q), ph = BOSS.ph || 1, PI = Math.PI;
+        const mk0 = e.s2 == 'morph' && e.mtx ? 1 - e.mt / e.mtx : -1, f = mk0 >= 0 && mk0 < .55 ? Math.max(1, ph - 1) : ph;
+        const PAL = [['#0d2a4a', '#235e96', '#cfeeff', '#6fd8ff'], ['#091c3a', '#1c5694', '#b4e8ff', '#3fd0ff'], ['#060f2c', '#173f86', '#eaffff', '#aef6ff']][f - 1], D = PAL[0], M = PAL[1], L = PAL[2], G = PAL[3];
+        const k = e.atk, w = e.s2 == 'wind' && at, q = ez(pp || 0);
+        let roar = 0, wing = 0, lean = 0, hv = 0;
+        if (w) { if (k == 'nova' || k == 'triad') { roar = q; wing = q } else if (k == 'breath') roar = .85 * q; else if (k == 'lunge') lean = (Math.cos(e.ca || 0) < 0 ? -1 : 1) * .12 * q; else if (k == 'icicles' || k == 'hail') { wing = q; hv = q } else if (k == 'blizzard') { wing = q; roar = .5 * q } else if (k == 'tail') lean = -.07 * q; else roar = .5 * q }
+        else if (e.s2 == 'act') { roar = .9; wing = .5 } else if (e.s2 == 'morph') { roar = 1; wing = 1 }
+        let jx = 0, sc = 1; if (mk0 >= 0) { jx = (R() - .5) * 10 * mk0; if (mk0 > .55) sc = 1 + .2 * (1 - (mk0 - .55) / .45) }
+        const poly = (a, c) => { g.fillStyle = F(c); g.beginPath(); a.forEach((v, i) => i ? g.lineTo(v[0], v[1]) : g.moveTo(v[0], v[1])); g.closePath(); g.fill() };
+        const ell = (x, y, rx, ry, c) => { g.fillStyle = F(c); g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill() };
+        const glow = (x, y, r, c, a) => { if (fl) return; g.save(); g.globalCompositeOperation = 'lighter'; const o = g.createRadialGradient(x, y, 0, x, y, r); o.addColorStop(0, 'rgba(' + c + ',' + a + ')'); o.addColorStop(1, 'rgba(' + c + ',0)'); g.fillStyle = o; g.fillRect(x - r, y - r, r * 2, r * 2); g.restore() };
+        const ln = (pts, lw, c) => { g.strokeStyle = F(c); g.lineWidth = lw; g.beginPath(); pts.forEach((v, i) => i ? g.lineTo(v[0], v[1]) : g.moveTo(v[0], v[1])); g.stroke() };
+        const SS = DG_SS[f - 1] * sc;
+        g.save(); g.lineCap = g.lineJoin = 'round'; g.translate(320 + jx, 333); g.rotate(lean); g.scale(SS, SS); g.translate(-320, -333);
+        if (!fl) { g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.ellipse(320, 331, 108, 12, 0, 0, 7); g.fill() }
+        glow(320, 230, 220, '90,190,255', .14 + .05 * f + .04 * Math.sin(tm * 3));
+        if (f == 3) glow(320, 240, 260, '30,60,160', .25);
+
+        /* sayap kelelawar: tulang panjang, selaput bergerigi */
+        [-1, 1].forEach(s => {
+          const fp = Math.sin(tm * 2.2 + (s > 0 ? 0 : .5)) * 14 * (1 - wing * .6) - wing * 40, Wd = 92 + f * 26 + wing * 20, sx = 320 + s * 42, sy = 214;
+          const el = [320 + s * Wd * .55, 146 + fp * .4], wr = [320 + s * (Wd + 8), 92 - f * 8 + fp], T = [[320 + s * (Wd + 92), 128 - f * 6 + fp * 1.1], [320 + s * (Wd + 64), 196 + fp * .7], [320 + s * Wd * .8, 248 + fp * .4], [320 + s * Wd * .4, 270]];
+          g.fillStyle = F('rgba(14,52,108,.94)'); g.beginPath(); g.moveTo(sx, sy); g.lineTo(el[0], el[1]); g.lineTo(wr[0], wr[1]); g.lineTo(T[0][0], T[0][1]);
+          for (let i = 0; i < 3; i++) { const a = T[i], b2 = T[i + 1], mx = (a[0] + b2[0]) / 2, my = (a[1] + b2[1]) / 2; g.quadraticCurveTo(mx + (wr[0] - mx) * .3, my + (wr[1] - my) * .3, b2[0], b2[1]) }
+          g.lineTo(sx, sy + 38); g.closePath(); g.fill(); if (!fl) { g.strokeStyle = 'rgba(150,225,255,.55)'; g.lineWidth = 1.6; g.stroke() }
+          T.forEach(v => { ln([wr, v], 4.5, D); ln([wr, v], 1.3, L) });
+          ln([[sx, sy], el, wr], 9, D); ln([[sx, sy], el, wr], 5, M); ln([[sx, sy], el, wr], 1.6, L);
+          poly([[wr[0] - s * 5, wr[1] + 2], [wr[0] + s * 1, wr[1] - 20], [wr[0] + s * 7, wr[1] + 4]], L);
+          poly([[T[0][0] - s * 3, T[0][1]], [T[0][0] + s * 6, T[0][1] - 14], [T[0][0] + s * 8, T[0][1] + 4]], L);
+          [.3, .6].forEach(u => { const x = sx + (el[0] - sx) * u, y = sy + (el[1] - sy) * u; poly([[x - 4, y], [x + s * 2, y - 14 - f * 2], [x + 5, y + 2]], G) })
+        });
+
+        /* ekor berduri dengan ujung bilah es */
+        const tw = Math.sin(tm * 1.6) * 18, ex = 486 + tw, ey = 290 + Math.sin(tm * 1.6 + 1) * 12, tcx = 432 + tw * .6, tcy = 346;
+        [[22, D], [13, M], [3, L]].forEach(([lw, c]) => { g.strokeStyle = F(c); g.lineWidth = lw; g.beginPath(); g.moveTo(352, 298); g.quadraticCurveTo(tcx, tcy, ex, ey); g.stroke() });
+        for (let j = 1; j < 6; j++) { const v = bz(j / 6, 352, 298, tcx, tcy, ex, ey), sz = 14 - j * 1.6; poly([[v[0] - 5, v[1] + 2], [v[0] - 1, v[1] - sz - 4], [v[0] + 5, v[1] - 1]], j % 2 ? L : G) }
+        poly([[ex - 6, ey + 7], [ex + 12, ey - 16], [ex + 40, ey - 34], [ex + 22, ey - 4], [ex + 38, ey + 10], [ex + 8, ey + 12]], L); poly([[ex - 6, ey + 7], [ex + 12, ey - 16], [ex + 22, ey - 4], [ex + 8, ey + 12]], G);
+
+        /* kaki bertekuk dengan cakar panjang */
+        [-1, 1].forEach(s => {
+          const hip = [320 + s * 44, 284], kn = [320 + s * 68, 306], an = [320 + s * 54, 326];
+          ell(320 + s * 50, 290, 20, 26, D); ell(320 + s * 50, 289, 16, 22, M); ln([hip, kn, an], 14, D); ln([hip, kn, an], 8, M);
+          poly([[kn[0], kn[1] - 4], [kn[0] + s * 16, kn[1] - 14], [kn[0] + s * 4, kn[1] + 4]], L);
+          poly([[an[0] - 15, 331], [an[0] + 15, 331], [an[0] + 11, 336], [an[0] - 11, 336]], D);
+          [-12, 0, 12].forEach(o => poly([[an[0] + o - 3, 334], [an[0] + o + 3, 334], [an[0] + o + s * 2, 348]], L))
+        });
+
+        /* badan: zirah es ramping, tulang rusuk, inti beku bercahaya */
+        ell(320, 226, 52, 22, D);
+        poly([[262, 226], [290, 206], [350, 206], [378, 226], [368, 262], [352, 298], [288, 298], [272, 262]], D);
+        poly([[272, 228], [294, 214], [346, 214], [368, 228], [360, 260], [346, 290], [294, 290], [280, 260]], M);
+        ln([[320, 214], [320, 296]], 5, D);
+        for (let i = 0; i < 4; i++) { const y = 232 + i * 13, wd = 38 - i * 5;[-1, 1].forEach(s => { g.strokeStyle = F('#e4f2fb'); g.lineWidth = 3.4 - i * .35; g.beginPath(); g.moveTo(320, y); g.quadraticCurveTo(320 + s * wd * .9, y - 6, 320 + s * wd, y + 10); g.stroke() }) }
+        glow(320, 258, 36 + f * 9, '120,230,255', .3 + .12 * f + .22 * Math.sin(tm * 4)); ell(320, 258, 5 + f, 9 + f, L);
+        if (f >= 2) { g.strokeStyle = F('#e8ffff'); g.lineWidth = 1.4; g.beginPath(); g.moveTo(288, 232); g.lineTo(302, 258); g.lineTo(294, 286); g.moveTo(352, 236); g.lineTo(340, 264); g.lineTo(350, 290); g.stroke() }
+        const ns = 7 + f * 2; for (let i = 0; i < ns; i++) { const x = 270 + i * 100 / (ns - 1), y = 210 - Math.sin(i / (ns - 1) * PI) * 8; poly([[x - 6, y + 10], [x, y - 12 - f * 5 - (i % 2) * 7], [x + 6, y + 10]], i % 2 ? L : G) }
+        [-1, 1].forEach(s => {
+          poly([[320 + s * 50, 218], [320 + s * (74 + f * 8), 188 - f * 10], [320 + s * (66 + f * 4), 216]], L); poly([[320 + s * 58, 224], [320 + s * (94 + f * 10), 210 - f * 6], [320 + s * 76, 234]], G);
+          if (f >= 2) poly([[320 + s * 44, 212], [320 + s * 54, 172 - f * 8], [320 + s * 60, 210]], L)
+        });
+
+        /* leher S berduri + kepala tengkorak bertanduk */
+        const dA = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b)), SSn = .4 * DG_SS[f - 1], ord = f == 3 ? [1, 2, 0] : DG_HP[f - 1].map((_, i) => i);
+        ord.forEach(i => {
+          const hp = DG_HP[f - 1][i], hs = f == 1 ? 1.2 : f == 3 && i == 0 ? 1.35 : 1.02, hx = hp[0] + Math.sin(tm * 1.6 + i * 2.1) * 5, hy = hp[1] + Math.sin(tm * 2.1 + i) * 4 - roar * 16 - hv * 6;
+          const mine = e.hd % f == i || k == 'triad' || k == 'nova'; let op = .1 + .07 * Math.sin(tm * 2 + i * 2);
+          if (w && mine) op = .25 + .75 * q; else if (e.s2 == 'act' && mine) op = .9; if (e.s2 == 'morph') op = 1;
+          const tx = Math.atan2(p.y - (e.y + 7 + (hy - 333) * SSn), p.x - (e.x + (hx - 320) * SSn)); let ha = -PI / 2 + (hp[0] - 320) * .004 + Math.sin(tm * 1.3 + i) * .1;
+          ha = roar > .6 ? -PI / 2 + (hp[0] - 320) * .006 : ha + dA(tx, ha) * (op > .25 ? 1 : .35);
+          const sx = 320 + (hp[0] - 320) * .3, sy = 236, cx = 320 + (hp[0] - 320) * 1.15 + (i % 2 ? 26 : -26) * (f > 1 ? 1 : 0), cy = (hy + sy) / 2 + 30;
+          [[20, D], [13, M], [4, L]].forEach(([lw, c], j) => { g.strokeStyle = F(c); g.lineWidth = lw * hs * (j == 2 ? .8 : 1); g.beginPath(); g.moveTo(sx, sy); g.quadraticCurveTo(cx, cy, hx, hy + 8); g.stroke() });
+          for (let j = 1; j < 6; j++) { const v = bz(j / 6, sx, sy, cx, cy, hx, hy + 8); poly([[v[0] - 7, v[1] + 5], [v[0], v[1] - 17], [v[0] + 7, v[1] + 5]], j % 2 ? L : G) }
+          g.save(); g.translate(hx, hy); g.rotate(ha); g.scale(hs, hs);
+          poly([[-4, -11], [-14, -30], [-40, -48], [-60, -52], [-36, -36], [-20, -16]], L); poly([[-4, 11], [-14, 30], [-40, 48], [-60, 52], [-36, 36], [-20, 16]], L);
+          if (f == 3 && i == 0) { poly([[-2, -13], [-6, -44], [-24, -62], [-16, -34], [-10, -14]], G); poly([[-2, 13], [-6, 44], [-24, 62], [-16, 34], [-10, 14]], G) }
+          poly([[-20, -14], [6, -18], [28, -11], [46, -5], [52, 1], [44, 5], [12, 9], [-20, 15]], D); poly([[-16, -10], [6, -14], [28, -8], [44, -3], [48, 1], [10, 6], [-16, 10]], M);
+          poly([[-2, -15], [24, -9], [24, -3], [2, -8]], D); poly([[6, -8], [22, -5], [8, -1]], f == 3 ? '#ffffff' : '#bff8ff'); g.fillStyle = F(D); g.fillRect(40, -3, 3, 2);
+          for (let j = 0; j < 5; j++) poly([[14 + j * 7, 4], [18 + j * 7, 4], [16 + j * 7, 11 + (j % 2) * 4]], '#fff'); poly([[40, 3], [45, 3], [43, 17]], '#fff');
+          for (let j = 0; j < 6; j++) poly([[-14 + j * 6, -15], [-9 + j * 6, -15], [-12 + j * 6, -26 - (j % 2) * 7 - (f == 3 ? 6 : 0)]], j % 2 ? G : L);
+          g.save(); g.translate(-6, 9); g.rotate(op * .8); poly([[0, 0], [46, 5], [54, 13], [6, 19]], D); poly([[3, 3], [44, 6], [50, 11], [7, 16]], M);
+          for (let j = 0; j < 4; j++) poly([[12 + j * 8, 4], [16 + j * 8, 4], [14 + j * 8, -5 - (j % 2) * 3]], '#fff'); poly([[42, 6], [47, 6], [45, -9]], '#fff'); g.restore(); g.restore();
+          const ca = Math.cos(ha), sa = Math.sin(ha); glow(hx + (14 * ca + 5 * sa) * hs, hy + (14 * sa - 5 * ca) * hs, 15, '180,250,255', .95);
+          if (op > .3) glow(hx + ca * 36 * hs, hy + sa * 36 * hs, 34 * op, '150,235,255', .65 * op)
+        });
+        glow(320, 330, 130, '140,225,255', .1);
+        if (!fl) { g.save(); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 18; i++) { const u = (tm * .25 + i * .0556) % 1; g.fillStyle = 'rgba(225,248,255,' + (1 - u) * .8 + ')'; g.fillRect(Math.round(320 + Math.sin(i * 12.9) * 160 + Math.sin(tm + i) * 8), Math.round(330 - u * 270), 3, 3) } g.restore() }
+        g.restore()
+      }
+    })();
   </script>
   <script>
     /* ===== MODE ENDLESS: gelombang tanpa akhir di arena pertama, makin banyak & kuat, mini bos tiap 5 gelombang ===== */
