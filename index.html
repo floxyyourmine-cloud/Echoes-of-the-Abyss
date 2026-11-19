@@ -12461,7 +12461,21 @@
     function iceShard(x, y, n, v0, up, cols) {
       for (let i = 0; i < n; i++) { const a = R() * 6.283, v = v0 * (.4 + R()); dp.push({ k: 'sh', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .7 - up, rot: a, vr: (R() - .5) * 14, life: .7 + R() * .5, max: 1.2, s: 2 + R() * 2.6, c: cols || '190,235,255' }) }
     }
-    function iceShot(x, y, a, v, d) { pr.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, d, r: 3.5, col: ICE_COL, own: 'e', life: 3.2 }) }
+    function iceShot(x, y, a, v, d) { pr.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, d, r: 4.5, col: ICE_COL, own: 'e', life: 3.2, rock: 1, ic: 1, ib: 1, rot: 0, vr: 0, sd: R() * 50 }) }
+    /* BOLA ES: gambar proyektil mini bos salju sebagai bola es (bukan pecahan runcing) */
+    function drawIceBall(b) {
+      const pu = .5 + .5 * Math.sin(t * 9 + (b.sd || 0)), R1 = 7 + pu * .8;
+      g.save(); g.translate(b.x, b.y);
+      g.globalCompositeOperation = 'lighter';
+      const o = g.createRadialGradient(0, 0, 2, 0, 0, 17); o.addColorStop(0, 'rgba(190,240,255,' + (.55 + .2 * pu) + ')'); o.addColorStop(1, 'rgba(70,170,255,0)'); g.fillStyle = o; g.fillRect(-17, -17, 34, 34);
+      g.globalCompositeOperation = 'source-over';
+      const sp = g.createRadialGradient(-2.2, -2.4, .8, 0, 0, R1); sp.addColorStop(0, '#ffffff'); sp.addColorStop(.35, '#d9f6ff'); sp.addColorStop(.75, '#7fcbff'); sp.addColorStop(1, '#3f94e0');
+      g.fillStyle = sp; g.beginPath(); g.arc(0, 0, R1, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(235,252,255,.9)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 0, R1, 0, 7); g.stroke();
+      g.save(); g.rotate(t * 2 + (b.sd || 0)); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = .8; g.beginPath(); g.moveTo(-3, 1); g.lineTo(0, -1.5); g.lineTo(3.2, .8); g.moveTo(0, -1.5); g.lineTo(.6, 3.6); g.stroke(); g.restore();
+      g.fillStyle = 'rgba(255,255,255,.95)'; g.beginPath(); g.ellipse(-2.4, -2.8, 2, 1.2, -.6, 0, 7); g.fill();
+      g.restore();
+    }
 
     /* ---------- AI ---------- */
     function iceMiniTick(e, dt) {
@@ -13087,7 +13101,7 @@
       g.restore()
     };
     const _drawRockDG = drawRock; drawRock = function (b) {
-      if (!b.ic) return _drawRockDG(b); g.save(); g.translate(b.x, b.y); g.rotate(Math.atan2(b.vy, b.vx)); g.globalCompositeOperation = 'lighter';
+      if (b.ib) return drawIceBall(b); if (!b.ic) return _drawRockDG(b); g.save(); g.translate(b.x, b.y); g.rotate(Math.atan2(b.vy, b.vx)); g.globalCompositeOperation = 'lighter';
       const o = g.createRadialGradient(0, 0, 0, 0, 0, 12); o.addColorStop(0, 'rgba(200,245,255,.8)'); o.addColorStop(1, 'rgba(80,190,255,0)'); g.fillStyle = o; g.fillRect(-12, -12, 24, 24); g.globalCompositeOperation = 'source-over';
       g.fillStyle = '#e8fbff'; g.beginPath(); g.moveTo(9, 0); g.lineTo(0, -3.6); g.lineTo(-8, 0); g.lineTo(0, 3.6); g.closePath(); g.fill(); g.fillStyle = '#6fc8ff'; g.beginPath(); g.moveTo(9, 0); g.lineTo(0, 3.6); g.lineTo(-8, 0); g.closePath(); g.fill(); g.restore()
     };
@@ -13514,6 +13528,79 @@
       if (ENDLESS) { walls = WE; TO = TOE; BR = BRE; p.x = DW / 2; p.y = DY; window.EBGC = EBGS[LVL] || (EBGS[LVL] = buildEndBG(LVL)) }
     };
     const _updAR = upd; upd = function (dt) { if (window.ENDM && !lobby) { walls = WE; TO = TOE; BR = BRE } _updAR(dt) };
+  </script>
+  <script>
+    /* ===== ANIMASI MATI MINI BOS =====
+       Mini bos tidak langsung hilang: ia berkedip putih & bergetar, lalu runtuh dengan gaya masing-masing,
+       dan baru setelah itu meledak (efek miniDeath yang sudah ada) dan memberi XP / drop.
+         kn  Skeleton Knight   : bergetar, tulang lepas, roboh ke samping
+         ar  Skeleton Archer   : memudar jadi arwah, merosot lalu menguap
+         gl  Lava Golem        : membara membengkak, retak, runtuh jadi puing
+         bl  Blash Inferno     : api berputar makin cepat lalu menciut ke atas
+         ik  Ksatria Salju     : membeku putih, kuda ambruk ke samping
+         it  Turet Es Hidup    : retak, lalu tenggelam ke tanah */
+    const mdC = (v, a, b) => Math.max(a, Math.min(b, v));
+    const MD_DUR = { kn: 1.2, ar: 1.1, gl: 1.5, bl: 1.3, ik: 1.3, it: 1.3 };
+    const MD_COL = { kn: '150,255,190', ar: '150,255,235', gl: '255,120,30', bl: '255,100,50', ik: '170,225,255', it: '170,225,255' };
+    const _killMD = kill;
+    kill = function (e) {
+      if (e && e.mini && !e.mdDone) {
+        if (e.dying) return;
+        const id = bossVid(e) || 'kn';
+        Object.assign(e, { dying: 1, hp: 0, s2: 'rest', atk: null, an: 0, wind: 0, stun: 0, vx: 0, vy: 0, tm: 99, dyT: 0, dyMax: MD_DUR[id] || 1.2, dyId: id, dyDir: p.x < e.x ? -1 : 1 });
+        HST = Math.max(HST, .12); shake = Math.max(shake, 7); try { SFX.slam() } catch (x) { }
+        return
+      }
+      _killMD(e)
+    };
+    const _miniTickMD = miniTick;
+    miniTick = function (e, dt) { if (e.dying) return; _miniTickMD(e, dt) };
+    const _updMD = upd;
+    upd = function (dt) {
+      _updMD(dt);
+      if (lobby || !(dt > 0) || HST > 0) return;
+      es.slice().forEach(e => {
+        if (!e.mini || !e.dying || e.mdDone) return;
+        e.dyT += dt; const k = mdC(e.dyT / e.dyMax, 0, 1), id = e.dyId, x = e.x, y = e.y - 6;
+        const P = (c, f) => { if (R() < dt * c) dp.push(f()) };
+        if (id == 'kn' || id == 'ar') {
+          P(45, () => ({ k: 'p', x: x + (R() - .5) * 26, y: y + R() * 10, vx: (R() - .5) * 20, vy: -20 - R() * 40, life: .6, max: .6, s: 1.6 + R() * 2, c: R() < .5 ? '#9dffb8' : '#e8fff0' }));
+          if (id == 'kn') P(30, () => ({ k: 'sh', x: x + (R() - .5) * 20, y: y + R() * 10, vx: (R() - .5) * 70, vy: -30 - R() * 40, rot: R() * 6, vr: (R() - .5) * 14, life: .7, max: .7, s: 2 + R() * 2, c: '232,224,204' }))
+        } else if (id == 'gl' || id == 'bl') {
+          P(70, () => ({ k: 'p', x: x + (R() - .5) * 30, y: y + R() * 14, vx: (R() - .5) * 40, vy: -40 - R() * 80, life: .5, max: .5, s: 2 + R() * 2.5, c: ['#ffd34d', '#ff5a1f', '#ffb347'][R() * 3 | 0] }));
+          if (id == 'gl') P(20, () => ({ k: 'sh', x: x + (R() - .5) * 30, y: y + R() * 14, vx: (R() - .5) * 60, vy: -20 - R() * 40, rot: R() * 6, vr: (R() - .5) * 12, life: .8, max: .8, s: 2 + R() * 2.5, c: '80,62,56' }))
+        } else {
+          P(60, () => ({ k: 'p', x: x + (R() - .5) * 28, y: y + R() * 12, vx: (R() - .5) * 30, vy: -20 - R() * 60, life: .6, max: .6, s: 1.5 + R() * 2, c: R() < .5 ? '#e8fbff' : '#8fd0f0' }));
+          P(25, () => ({ k: 'sh', x: x + (R() - .5) * 24, y: y + R() * 10, vx: (R() - .5) * 60, vy: -20 - R() * 40, rot: R() * 6, vr: (R() - .5) * 14, life: .7, max: .7, s: 2 + R() * 2, c: '190,235,255' }))
+        }
+        if (k > .5 && !e.mdQ) { e.mdQ = 1; shake = Math.max(shake, 5); fx.push({ k: 'ring', x, y: y + 6, r: 30, w: 2, life: .3, max: .3, col: '#fff' }) }
+        if (e.dyT >= e.dyMax) { e.mdDone = 1; e.dying = 0; _killMD(e) }
+      })
+    };
+    const _drawEnemyMD = drawEnemy;
+    drawEnemy = function (e) {
+      if (!(e.mini && e.dying)) return _drawEnemyMD(e);
+      const id = e.dyId, T = e.dyT, k = mdC(T / e.dyMax, 0, 1), c = mdC((k - .4) / .6, 0, 1), cc = c * c * (3 - 2 * c), dd = e.dyDir || 1;
+      const x0 = e.x, y0 = e.y + 7, jx = (R() - .5) * (1.5 + 4 * (1 - cc * .6)), sv = e.fl;
+      let sx = 1, sy = 1, rot = 0, sink = 0, up = 0, al = 1, clipG = false;
+      if (id == 'kn') { sy = 1 - .5 * cc; sx = 1 + .2 * cc; rot = dd * .55 * cc; sink = 4 * cc }
+      else if (id == 'ar') { sy = 1 - .45 * cc; sx = 1 + .1 * cc; sink = 8 * cc; al = 1 - .85 * cc }
+      else if (id == 'gl') { const sw = Math.sin(mdC(k / .5, 0, 1) * 3.14) * .1; sx = 1 + sw + .15 * cc; sy = 1 + sw - .55 * cc; sink = 6 * cc }
+      else if (id == 'bl') { const sh = 1 - .85 * cc; sx = sh; sy = sh; up = -26 * cc; rot = Math.sin(t * 25) * .12 * (1 + cc * 2); al = 1 - .3 * cc }
+      else if (id == 'ik') { rot = dd * .9 * cc; sy = 1 - .15 * cc; sink = 10 * cc }
+      else { sink = 46 * cc; clipG = true }
+      g.save();
+      if (clipG) { g.beginPath(); g.rect(x0 - 120, y0 - 260, 240, 260 + 2); g.clip() }
+      g.translate(x0 + jx, y0 + sink + up); g.rotate(rot); g.scale(sx, sy); g.translate(-x0, -y0);
+      g.globalAlpha = al; e.fl = 0; _drawEnemyMD(e);
+      const wa = Math.floor(T * 14) % 2 ? .6 * (1 - cc * .5) : 0;
+      if (wa > 0) { e.fl = .1; g.globalAlpha = wa * al; _drawEnemyMD(e) }
+      g.globalAlpha = 1; e.fl = sv; g.restore();
+      const col = MD_COL[id] || '255,255,255', ga = .15 + .4 * k + .12 * Math.sin(T * 30);
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const gq = g.createRadialGradient(e.x, e.y - 16, 3, e.x, e.y - 16, 56); gq.addColorStop(0, 'rgba(' + col + ',' + mdC(ga, 0, 1) + ')'); gq.addColorStop(1, 'rgba(' + col + ',0)');
+      g.fillStyle = gq; g.fillRect(e.x - 58, e.y - 74, 116, 116); g.restore()
+    };
   </script>
 </body>
 
