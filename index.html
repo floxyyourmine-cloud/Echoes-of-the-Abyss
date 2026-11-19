@@ -3945,7 +3945,7 @@
       }
     }
     function kill(e) {
-      SFX.die(e.k); if (e.mini) { SFX.bossVo(bossVid(e), 'die'); miniDeath(e) } burst(e); ultAdd(ULT_KILL); es = es.filter(x => x !== e); exp += e.xp; if (R() < .3) { const s = freeSpot(e.x, e.y); dr.push({ x: s.x, y: s.y, ph: R() * 6 }) }
+      SFX.die(e.k); if (e.mini) { SFX.bossVo(bossVid(e), 'die'); miniDeath(e) } burst(e); ultAdd(ULT_KILL); es = es.filter(x => x !== e); exp += e.xp; if (R() < dfx().drop) { const s = freeSpot(e.x, e.y); dr.push({ x: s.x, y: s.y, ph: R() * 6 }) }
       while (exp >= lvl * 40) { exp -= lvl * 40; lvl++; pts += 3; msg('Level ' + lvl + '! +3 poin atribut (bagi di Ketua Orin, lobby)'); SFX.level() }
     }
     const SH = [[{ hn: 0, sd: 1, r: 30, arc: 1.7, lg: 60 }, { hn: 1, sd: -1, r: 30, arc: 1.7, lg: 60 }, { hn: 2, sd: 1, r: 40, arc: 2.5, lg: 130 }], [{ hn: 0, sd: 1, r: 46, arc: .5, lg: 70 }, { hn: 1, sd: -1, r: 40, arc: 1.5, lg: 50 }, { hn: 2, sd: 1, r: 68, arc: .45, lg: 170 }], [], [], [{ hn: 0, sd: 1, r: 24, arc: .7, lg: 60 }, { hn: 1, sd: -1, r: 24, arc: 1.6, lg: 60 }, { hn: 2, sd: 1, r: 32, arc: 2.6, lg: 90 }]];
@@ -4328,7 +4328,7 @@
     // ===== ULTIMATE (tombol Q) — bar terisi dari damage; atur ULT_RATE (lebih besar = lebih cepat penuh) =====
     const ULT_MAX = 100, ULT_RATE = .32, ULT_KILL = 3; let ULTH = 0, ULT = 0, ULTT = 0, ULTF = 0, ULTN = '', ULTC = '255,255,255';
     function ultAdd(v) {
-      if (ULTT > 0 || (p && p.dead > 0) || ULT >= ULT_MAX) return; ULT = Math.min(ULT_MAX, ULT + v);
+      if (ULTT > 0 || (p && p.dead > 0) || ULT >= ULT_MAX) return; ULT = Math.min(ULT_MAX, ULT + v * dfx().ult);
       if (ULT >= ULT_MAX) { SFX.ultReady(); msg('ULTIMATE SIAP! Tekan [Q]'); fx.push({ k: 'ring', x: p.x, y: p.y, r: 30, w: 4, life: .6, max: .6, col: '#ffe08a' }, { k: 'gl', x: p.x, y: p.y, r: 60, c: '255,225,140', life: .5, max: .5 }); dn(p.x, p.y - 22, 'ULTIMATE READY', 0, '#ffe08a') }
     }
     function ultGain(d) { ultAdd(d * ULT_RATE) }
@@ -4801,27 +4801,29 @@
       [['KeyZ', 0], ['KeyX', 1], ['KeyC', 2]].forEach(([k, i]) => { const q = SK[wi][i]; if (P[k] && p.sc[i] <= 0 && p.skb <= 0) { p.sc[i] = q.cd; p.skb = q.dur; SFX.skill(i); skCast(i); q.f(p.face, mul()) } });
       if (P.KeyQ) castUlt();
       if (P.KeyE && p.ec <= 0) { p.ec = 30; p.focus = FOCUS_CFG.dur; p.fpt = 0; SFX.focus(); const PL = FPAL[wi], pc = PL.pc, mel = wi == 0 || wi == 1 || wi == 4, cfp = (x, y, vx, vy, life, s) => dp.push({ k: 'cf', x, y, vx, vy, life, max: life, s, pc, dark: PL.dark }); fx.push({ k: 'ring', x: p.x, y: p.y, r: 20, w: 4, life: .45, max: .45, col: PL.h[0] }, { k: 'ring', x: p.x, y: p.y, r: 36, w: 2, life: .65, max: .65, col: PL.h[1] }, { k: 'gl', x: p.x, y: p.y, r: 60, c: PL.mid, life: .5, max: .5 }); for (let i = 0; i < 24; i++) { const q = R() * 6.283, v = 50 + R() * 130; cfp(p.x, p.y, Math.cos(q) * v, Math.sin(q) * v - 30, .45 + R() * .3, 5 + R() * 6) } shake = Math.max(shake, 8); FLSH = .8; FLSC = PL.mid; HST = Math.max(HST, .07); for (let i = 0; i < 40; i++) cfp(p.x + (R() - .5) * 14, p.y + 6, (R() - .5) * 60, -60 - R() * 130, .6 + R() * .5, 6 + R() * 8); for (let i = 0; i < 40; i++) { const q = R() * 6.283, v = 60 + R() * 150; dp.push({ k: 'p', x: p.x, y: p.y, vx: Math.cos(q) * v, vy: Math.sin(q) * v * .6 - 30, life: .5 + R() * .5, max: 1, s: 1.5, c: PL.h[R() < .5 ? 0 : 1] }) } skLater(.12, () => fx.push({ k: 'ring', x: p.x, y: p.y + 4, r: 46, w: 3, life: .6, max: .6, col: PL.h[0] })); skLater(.26, () => fx.push({ k: 'ring', x: p.x, y: p.y + 4, r: 64, w: 2, life: .8, max: .8, col: PL.h[1] }, { k: 'gl', x: p.x, y: p.y, r: 90, c: PL.mid, life: .6, max: .6 })); dn(p.x, p.y - 14, 'BATTLE FOCUS!', 0, PL.h[0]); dn(p.x, p.y - 27, mel ? 'ATK SPD + DMG + RUN' : 'SPEED + DEFENSE', 0, PL.h[1]) }
-      if (P.KeyR && p.pot > 0 && p.hp < mhp() && p.potC <= 0) { p.hp = Math.min(mhp(), p.hp + 60); p.pot--; p.potC = .5; SFX.potion(); dn(p.x, p.y - 10, '+60', 0, '#6f6') }
+      if (P.KeyR && p.pot > 0 && p.hp < mhp() && p.potC <= 0) { { const hv = HEALV(60); p.hp = Math.min(mhp(), p.hp + hv); p.pot--; p.potC = dfx().potCd; SFX.potion(); dn(p.x, p.y - 10, '+' + hv, 0, '#6f6') } }
       dr = dr.filter(d => {
         const k = dist(d, p); if (k < 50 && k > 1) { const s = Math.min(k, 110 * dt); d.x += (p.x - d.x) / k * s; d.y += (p.y - d.y) / k * s }
-        if (k < 14) { SFX.pickup(); if (p.pot < 5) { p.pot++; dn(d.x, d.y - 6, '+potion', 0, '#6f6') } else { p.hp = Math.min(mhp(), p.hp + 20); dn(d.x, d.y - 6, '+20 HP', 0, '#6f6') } return false } return true
+        if (k < 14) { SFX.pickup(); if (p.pot < 5) { p.pot++; dn(d.x, d.y - 6, '+potion', 0, '#6f6') } else { const hv = HEALV(20); p.hp = Math.min(mhp(), p.hp + hv); dn(d.x, d.y - 6, '+' + hv + ' HP', 0, '#6f6') } return false } return true
       });
       es.forEach(e => {
-        if (e.sw > 0) { spawnTick(e, dt); return } if (e.k == 'dummy') { dummyTick(e, dt); return } if (e.k == 'boss') { bossTick(e, dt); return } if (e.mini) { miniTick(e, dt); return } e.fl -= dt; e.cd -= dt; e.an -= dt; mv(e, e.vx * dt, e.vy * dt); e.vx *= Math.pow(.02, dt); e.vy *= Math.pow(.02, dt); e.stg = Math.max(0, e.stg - 4 * dt);
-        if (e.stun > 0) { e.stun -= dt; e.wind = 0; e.an = 0; return }
-        const d = dist(e, p), a = ang(e, p), cs = Math.cos(a) * e.sp * dt, sn = Math.sin(a) * e.sp * dt;
-        if (e.wind > 0) {
-          e.wind -= dt; if (e.wind <= 0) {
-            if (e.k == 'skel') { SFX.slam(); shake = Math.max(shake, 4); fx.push({ k: 'ring', x: e.tx, y: e.ty, r: 28, life: .2, max: .2, col: '#f55' }); pfire(e.tx, e.ty, 38); if (Math.hypot(p.x - e.tx, p.y - e.ty) < 28 + p.r) hurt(16) }
-            else { SFX.eshot(); const b = Math.atan2(e.ty - e.y, e.tx - e.x); fx.push({ k: 'muzz', x: e.x + Math.cos(b) * 10, y: e.y + Math.sin(b) * 10, a: b, col: '#e6c98e', life: .18, max: .18 }); pr.push({ x: e.x, y: e.y, vx: Math.cos(b) * 140, vy: Math.sin(b) * 140, d: 12, r: 3, col: '#e6c98e', own: 'e', life: 3 }) }
-          } return
-        }
-        if (e.k == 'slime') {
-          if (e.an > 0) { if (!e.hd && e.an <= .3) { e.hd = 1; fx.push({ k: 'slash', x: e.x, y: e.y, a: a, arc: 1.8, r: 24, life: .22, max: .22, sd: 1, w: 0, hn: 0, en: 1 }); SFX.chop(); if (d < e.r + p.r + 12) hurt(8) } }
-          else { mv(e, cs, sn); if (d < e.r + p.r + 9 && e.cd <= 0) { e.an = .6; e.hd = 0; e.cd = 1.3 } }
-        }
-        else if (e.k == 'skel') { if (d > 32) mv(e, cs, sn); else if (e.cd <= 0) { SFX.warn(0); e.wind = .6; e.tx = p.x; e.ty = p.y; e.cd = 1.6 } }
-        else { const s = d < 110 ? -1 : d > 150 ? 1 : 0; mv(e, cs * s, sn * s); if (e.cd <= 0 && d < 260) { SFX.warn(1); e.wind = .7; e.tx = p.x; e.ty = p.y; e.cd = 2.2 } }
+        const dt1 = dt * enemyTime(e); (function (dt) {
+          if (e.sw > 0) { spawnTick(e, dt); return } if (e.k == 'dummy') { dummyTick(e, dt); return } if (e.k == 'boss') { bossTick(e, dt); return } if (e.mini) { miniTick(e, dt); return } e.fl -= dt; e.cd -= dt; e.an -= dt; mv(e, e.vx * dt, e.vy * dt); e.vx *= Math.pow(.02, dt); e.vy *= Math.pow(.02, dt); e.stg = Math.max(0, e.stg - 4 * dt);
+          if (e.stun > 0) { e.stun -= dt; e.wind = 0; e.an = 0; return }
+          const d = dist(e, p), a = ang(e, p), cs = Math.cos(a) * e.sp * dt, sn = Math.sin(a) * e.sp * dt;
+          if (e.wind > 0) {
+            e.wind -= dt; if (e.wind <= 0) {
+              if (e.k == 'skel') { SFX.slam(); shake = Math.max(shake, 4); fx.push({ k: 'ring', x: e.tx, y: e.ty, r: 28, life: .2, max: .2, col: '#f55' }); pfire(e.tx, e.ty, 38); if (Math.hypot(p.x - e.tx, p.y - e.ty) < 28 + p.r) hurt(16); if (dfx().shots >= 2) skLater(.4, () => { if (!es.includes(e) || p.dead > 0) return; const sx = p.x, sy = p.y; SFX.slam(); shake = Math.max(shake, 3); fx.push({ k: 'ring', x: sx, y: sy, r: 24, life: .2, max: .2, col: '#f55' }); pfire(sx, sy, 30); if (Math.hypot(p.x - sx, p.y - sy) < 24 + p.r) hurt(10) }) }
+              else { SFX.eshot(); const b = Math.atan2(e.ty - e.y, e.tx - e.x); fx.push({ k: 'muzz', x: e.x + Math.cos(b) * 10, y: e.y + Math.sin(b) * 10, a: b, col: '#e6c98e', life: .18, max: .18 }); { const X = dfx(); for (let i = 0; i <= X.shots; i++) { const q = b + (i - X.shots / 2) * .24, v = 140 * X.pv; pr.push({ x: e.x, y: e.y, vx: Math.cos(q) * v, vy: Math.sin(q) * v, d: 12, r: 3, col: '#e6c98e', own: 'e', life: 3 }) } } }
+            } return
+          }
+          if (e.k == 'slime') {
+            if (e.an > 0) { if (!e.hd && e.an <= .3) { e.hd = 1; fx.push({ k: 'slash', x: e.x, y: e.y, a: a, arc: 1.8, r: 24, life: .22, max: .22, sd: 1, w: 0, hn: 0, en: 1 }); SFX.chop(); if (d < e.r + p.r + 12) hurt(8) } }
+            else { mv(e, cs, sn); if (d < e.r + p.r + 9 && e.cd <= 0) { e.an = .6; e.hd = 0; e.cd = 1.3 * dfx().cd } }
+          }
+          else if (e.k == 'skel') { if (d > 32) mv(e, cs, sn); else if (e.cd <= 0) { SFX.warn(0); e.wind = .6; e.tx = p.x; e.ty = p.y; e.cd = 1.6 * dfx().cd } }
+          else { const s = d < 110 ? -1 : d > 150 ? 1 : 0; mv(e, cs * s, sn * s); if (e.cd <= 0 && d < 260) { SFX.warn(1); e.wind = .7; e.tx = p.x; e.ty = p.y; e.cd = 2.2 * dfx().cd } }
+        }).call(null, dt1)
       });
       pr = pr.filter(b => {
         if (b.rock) rockTrail(b); b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt; if (b.own == 'p' && !b.aoe && R() < .5) dp.push({ k: 'p', x: b.x, y: b.y, vx: 0, vy: 0, life: .25, max: .25, s: 1.5, c: b.big ? '#ffe9a8' : '#b6f08a' }); if (b.aoe && R() < .5) dp.push({ k: 'p', x: b.x + (R() - .5) * 6, y: b.y + (R() - .5) * 6, vx: (R() - .5) * 30, vy: (R() - .5) * 30, life: .35, max: .35, s: 1 + R() * 1.5, c: R() < .5 ? '#fff' : '#e6b8ff' }); if (b.aoe && R() < .8) dp.push({ k: 'f', x: b.x, y: b.y, vx: (R() - .5) * 20, vy: (R() - .5) * 20 - 10, life: .3, max: .3, s: 2.5 + R() * 2 }); let dead = b.life <= 0 || blk(b.x, b.y, 1);
@@ -8302,7 +8304,7 @@
     }
 
     function bossFan(e) {
-      const n = BOSS.ph == 1 ? 5 : BOSS.ph == 2 ? 7 : 9, sp = 135 + BOSS.ph * 16;
+      const n = (BOSS.ph == 1 ? 5 : BOSS.ph == 2 ? 7 : 9) + dfx().shots * 2, sp = (135 + BOSS.ph * 16) * dfx().pv;
       let ox = e.x - 26, oy = e.y - 18; if (blk(ox, oy, 1)) { ox = e.x; oy = e.y }
       const b = Math.atan2(p.y - oy, p.x - ox);
       SFX.dodge(); SFX.boom(16); e.rc = 1; shake = Math.max(shake, 3);
@@ -8344,7 +8346,7 @@
           else if (e.atk == 'charge') { e.s2 = 'act'; e.tm = .5; SFX.dodge(); SFX.bossVo('mino', 'dash') }
           else if (e.atk == 'fan') { bossFan(e); if (ph == 3) B.q.push({ t: .4, f: () => { if (es.includes(e) && p.dead <= 0) bossFan(e) } }); e.s2 = 'rest'; e.tm = .6 }
           else {
-            const n = ph == 2 ? 6 : 9, cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+            const n = (ph == 2 ? 6 : 9) + dfx().shots * 2, cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
             for (let i = 0; i < n; i++) { const t0 = .8 + i * .16, x = i ? cl(p.x + (R() - .5) * 170, 40, DW - 40) : p.x, y = i ? cl(p.y + (R() - .5) * 130, 40, DH - 40) : p.y; B.hz.push({ x, y, r: 30, t: t0, mx: t0, d: 16 }) }
             SFX.summon(); e.s2 = 'rest'; e.tm = 1.2
           }
@@ -10227,10 +10229,21 @@
   <script>
     /* ===== Pilihan Level & Kesulitan Dungeon ===== */
     let LVL = 1, DIFF = 1, dselOn = false;
+    // ===== KESULITAN LANJUTAN (MUDAH tetap normal; BIASA & SULIT lebih keras) =====
+    // heal  : pengali penyembuhan (potion & +HP)   potCd: jeda minum potion   drop: peluang musuh menjatuhkan potion
+    // ult   : pengali kecepatan isi bar ULT        time : kecepatan gerak+serangan musuh biasa   tb: kecepatan bos/mini bos (saat jalan & jeda)
+    // cd    : pengali jeda serangan musuh biasa    shots: tambahan peluru/serangan beruntun       pv: kecepatan peluru musuh
+    const DFX = [
+      { heal: 1, potCd: .5, drop: .3, ult: 1, time: 1, tb: 1, cd: 1, shots: 0, pv: 1 },
+      { heal: .8, potCd: 1, drop: .22, ult: .75, time: 1.12, tb: 1.12, cd: .85, shots: 1, pv: 1.1 },
+      { heal: 1 / 6, potCd: 1.6, drop: .1, ult: .3, time: 1.3, tb: 1.35, cd: .7, shots: 2, pv: 1.3 }];
+    const dfx = () => lobby ? DFX[0] : DFX[DIFF];
+    const HEALV = v => Math.max(1, Math.round(v * dfx().heal));
+    const enemyTime = e => { if (lobby || e.sw > 0 || e.k == 'dummy') return 1; const f = DFX[DIFF]; if (e.k == 'boss' || e.mini) return (!e.s2 || e.s2 == 'move' || e.s2 == 'rest') ? f.tb : 1; return f.time };
     const DF = [
       { n: 'MUDAH', hp: 1, dmg: 1, sp: 1, cnt: 1, c: '#8fe8a0', d: 'Pengalaman standar' },
-      { n: 'BIASA', hp: 2, dmg: 1, sp: 1.05, cnt: 1.15, c: '#ffe7ad', d: 'Musuh sangat alot (HP 2x) & sedikit lebih banyak' },
-      { n: 'SULIT', hp: 3, dmg: 1.8, sp: 1.2, cnt: 1.4, c: '#ff6b6b', d: 'Musuh sangat alot (HP 3x), lebih banyak & cepat, damage diterima +80%' }];
+      { n: 'BIASA', hp: 2, dmg: 1, sp: 1.05, cnt: 1.15, c: '#ffe7ad', d: 'Musuh alot (HP 2x), lebih banyak & agresif · ULT lebih lambat · heal berkurang' },
+      { n: 'SULIT', hp: 5, dmg: 1.8, sp: 1.2, cnt: 1.4, c: '#ff6b6b', d: 'HP musuh 5x, brutal & cepat, serangan bertubi-tubi · damage +80% · ULT sangat sulit penuh · heal hanya +10' }];
     (function () {
       const PX = rows => { let d = ''; rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] == '#') d += 'M' + x + ' ' + y + 'h1v1h-1z' }); return '<svg viewBox="0 0 ' + rows[0].length + ' ' + rows.length + '" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>' };
       const IC = {
@@ -10699,7 +10712,7 @@
         if (LBEAM) { LBEAM.bx = e.x; LBEAM.by = e.y - 24 }
         if (e.tm <= 0) {
           e.an = 0; const q = e.atk;
-          if (q == 'orbs') { const n = f == 1 ? 3 : f == 2 ? 5 : 7, b0 = Math.atan2(p.y - e.y, p.x - e.x); SFX.eshot(); for (let i = 0; i < n; i++) lfire(e, b0 + (i - (n - 1) / 2) * .24, 95 + f * 15, 11 + f * 2); e.s2 = 'rest'; e.tm = .6 }
+          if (q == 'orbs') { const n = (f == 1 ? 3 : f == 2 ? 5 : 7) + dfx().shots, b0 = Math.atan2(p.y - e.y, p.x - e.x); SFX.eshot(); for (let i = 0; i < n; i++) lfire(e, b0 + (i - (n - 1) / 2) * .24, (95 + f * 15) * dfx().pv, 11 + f * 2); e.s2 = 'rest'; e.tm = .6 }
           else if (q == 'ring') {
             const rings = f == 3 ? 3 : 2, g0 = Math.atan2(p.y - e.y, p.x - e.x);
             const ring = (off, gap) => { SFX.boom(16); fx.push({ k: 'ring', x: e.x, y: e.y - 18, r: 30, w: 3, life: .3, max: .3, col: '#ff8a2a' }); for (let i = 0; i < 18; i++) { const an = i / 18 * 6.283 + off; let dd = Math.abs(((an - gap + 9.425) % 6.283) - 3.1416); if (Math.abs(((an - gap) % 6.283 + 6.283 + 3.1416) % 6.283 - 3.1416) < .4) continue; lfire(e, an, 85, 13) } };
@@ -12089,13 +12102,13 @@
         if (k == 'smash') MBH.push(L ? { k: 'c', x: e.x, y: e.y, r: 54, t: dur, mx: dur, d: 18, big: 1, ring: 1, rs: rg ? 210 : 165 } : { k: 'c', x: e.x, y: e.y, r: 62, t: dur, mx: dur, d: 16, big: 1, sh: rg ? 12 : 8 });
         if (k == 'quake' && L) for (let i = 1; i <= (rg ? 5 : 3); i++) { const q = dur + i * .2; MBH.push({ k: 'c', x: mbCl(e.x + Math.cos(a) * (36 + i * 34), 30, DW - 30), y: mbCl(e.y + Math.sin(a) * (36 + i * 34), 30, DH - 30), r: 26, t: q, mx: q, d: 14, sp: !L }) }
         if (k == 'snipe' && L) MBH.push({ k: 'l', o: e, x: e.x, y: e.y, a, len: 360, w: 6, t: dur, mx: dur, d: 20 });
-        if (k == 'rain') for (let i = 0; i < (rg ? 6 : 4); i++) { const q = dur + i * .2; MBH.push({ k: 'c', x: i ? mbCl(p.x + (R() - .5) * 150, 30, DW - 30) : p.x, y: i ? mbCl(p.y + (R() - .5) * 110, 30, DH - 30) : p.y, r: L ? 24 : 20, t: q, mx: q, d: 12, ar: !L }) }
+        if (k == 'rain') for (let i = 0; i < (rg ? 6 : 4) + dfx().shots; i++) { const q = dur + i * .2; MBH.push({ k: 'c', x: i ? mbCl(p.x + (R() - .5) * 150, 30, DW - 30) : p.x, y: i ? mbCl(p.y + (R() - .5) * 110, 30, DH - 30) : p.y, r: L ? 24 : 20, t: q, mx: q, d: 12, ar: !L }) }
       }
       else if (e.s2 == 'wind') {
         e.tm -= dt; if (e.atk == 'charge' && e.tm > e.tmx * .4) e.ca = a; if (e.tm > 0) return;
         if (e.atk == 'charge') { e.s2 = 'act'; e.tm = .42; e.hit = 0; SFX.dodge(); SFX.bossVo(bossVid(e), 'dash'); return }
         if (!L && (e.atk == 'quake' || e.atk == 'snipe')) { const b0 = Math.atan2(p.y - e.y, p.x - e.x), big = e.atk == 'snipe', n = big ? 1 : (rg ? 5 : 3); SFX.eshot(); shake = Math.max(shake, 2); fx.push({ k: 'ring', x: e.x, y: e.y - 20, r: 26, w: 3, life: .3, max: .3, col: '#7dff5a' }); for (let i = 0; i < n; i++) { const q = b0 + (i - (n - 1) / 2) * .3, v = big ? 230 : 120; pr.push({ x: e.x, y: e.y - 6, vx: Math.cos(q) * v, vy: Math.sin(q) * v, d: big ? 16 : 11, r: big ? 14 : 5.5, col: '#7dff5a', pb: 1, own: 'e', life: 3.5 }) } }
-        if (e.atk == 'volley') { const n = L ? (rg ? 7 : 5) : (rg ? 5 : 3), b = Math.atan2(p.y - e.y, p.x - e.x); SFX.eshot(); shake = Math.max(shake, 2); fx.push({ k: 'ring', x: e.x, y: e.y, r: 24, w: 3, life: .25, max: .25, col }); for (let i = 0; i < n; i++) { const q = b + (i - (n - 1) / 2) * (L ? .22 : .3); pr.push({ x: e.x, y: e.y, vx: Math.cos(q) * (L ? 150 : 125), vy: Math.sin(q) * (L ? 150 : 125), d: 10, r: L ? 3 : 9, col: L ? col : '#7dff5a', pb: !L, own: 'e', life: 3 }) } }
+        if (e.atk == 'volley') { const n = (L ? (rg ? 7 : 5) : (rg ? 5 : 3)) + dfx().shots, b = Math.atan2(p.y - e.y, p.x - e.x); SFX.eshot(); shake = Math.max(shake, 2); fx.push({ k: 'ring', x: e.x, y: e.y, r: 24, w: 3, life: .25, max: .25, col }); for (let i = 0; i < n; i++) { const q = b + (i - (n - 1) / 2) * (L ? .22 : .3); pr.push({ x: e.x, y: e.y, vx: Math.cos(q) * (L ? 150 : 125), vy: Math.sin(q) * (L ? 150 : 125), d: 10, r: L ? 3 : 9, col: L ? col : '#7dff5a', pb: !L, own: 'e', life: 3 }) } }
         e.s2 = 'rest'; e.tm = mel ? .8 : .55;
         if (!mel && rg && R() < .5) { const r = R() * 6.283, nx = mbCl(p.x + Math.cos(r) * 150, 40, DW - 40), ny = mbCl(p.y + Math.sin(r) * 110, 40, DH - 40); if (!blk(nx, ny, e.r)) { puff(e.x, e.y, 6, '255,120,40', 1); fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, w: 3, life: .3, max: .3, col }); e.x = nx; e.y = ny; puff(nx, ny, 6, '255,120,40', 1) } }
       }
