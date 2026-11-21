@@ -2112,8 +2112,25 @@ upd = function (dt) {
 
   /* ---------- gambar orang (dipakai semua NPC luar ruangan) ---------- */
   const OUT = '#120e18';
+  /* ikon emosi melayang di atas kepala: kaget "!", senang hati, sedih "...", marah urat, bingung "?" (takut cukup keringat dingin) */
+  function emoIcon(em, X, Y, ea, left) {
+    let al = Math.min(1, ea / .1, left / .35); if (!(al > 0)) return;
+    const pxl = (c, a, b) => { g.fillStyle = c; g.fillRect(Math.round(X + a), Math.round(Y + b), 1, 1) };
+    const pat = (rows, ox, oy, col) => { for (let pass = 0; pass < 2; pass++) rows.forEach((s, ry) => { for (let rx = 0; rx < s.length; rx++) if (s[rx] === 'X') pxl(pass ? col : 'rgba(18,10,24,.6)', ox + rx + (pass ? 0 : 1), oy + ry + (pass ? 0 : 1)) }) };
+    g.save();
+    if (em === 'kaget') { if (ea < 1.3) { g.globalAlpha = al; pat(['XX', 'XX', 'XX', 'XX', '..', 'XX'], -1, -8 - Math.round(Math.sin(Math.min(1, ea / .25) * Math.PI) * 2), '#ff5a3a') } }
+    else if (em === 'senang') { const k = ea % 2.6; if (k < 1.5) { g.globalAlpha = al * Math.min(1, (1.5 - k) / .4); pat(['.X.X.', 'XXXXX', 'XXXXX', '.XXX.', '..X..'], -2, -7 - Math.round(k * 3), '#ff6a9a') } }
+    else if (em === 'sedih') { g.globalAlpha = al; const nd = Math.floor(ea * 1.8) % 4; for (let j = 0; j < nd; j++) pat(['XX', 'XX'], -5 + j * 4, -6, '#aebfff') }
+    else if (em === 'marah') { g.globalAlpha = al; pat(Math.floor(t * 6) % 2 ? ['XX...XX', 'X.....X', '.......', '.......', '.......', 'X.....X', 'XX...XX'] : ['XX.XX', 'X...X', '.....', 'X...X', 'XX.XX'], Math.floor(t * 6) % 2 ? 3 : 4, Math.floor(t * 6) % 2 ? -9 : -8, '#ff3a3a') }
+    else if (em === 'bingung') { g.globalAlpha = al; pat(['.XXX.', 'X...X', '....X', '...X.', '..X..', '.....', '..X..'], -2, -9 + Math.round(Math.sin(t * 5)), '#ffe28a') }
+    g.restore();
+  }
   function person(n, i) {
     const x = Math.round(n.x), y = Math.round(n.y), tk = t + i * 1.7, talk = dlg && dlg.n === n, near = dist(n, p) < 90;
+    // [ekspresi] emo = senang | kaget | sedih | marah | takut | bingung (diatur modul Desa Hidup lewat n._em / n._emT / n._emA)
+    const emo = n._emT > 0 ? (n._em || '') : '', emA = n._emA || 0;
+    const emJx = emo === 'takut' ? (Math.sin(t * 46 + i * 2) > .35 ? 1 : Math.sin(t * 46 + i * 2) < -.35 ? -1 : 0) : emo === 'marah' ? (Math.sin(t * 24 + i) > .6 ? 1 : 0) : 0;
+    const emBt = emo === 'kaget' && emA < .45 ? -Math.round(2.4 * Math.sin(Math.PI * emA / .45)) : emo === 'senang' ? -Math.round(Math.max(0, Math.sin(t * 9 + i)) * 1.2) : 0;
     // [animasi-npc] kecepatan, fase langkah, belok mulus, kedip tak beraturan
     const spd = n.spd || 0, wk = Math.min(1, spd / 22), ph = n._ph || 0, moving = spd > 5, mv = moving, dts = Math.min(.05, Math.max(0, t - (n._ft === undefined ? t : n._ft))); n._ft = t;
     n._nt = near && !moving ? (n._nt || 0) + dts : 0;
@@ -2127,7 +2144,7 @@ upd = function (dt) {
     const sk = n.sk || '#e0b090', hair = n.hair || '#4a2a18', c1 = n.c1 || '#7a5a3a', c2 = n.c2 || '#d8b878', c3 = n.c3 || '#3a2e24', SH = 'rgba(0,0,0,.25)', HL = 'rgba(255,255,255,.16)', Q = [];
     const r = (a, b, w, h, c, o) => Q.push([a, b, w, h, c, o !== 0]), fl = () => { g.fillStyle = OUT; Q.forEach(q => q[5] && g.fillRect(q[0] - 1, q[1] - 1, q[2] + 2, q[3] + 2)); Q.forEach(q => { g.fillStyle = q[4]; g.fillRect(q[0], q[1], q[2], q[3]) }); Q.length = 0 };
     const rh = (a, b, w, h, c, o) => r(a + hx, b, w, h, c, o);
-    g.save(); g.translate(x, y); const kid = n.kid; if (kid) g.scale(.8, .8);
+    g.save(); g.translate(x + emJx, y); const kid = n.kid; if (kid) g.scale(.8, .8);
     g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0, 8, 9 - Math.abs(sw0) * .9, 3 - Math.abs(sw0) * .3, 0, 0, 7); g.fill(); g.scale(fc, 1);
     const sw = sw0, lf = Math.round(Math.max(0, sw) * 3), rf = Math.round(Math.max(0, -sw) * 3), lx = Math.round(Math.cos(ph) * 1.4 * wk), by = n.sit ? 4 : 0;
     // belakang: tas / tongkat panjang
@@ -2141,7 +2158,7 @@ upd = function (dt) {
     if (n.sit) { r(-5, 2, 10, 4, c3); r(-7, 4, 4, 3, '#241a14'); r(3, 4, 4, 3, '#241a14') }
     else if (n.robe) { r(-7, 2, 14, 7, c1); r(-7, 8, 14, 1, c2, 0); r(-5, 3, 3, 5, SH, 0) }
     else { r(-5, 0, 4, 8 - lf, c3); r(1, 0, 4, 8 - rf, c3); r(-6 + lx, 6 - lf, 5, 3, '#241a14'); r(1 - lx, 6 - rf, 5, 3, '#241a14'); r(-3, 3, 1, 4, SH, 0) }
-    g.translate(0, by); const bt = -bo;
+    g.translate(0, by); const bt = -bo + emBt;
     // badan
     g.save(); g.translate(0, bt);
     r(-6, -10, 12, 13, c1); r(3, -9, 3, 11, SH, 0); r(-5, -9, 2, 9, HL, 0);
@@ -2180,12 +2197,40 @@ upd = function (dt) {
     else if (ht == 'cook') { rh(-5, -25, 10, 5, '#f4f0e8'); rh(-4, -28, 8, 4, '#f4f0e8'); rh(-4, -25, 8, 1, '#d8d0c0', 0) }
     else if (ht == 'band') { rh(-5, -21, 10, 2, n.hc || '#c8283e', 0) }
     // wajah
-    if (blink) { rh(-3, -16, 2, 1, '#3a2418', 0); rh(1, -16, 2, 1, '#3a2418', 0) } else { rh(-3, -17, 2, 2, '#f4eee8', 0); rh(1, -17, 2, 2, '#f4eee8', 0); rh(-2 - gl, -17, 1, 2, '#2a1a14', 0); rh(2 - gl, -17, 1, 2, '#2a1a14', 0) }
-    if (n.brow !== 0) { rh(-3, -19, 2, 1, n.hairb || hair, 0); rh(1, -19, 2, 1, n.hairb || hair, 0) }
-    rh(-4, -15, 1, 1, 'rgba(255,120,130,.55)', 0); rh(3, -15, 1, 1, 'rgba(255,120,130,.55)', 0);
-    if (talk && Math.floor(t * 9) % 2) rh(-1, -14, 2, 2, '#5a2020', 0); else rh(-1, -14, 2, 1, '#a8483a', 0);
+    const INK = '#3a2418', EW = '#f4eee8', PU = '#2a1a14', BRC = n.hairb || hair, wideEye = emo === 'kaget' || emo === 'takut', talkOn = talk && Math.floor(t * 9) % 2;
+    if (emo === 'takut') rh(-4, -19, 8, 6, 'rgba(205,225,255,.22)', 0);             // wajah pucat
+    // mata
+    if (emo === 'senang') { [-4, 1].forEach(ex => { rh(ex, -16, 1, 1, INK, 0); rh(ex + 1, -17, 1, 1, INK, 0); rh(ex + 2, -16, 1, 1, INK, 0) }) }   // mata tertawa ^ ^
+    else if (wideEye) { const sh = emo === 'takut' ? (Math.sin(t * 13 + i) > 0 ? 0 : -1) : 0; rh(-3, -18, 2, 3, EW, 0); rh(1, -18, 2, 3, EW, 0); rh(-2 + sh, -17, 1, 1, PU, 0); rh(2 + sh, -17, 1, 1, PU, 0) }   // melotot, pupil kecil
+    else if (blink) { rh(-3, -16, 2, 1, INK, 0); rh(1, -16, 2, 1, INK, 0) }
+    else if (emo === 'marah') { rh(-3, -16, 2, 1, EW, 0); rh(1, -16, 2, 1, EW, 0); rh(-2, -16, 1, 1, PU, 0); rh(2, -16, 1, 1, PU, 0) }               // mata menyipit
+    else if (emo === 'sedih') { rh(-3, -17, 2, 2, EW, 0); rh(1, -17, 2, 2, EW, 0); rh(-2, -16, 1, 1, PU, 0); rh(2, -16, 1, 1, PU, 0) }               // pupil menunduk
+    else { rh(-3, -17, 2, 2, EW, 0); rh(1, -17, 2, 2, EW, 0); rh(-2 - gl, -17, 1, 2, PU, 0); rh(2 - gl, -17, 1, 2, PU, 0) }
+    // alis
+    if (n.brow !== 0) {
+      if (emo === 'sedih') { rh(-3, -18, 1, 1, BRC, 0); rh(-2, -19, 1, 1, BRC, 0); rh(1, -19, 1, 1, BRC, 0); rh(2, -18, 1, 1, BRC, 0) }               // ujung dalam naik
+      else if (emo === 'takut') { rh(-3, -19, 1, 1, BRC, 0); rh(-2, -20, 1, 1, BRC, 0); rh(1, -20, 1, 1, BRC, 0); rh(2, -19, 1, 1, BRC, 0) }
+      else if (emo === 'marah') { rh(-3, -19, 1, 1, BRC, 0); rh(-2, -18, 1, 1, BRC, 0); rh(1, -18, 1, 1, BRC, 0); rh(2, -19, 1, 1, BRC, 0) }         // ujung dalam turun
+      else if (emo === 'kaget') { rh(-3, -20, 2, 1, BRC, 0); rh(1, -20, 2, 1, BRC, 0) }                                                             // alis terangkat
+      else if (emo === 'bingung') { rh(-3, -19, 2, 1, BRC, 0); rh(1, -20, 2, 1, BRC, 0) }                                                           // satu alis naik
+      else { rh(-3, -19, 2, 1, BRC, 0); rh(1, -19, 2, 1, BRC, 0) }
+    }
+    // pipi
+    const CK = emo === 'senang' ? 'rgba(255,100,120,.85)' : emo === 'marah' ? 'rgba(255,60,50,.8)' : emo === 'takut' || emo === 'sedih' ? 'rgba(255,120,130,.18)' : 'rgba(255,120,130,.55)';
+    rh(-4, -15, 1, 1, CK, 0); rh(3, -15, 1, 1, CK, 0);
+    // mulut
+    if (emo === 'senang') { if (talkOn) { rh(-1, -14, 2, 1, '#a8483a', 0); rh(-2, -15, 1, 1, '#a8483a', 0); rh(1, -15, 1, 1, '#a8483a', 0) } else { rh(-2, -15, 4, 1, '#4a1a18', 0); rh(-1, -14, 2, 1, '#e8707a', 0) } }   // senyum lebar
+    else if (emo === 'kaget') rh(-1, -15, 2, 2, '#4a1a18', 0);                                                                                        // mulut "o"
+    else if (emo === 'sedih') { rh(-1, -14, 2, 1, '#8a3a30', 0); rh(-2, -13, 1, 1, '#8a3a30', 0); rh(1, -13, 1, 1, '#8a3a30', 0) }                    // cemberut
+    else if (emo === 'marah') { rh(-2, -14, 4, 1, '#6a1c18', 0); rh(-1, -14, 2, 1, EW, 0) }                                                           // gigi terkatup
+    else if (emo === 'takut') { rh(-2, -14, 1, 1, '#6a2a2a', 0); rh(-1, -13, 1, 1, '#6a2a2a', 0); rh(0, -14, 1, 1, '#6a2a2a', 0); rh(1, -13, 1, 1, '#6a2a2a', 0) }   // mulut bergetar
+    else if (emo === 'bingung') rh(0, -14, 2, 1, '#8a3a30', 0);
+    else if (talkOn) rh(-1, -14, 2, 2, '#5a2020', 0); else rh(-1, -14, 2, 1, '#a8483a', 0);
+    if (emo === 'sedih') { const k = (t * 2.4 + i) % 1; rh(Math.floor(t * 2.4 + i) % 2 ? -3 : 2, -15 + Math.round(k * 2), 1, 1, '#8ad0ff', 0) }   // air mata
+    if (emo === 'takut') { const k = (t * 1.7 + i) % 1; rh(4, -20 + Math.round(k * 5), 1, 2, '#8ad8ff') }                                            // keringat dingin
     if (n.glasses) { rh(-4, -18, 4, 3, 'rgba(180,220,255,.35)', 0); rh(0, -18, 4, 3, 'rgba(180,220,255,.35)', 0); rh(-1, -17, 2, 1, '#2a2030', 0) }
     fl(); g.restore(); g.restore();
+    if (emo) emoIcon(emo, x + emJx, y - (kid ? 27 : 33), emA, n._emT);
   }
 
   /* ---------- state dunia (disimpan di localStorage) ---------- */
@@ -3214,7 +3259,7 @@ upd = function (dt) {
       n: 'Aldous, Kepala Desa', x: 826, y: 638, fc: -1, sk: '#e0b898', hair: '#e8e8f0', hs: 'bald', beard: '#e8e8f0', c1: '#3a7a5a', c2: '#d8b84a', c3: '#4a3a2a', robe: 1, prop: 'staff', pc: '#ffd34d', fresh: 1,
       get lines() { return this.seen ? ['Semoga langkahmu ringan, pahlawan. Desa ini berutang budi pada keberanianmu.'] : ['Ah, pahlawan dari bawah tanah! Aku Aldous, kepala desa Lembah Lentera. Sudah lama kami tidak melihat seseorang keluar dari Aula Kuno.', 'Dulu, desa ini hidup dari para penjelajah dungeon. Lalu Morvath bangkit, dan jalan hutan menjadi sepi.', 'Kau memberi kami harapan. Terimalah sedikit bekal dari desa kami, 50 emas, untuk perjalananmu.'] }, act() { if (!this.seen) { WORLD.addGold(50); try { SFX.point() } catch (e) { } } this.seen = 1; this.fresh = 0; W_.seen.aldous = 1; WORLD.save() }
     });
-    mkN({ n: 'Lio, Penyair Keliling', x: PLAZA.x - 62, y: PLAZA.y + 46, sit: 1, fc: 1, sk: '#e0b090', hair: '#a8622c', hs: 'short', hat: 'feather', hc: '#3a6a8a', c1: '#3a6a8a', c2: '#e8d890', c3: '#2a2a40', prop: 'lute', lines: ['Dengarlah, dengarlah! Kisah pahlawan yang keluar dari kegelapan... masih kurang bait terakhirnya.', 'Aku menggubah lagu tentang Morvath si Banteng Abyss. Sayangnya aku belum pernah melihatnya, dan tak mau melihatnya.', 'Kalau kau mengalahkannya, datanglah ke sini. Kau akan jadi bait terakhirku!'] });
+    mkN({ n: 'Hendra, Penyair Keliling', x: PLAZA.x - 62, y: PLAZA.y + 46, sit: 1, fc: 1, sk: '#e0b090', hair: '#a8622c', hs: 'short', hat: 'feather', hc: '#3a6a8a', c1: '#3a6a8a', c2: '#e8d890', c3: '#2a2a40', prop: 'lute', lines: ['Dengarlah, dengarlah! Kisah pahlawan yang keluar dari kegelapan... masih kurang bait terakhirnya.', 'Aku menggubah lagu tentang Morvath si Banteng Abyss. Sayangnya aku belum pernah melihatnya, dan tak mau melihatnya.', 'Kalau kau mengalahkannya, datanglah ke sini. Kau akan jadi bait terakhirku!'] });
     mkN({ n: 'Gaspar, Petani', x: 1098, y: 540, fc: -1, sk: '#c9946e', hair: '#5a3a1a', hat: 'straw', c1: '#5a8a4a', c2: '#c9a95a', c3: '#4a3a2a', prop: 'pitchfork', lines: ['Panen tahun ini bagus! Kol, gandum, dan labu, semuanya subur.', 'Orang-orangan sawah itu? Anakku yang menggambar wajahnya. Burung gagak malah makin berani.', 'Kalau di hutan kau lihat herba, petik saja. Tak ada yang melarang.'] });
     mkN({ n: 'Finn, Nelayan', x: 212, y: 688, sit: 1, fc: 1, sk: '#d9a07a', hair: '#2a1a14', hat: 'cap', hc: '#6a5a3a', c1: '#4a6a8a', c2: '#c9a95a', c3: '#3a3a30', prop: 'rod', lines: ['Sst... jangan keras-keras. Ikan di kolam ini pemalu.', 'Sudah tiga hari aku di sini dan baru dapat satu sepatu bot. Tapi kolam ini menenangkan.'] });
     const kid = (o, path) => mkN({ ...o, kid: 1, hs: 'short', path, pi: 0, mv: 0 });
@@ -3459,6 +3504,11 @@ upd = function (dt) {
   const POND = { x: 210, y: 650, rx: 96, ry: 44 }, POND2 = { x: 1580, y: 690, rx: 78, ry: 30 }, PLAZA = { x: 640, y: 380, r: 86 };
   const DAY = 420; // detik nyata per 24 jam desa
   V.clock = 15; V.night = 0; V.rain = 0; V.rainOn = 0; V.rainT = 90 + Math.random() * 60;
+  /* cuaca acak: V.wx = 0 cerah | 1 hujan biasa | 2 hujan petir. V.rain = intensitas hujan, V.storm = intensitas badai (0..1) */
+  const P_STORM = .4;          // peluang hujan yang datang berupa badai petir
+  const THUNDER_SFX = true;    // false = matikan suara guntur
+  const CAM_SHAKE = 1;         // kekuatan getar kamera saat guntur (0 = mati, 1 = halus, 2 = lebih terasa)
+  V.wx = 0; V.storm = 0; V._ltT = 3; V._fl = 0; V._bolt = null; V._th = null; V._re = null; V._rb = 0; V._rbT = 1; V._pw = 0;
   const nightOf = h => (h >= 20 || h < 4) ? 1 : h >= 18 ? sm((h - 18) / 2) : h < 6 ? 1 - sm((h - 4) / 2) : 0;
 
   const rng = mkRng(4242), FC = [0, '#ffffff', '#ffd34d', '#ff9ac0', '#b48cff'];
@@ -3468,7 +3518,7 @@ upd = function (dt) {
   const CH = {
     Mira: ['Herba segar, herba segar!', 'Ramuan baru sudah matang~'], Tamsin: ['Harga adil, senyum gratis!', 'Apa pun ada, apa pun kubeli!'],
     Borin: ['*TANG! TANG!*', 'Baja panas, tangan sabar.'], Hanna: ['Sup hangat siap disajikan!', 'Kamar kosong masih ada~'],
-    Wren: ['Telur rebus, masih hangat!', 'Roti madu baru keluar oven~'], Lio: ['\u266a la la la ~', 'Satu bait lagi...'],
+    Wren: ['Telur rebus, masih hangat!', 'Roti madu baru keluar oven~'], Hendra: ['\u266a la la la ~', 'Satu bait lagi...'],
     Gaspar: ['Gagak-gagak itu lagi...', 'Labunya gemuk tahun ini!'], Finn: ['...', 'Sst. Ada yang menggigit!'],
     Nia: ['Kejar aku!', 'Hore!'], Tobi: ['Aku menang!', 'Nia curang!'], Rafi: ['Ada katak besar!', 'Kwek kwek!'],
     Kael: ['Semua aman.', 'Siapa di sana?'], Joko: ['Timur aman.', 'Hmm, tenang sekali.'],
@@ -3477,8 +3527,65 @@ upd = function (dt) {
     Aldous: ['Desa ini damai...', 'Pahlawan kita...'], Marta: ['Belanja dulu, ya.', 'Roti atau telur, ya?'],
     Salim: ['Pasar ramai hari ini!', 'Untung besar, untung besar.'], Nox: ['Lentera menyala, bisikan menjauh.', 'Malam yang tenang.']
   };
+  const STORML = ['Petir! Kaget aku!', 'Duar! Masuk, masuk!', 'Badainya ganas...'];
   const RAINL = ['Hujan!', 'Basah semua...', 'Cepat berteduh!'], NIGHTL = ['Sudah malam...', 'Dingin ya.'];
-  const say = n => { const a = CH[n.n.split(',')[0]] || ['...'], r = Math.random(); if (V.rain > .4 && r < .6) return RAINL[(Math.random() * 3) | 0]; if (V.night > .6 && r < .3) return NIGHTL[(Math.random() * 2) | 0]; return a[(Math.random() * a.length) | 0] };
+  const say = n => { const a = CH[n.n.split(',')[0]] || ['...'], r = Math.random(); if (V.storm > .5 && r < .6) return STORML[(Math.random() * 3) | 0]; if (V.rain > .4 && r < .6) return RAINL[(Math.random() * 3) | 0]; if (V.night > .6 && r < .3) return NIGHTL[(Math.random() * 2) | 0]; return a[(Math.random() * a.length) | 0] };
+
+  /* ================= EKSPRESI WARGA =================
+     n._em = emosi, n._emT = sisa detik, n._emA = umur emosi (dipakai person() untuk wajah + ikon).
+     Pemicu: petir, hujan mulai/reda, hero mendekat/mengajak bicara, kalimat bubble, dan sesekali spontan. */
+  const EMP = { kaget: 5, takut: 4, marah: 3, sedih: 2, bingung: 2, senang: 1 }, BRAVE = /Kael|Joko/;
+  const EML = {   // kalimat bubble -> emosi
+    'Hujan!': 'kaget', 'Basah semua...': 'sedih', 'Cepat berteduh!': 'kaget',
+    'Petir! Kaget aku!': 'kaget', 'Duar! Masuk, masuk!': 'takut', 'Badainya ganas...': 'takut',
+    'Gagak-gagak itu lagi...': 'marah', 'Nia curang!': 'marah', 'Aku menang!': 'senang', 'Kejar aku!': 'senang', 'Hore!': 'senang',
+    'Ada katak besar!': 'kaget', 'Kwek kwek!': 'senang', 'Mana ayamku?': 'bingung', 'Jangan injak ayamnya!': 'kaget',
+    'Sst. Ada yang menggigit!': 'kaget', 'Siapa di sana?': 'kaget', 'Hmm, tenang sekali.': 'bingung',
+    'Kayu ini berat!': 'sedih', 'Satu kayu lagi...': 'sedih', 'Benangnya kurang satu warna.': 'sedih',
+    'Untung besar, untung besar.': 'senang', 'Pasar ramai hari ini!': 'senang', 'Harga adil, senyum gratis!': 'senang',
+    'Desa ini damai...': 'senang', 'Pahlawan kita...': 'senang', 'Satu bait lagi...': 'senang', '\u266a la la la ~': 'senang'
+  };
+  function feel(n, em, dur, force) {
+    if (!n || NP.indexOf(n) < 0) return;
+    if (n._emT > 0 && !force && (EMP[n._em] || 0) > (EMP[em] || 0)) return;
+    n._em = em; n._emT = dur; n._emA = 0;
+  }
+  const later = (n, em, dur, delay, force) => { n._emL = { em, dur, t: delay, f: force } };
+  function moodFor(n, s) {
+    let em = EML[s];
+    if (!em && /[!~\u266a]/.test(s) && Math.random() < .45) em = 'senang';
+    if (em) feel(n, em, 3.4);
+  }
+  function weatherMood(a, b) {       // a = cuaca sebelumnya, b = cuaca sekarang (0 cerah, 1 hujan biasa, 2 petir)
+    V.npcs.forEach(n => {
+      if (NP.indexOf(n) < 0) return; const kid = n.kid, brave = BRAVE.test(n.n), r = Math.random(), d = Math.random() * 2.5;
+      if (b === 1) { if (kid) { if (r < .75) later(n, 'senang', 7 + Math.random() * 5, d) } else if (r < .35) later(n, 'sedih', 5 + Math.random() * 4, d); else if (r < .5) later(n, 'bingung', 3, d) }
+      else if (b === 2) { if (brave) { if (r < .4) later(n, 'bingung', 4, d) } else if (r < (kid ? .85 : .55)) { later(n, 'kaget', 1, d, 1); n._emQ = ['takut', 8 + Math.random() * 6] } else if (r < .8) later(n, 'sedih', 6, d) }
+      else if (b === 0 && a) { if (r < .6) later(n, 'senang', 3 + Math.random() * 3, d, 1) }       // hujan reda: lega
+    });
+  }
+  function reactStrike() {            // petir menyambar: kaget, lalu sebagian jadi takut
+    V.npcs.forEach(n => {
+      if (NP.indexOf(n) < 0) return; const brave = BRAVE.test(n.n);
+      if (Math.random() < (n.kid ? .9 : brave ? .3 : .6)) { later(n, 'kaget', .9 + Math.random() * .5, Math.random() * .25, 1); if (!brave && Math.random() < .65) n._emQ = ['takut', 5 + Math.random() * 6] }
+    });
+  }
+  function moods(dt) {
+    for (const n of V.npcs) {
+      if (n._emL && (n._emL.t -= dt) <= 0) { const q = n._emL; n._emL = null; feel(n, q.em, q.dur, q.f) }
+      if (n._emT > 0) {
+        n._emT -= dt; n._emA += dt;
+        if (n._emT <= 0) { n._em = ''; if (n._emQ) { const q = n._emQ; n._emQ = null; n._em = q[0]; n._emT = q[1]; n._emA = 0 } }
+      }
+      if (NP.indexOf(n) < 0) continue;
+      const d = Math.hypot(n.x - p.x, n.y - p.y);
+      if (d < 58) { if (!n._nr && t > (n._gc || 0) && !(n._emT > 0)) { n._gc = t + 25 + Math.random() * 15; const r = Math.random(); if (r < .55) feel(n, 'senang', 2.4); else if (r < .7) feel(n, 'kaget', 1) } n._nr = 1 }
+      else if (d > 95) n._nr = 0;
+      if (dlg && dlg.n === n) { if (!n._tk) { n._tk = 1; if (!(n._emT > 0) && Math.random() < .5) feel(n, 'senang', 2.5) } } else n._tk = 0;
+      if (n._ie === undefined) n._ie = t + Math.random() * 30;
+      if (!(n._emT > 0) && V.wx === 0 && t > n._ie) { n._ie = t + 18 + Math.random() * 30; if (d < 360) { const r = Math.random(); if (r < .4) feel(n, 'senang', 2.2); else if (r < .6) feel(n, 'bingung', 2.2) } }   // ekspresi spontan
+    }
+  }
 
   function addLife() {
     tufts = []; for (let n = 0; tufts.length < 190 && n < 3000; n++) { const a = 24 + rng() * 1750, b = 50 + rng() * 870; if (V.free && !V.free(a, b, 4)) continue; tufts.push({ x: a, y: b, h: 5 + ((rng() * 5) | 0), k: rng() < .24 ? 1 + ((rng() * 4) | 0) : 0, ph: rng() * 6, c: GC[(rng() * 3) | 0] }) }
@@ -3510,11 +3617,59 @@ upd = function (dt) {
     V.dyn = V._all.filter(o => { const s = o.n; return !s || NP.indexOf(s) >= 0 })
   }
 
+  /* ---------- petir & guntur ---------- */
+  let AC = null;
+  function thunder() {
+    if (!THUNDER_SFX) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+      const dur = 1.8 + Math.random() * 1.4, n = (AC.sampleRate * dur) | 0, buf = AC.createBuffer(1, n, AC.sampleRate), d = buf.getChannelData(0);
+      let lp = 0, ph = Math.random() * 6;
+      for (let i = 0; i < n; i++) {
+        const k = i / n; lp += ((Math.random() * 2 - 1) - lp) * .02;
+        d[i] = lp * 6 * Math.min(1, k * 40) * Math.pow(1 - k, 1.7) * (.65 + .35 * Math.sin(k * 26 + ph));
+      }
+      const s = AC.createBufferSource(), f = AC.createBiquadFilter(), gn = AC.createGain();
+      s.buffer = buf; f.type = 'lowpass'; f.frequency.value = 240 + Math.random() * 120; gn.gain.value = .5;
+      s.connect(f); f.connect(gn); gn.connect(AC.destination); s.start();
+    } catch (e) { }
+  }
+  function strike() {
+    V._ltT = 2.5 + Math.random() * 6.5;                       // jeda ke petir berikutnya
+    const vw = W / CAM_Z, vh = H / CAM_Z, pts = [], fk = [];
+    let x = camX + vw * (.1 + Math.random() * .8), y = camY - 10;
+    const endY = camY + vh * (.35 + Math.random() * .4);
+    pts.push([x, y]);
+    while (y < endY) { y += 14 + Math.random() * 18; x += (Math.random() - .5) * 34; pts.push([x, y]) }
+    for (let c = 0, nf = 1 + ((Math.random() * 2) | 0); c < nf; c++) {
+      const s = pts[1 + ((Math.random() * (pts.length - 2)) | 0)], dir = Math.random() < .5 ? -1 : 1, br = [[s[0], s[1]]];
+      let bx = s[0], by = s[1]; for (let k = 0; k < 3; k++) { bx += dir * (8 + Math.random() * 12); by += 8 + Math.random() * 12; br.push([bx, by]) }
+      fk.push(br);
+    }
+    V._bolt = { pts, fk }; V._fl = 1; reactStrike();
+    V._re = Math.random() < .5 ? .12 : null;                   // kilat susulan
+    V._th = .25 + Math.random() * 1.5;                         // guntur menyusul setelah kilat
+  }
+
   function life(dt) {
     V.clock = (V.clock + dt * 24 / DAY) % 24; V.night = nightOf(V.clock); V._nt = V.night > (V._nt ? .5 : .62);
-    V.rainT -= dt; if (V.rainT <= 0) { V.rainOn = !V.rainOn; V.rainT = V.rainOn ? 30 + Math.random() * 30 : 110 + Math.random() * 120 }
-    V.rain += ((V.rainOn ? 1 : 0) - V.rain) * Math.min(1, dt * .5);
+    V.rainT -= dt;
+    if (V.rainT <= 0) {
+      V.rainOn = !V.rainOn;
+      if (V.rainOn) { V.wx = Math.random() < P_STORM ? 2 : 1; V.rainT = 30 + Math.random() * 30 }   // hujan datang: biasa atau petir
+      else { V.wx = 0; V.rainT = 110 + Math.random() * 120 }                                      // kembali cerah
+    }
+    V.rain += ((!V.rainOn ? 0 : V.wx === 2 ? 1 : .7) - V.rain) * Math.min(1, dt * .5);
+    V.storm += ((V.rainOn && V.wx === 2 ? 1 : 0) - V.storm) * Math.min(1, dt * .4);
+    V._fl = Math.max(0, V._fl - dt * 2.6);
+    if (V._re != null && (V._re -= dt) <= 0) { V._re = null; V._fl = .8 }
+    if (V._th != null && (V._th -= dt) <= 0) { V._th = null; thunder(); V._rbT = V._rb = 1.6 + Math.random() * .8; shake = Math.max(shake, 1.8 * CAM_SHAKE) }
+    if (V._rb > 0) { V._rb -= dt; shake = Math.max(shake, 1.1 * CAM_SHAKE * Math.max(0, V._rb) / V._rbT) }   // gemuruh guntur: getar halus yang memudar
+    if (V.storm > .5) { if ((V._ltT -= dt) <= 0) strike() } else V._ltT = 2 + Math.random() * 3;
+    if (V.wx !== V._pw) { weatherMood(V._pw, V.wx); V._pw = V.wx }
     V._sc = (V._sc || 0) - dt; if (V._sc <= 0) { V._sc = 1; shift() }
+    moods(dt);
     for (const b of pigeons) {
       const d = Math.hypot(b.x - p.x, b.y - p.y);
       if (b.st === 0) { if (d < 44) { b.st = 1; b.tm = 1.6 + Math.random(); const a = Math.atan2(b.y - p.y, b.x - p.x); b.vx = Math.cos(a) * 70; b.vy = Math.sin(a) * 40 } }
@@ -3525,7 +3680,7 @@ upd = function (dt) {
     for (const f of fishes) { if (!f.j && t > f.nx) { const a = rng() * TAU, r = Math.sqrt(rng()); f.j = { x: f.P.x + Math.cos(a) * r * (f.P.rx - 22), y: f.P.y + Math.sin(a) * r * (f.P.ry - 12), t0: t }; f.nx = t + 3 + Math.random() * 6 } if (f.j && t - f.j.t0 > .8) f.j = null }
     for (const n of V.npcs) {
       if (n._b && (n._b.t -= dt) <= 0) n._b = null; if (n._b || dlg || t < (n._bn || 0) || NP.indexOf(n) < 0) continue;
-      n._bn = t + 5 + Math.random() * 8; if (Math.hypot(n.x - p.x, n.y - p.y) < 190 && Math.random() < .6) n._b = { s: say(n), t: 3.4 }
+      n._bn = t + 5 + Math.random() * 8; if (Math.hypot(n.x - p.x, n.y - p.y) < 190 && Math.random() < .6) { n._b = { s: say(n), t: 3.4 }; moodFor(n, n._b.s) }
     }
   }
 
@@ -3533,7 +3688,7 @@ upd = function (dt) {
     const vw = W / CAM_Z, vh = H / CAM_Z, x0 = camX - 30, x1 = camX + vw + 30, y0 = camY - 30, y1 = camY + vh + 30, wet = V.rain, see = (x, y) => x > x0 && x < x1 && y > y0 && y < y1;
     for (const f of tufts) {
       if (!see(f.x, f.y)) continue;
-      const dx = f.x - p.x, dy = f.y - p.y, d = Math.hypot(dx, dy), push = d < 26 ? (dx / (d + 1)) * (1 - d / 26) * 5 : 0, sw = Math.sin(t * 1.7 + f.ph + f.x * .02) * (1.1 + wet * 1.6) + push;
+      const dx = f.x - p.x, dy = f.y - p.y, d = Math.hypot(dx, dy), push = d < 26 ? (dx / (d + 1)) * (1 - d / 26) * 5 : 0, sw = Math.sin(t * 1.7 + f.ph + f.x * .02) * (1.1 + wet * 1.6 + V.storm * 2.2) + push;
       for (let i = 0; i < 4; i++) { const bh = f.h - (i % 2) * 2, o = Math.round(sw * (.55 + i * .12)), bx = f.x + i * 2 - 3; R(f.c[i % 2], bx, f.y - bh / 2, 1, bh / 2 + 1); R(f.c[(i + 1) % 2], bx + o, f.y - bh, 1, bh / 2 + 1) }
       if (f.k) { const o = Math.round(sw * .9); R(FC[f.k], f.x + o - 1, f.y - f.h - 2, 3, 3); R('rgba(255,255,255,.8)', f.x + o, f.y - f.h - 2, 1, 1) }
     }
@@ -3565,7 +3720,7 @@ upd = function (dt) {
       const L = Math.hypot(c - a, d - b), N = Math.max(4, Math.round(L / 15)), sag = 9 + L * .05, pt = u => [a + (c - a) * u, b - 36 + (d - b) * u + Math.sin(u * Math.PI) * sag];
       if (pass) { for (let k = 1; k < N; k += 2) { const [x, y] = pt(k / N); lightL(x, y + 3, 11, '255,215,130', .55 * V.night) } continue }
       g.strokeStyle = '#3a2a1a'; g.lineWidth = 1; g.beginPath(); for (let k = 0; k <= N; k++) { const [x, y] = pt(k / N); k ? g.lineTo(x, y) : g.moveTo(x, y) } g.stroke();
-      for (let k = 1; k < N; k++) { const u = k / N, [x, y] = pt(u), sw = Math.sin(t * 2 + u * 7 + a * .01) * (1 + V.rain * 2); g.fillStyle = BC[(k + (a | 0)) % 5]; g.beginPath(); g.moveTo(x - 3, y); g.lineTo(x + 3, y); g.lineTo(x + sw * .6, y + 8); g.fill() }
+      for (let k = 1; k < N; k++) { const u = k / N, [x, y] = pt(u), sw = Math.sin(t * 2 + u * 7 + a * .01) * (1 + V.rain * 2 + V.storm * 3); g.fillStyle = BC[(k + (a | 0)) % 5]; g.beginPath(); g.moveTo(x - 3, y); g.lineTo(x + 3, y); g.lineTo(x + sw * .6, y + 8); g.fill() }
     }
   }
 
@@ -3585,6 +3740,7 @@ upd = function (dt) {
     if (gold > .02) { g.fillStyle = 'rgba(255,140,50,' + .13 * gold + ')'; g.fillRect(camX, camY, vw, vh) }
     if (n > .01) { g.fillStyle = 'rgba(5,9,42,' + .52 * n + ')'; g.fillRect(camX, camY, vw, vh) }
     if (r > .02) { g.fillStyle = 'rgba(30,40,70,' + .16 * r + ')'; g.fillRect(camX, camY, vw, vh) }
+    if (V.storm > .02) { g.fillStyle = 'rgba(8,12,32,' + .3 * V.storm + ')'; g.fillRect(camX, camY, vw, vh) }
     if (n > .04) {
       g.globalCompositeOperation = 'lighter';
       for (const o of V.objs) {
@@ -3601,9 +3757,20 @@ upd = function (dt) {
       g.globalCompositeOperation = 'source-over'
     }
     if (r > .03) {
-      const cnt = Math.round(150 * r); g.strokeStyle = 'rgba(195,215,245,' + .38 * r + ')'; g.lineWidth = 1; g.beginPath();
-      for (let i = 0; i < cnt; i++) { const X = camX + ((i * 131.7 + t * 60) % vw), Y = camY + ((i * 79.3 + t * 430) % vh); g.moveTo(X, Y); g.lineTo(X - 3, Y + 9) } g.stroke();
+      const S = V.storm, cnt = Math.round(150 * r + 120 * S), sl = 3 + 6 * S, ln = 9 + 5 * S, wd = 60 + 110 * S; g.strokeStyle = 'rgba(195,215,245,' + (.38 * r + .12 * S) + ')'; g.lineWidth = 1; g.beginPath();
+      for (let i = 0; i < cnt; i++) { const X = camX + ((((i * 131.7 - t * wd) % vw) + vw) % vw), Y = camY + ((i * 79.3 + t * (430 + 150 * S)) % vh); g.moveTo(X, Y); g.lineTo(X - sl, Y + ln) } g.stroke();
       g.strokeStyle = 'rgba(210,230,255,.6)'; for (let i = 0; i < 24; i++) { const k = (t * 1.4 + i * .41) % 1; g.globalAlpha = (1 - k) * r; g.beginPath(); g.ellipse(camX + ((i * 211.3) % vw), camY + ((i * 97.7 + 60) % vh), 1 + k * 6, .5 + k * 2.4, 0, 0, 7); g.stroke() } g.globalAlpha = 1
+    }
+    if (V._fl > .01) {
+      const b = V._bolt;
+      if (b && V._fl > .25) {
+        g.save(); g.globalCompositeOperation = 'lighter'; g.lineJoin = g.lineCap = 'round';
+        const al = cl((V._fl - .25) / .5, 0, 1), line = pts => { g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke() };
+        [[6, .15], [3, .45], [1.3, 1]].forEach(([w, a]) => { g.lineWidth = w; g.strokeStyle = 'rgba(225,235,255,' + a * al + ')'; line(b.pts) });
+        g.lineWidth = 1; g.strokeStyle = 'rgba(225,235,255,' + .6 * al + ')'; b.fk.forEach(line);
+        g.restore();
+      }
+      g.fillStyle = 'rgba(210,222,255,' + .42 * V._fl + ')'; g.fillRect(camX, camY, vw, vh);
     }
     g.restore();
     // bubble obrolan di atas segalanya
@@ -3632,7 +3799,8 @@ upd = function (dt) {
       const hh = V.clock | 0, mm = (((V.clock % 1) * 6) | 0) * 10, s = (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; g.font = 'bold 9px monospace';
       const tw = g.measureText(s).width + 24, X = W - 10 - tw, Y = 94;
       g.fillStyle = 'rgba(10,8,20,.62)'; g.fillRect(X, Y, tw, 14); g.fillStyle = '#c2a06b'; g.fillRect(X, Y, tw, 1); g.fillRect(X, Y + 13, tw, 1);
-      if (V.rain > .4) { R('#9ab0d0', X + 4, Y + 3, 8, 4); R('#cfe0ff', X + 5, Y + 2, 5, 2); R('#7ab8ff', X + 5, Y + 8, 1, 3); R('#7ab8ff', X + 9, Y + 8, 1, 3) }
+      if (V.storm > .4) { R('#6a7898', X + 4, Y + 2, 9, 4); R('#8a98b8', X + 5, Y + 1, 6, 2); R('#ffe45a', X + 9, Y + 6, 2, 2); R('#ffe45a', X + 7, Y + 8, 3, 2); R('#ffe45a', X + 8, Y + 10, 2, 2) }
+      else if (V.rain > .4) { R('#9ab0d0', X + 4, Y + 3, 8, 4); R('#cfe0ff', X + 5, Y + 2, 5, 2); R('#7ab8ff', X + 5, Y + 8, 1, 3); R('#7ab8ff', X + 9, Y + 8, 1, 3) }
       else if (V.night > .5) { R('#dfe8ff', X + 6, Y + 3, 5, 8); R('#dfe8ff', X + 4, Y + 5, 3, 4); R('rgba(10,8,20,1)', X + 8, Y + 4, 4, 5) }
       else { R('#ffd34d', X + 5, Y + 4, 6, 6); R('#fff3b0', X + 6, Y + 5, 2, 2); R('#ffd34d', X + 7, Y + 2, 2, 1); R('#ffd34d', X + 7, Y + 11, 2, 1); R('#ffd34d', X + 3, Y + 6, 1, 2); R('#ffd34d', X + 12, Y + 6, 1, 2) }
       g.textAlign = 'right'; g.fillStyle = '#ffe28a'; g.fillText(s, W - 14, Y + 10); g.restore()
