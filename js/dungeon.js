@@ -2402,7 +2402,7 @@ upd = function (dt) {
     if (o > .02) { CTX.save(); CTX.globalCompositeOperation = 'lighter'; for (let yy = 386; yy > 330; yy -= 2) { const tt = (386 - yy) / 56, half = Math.round(20 + tt * 28), a = Math.round(.2 * o * (1 - tt) * 25) / 25; if (a > 0) { CTX.fillStyle = 'rgba(255,205,140,' + a + ')'; CTX.fillRect(320 - half, yy - 2, half * 2, 2) } } CTX.restore() }
   }
   function lobbyDoorFx() {
-    if (TR.on) { if (TR.dO > .02 && (TR.k === 'toForest' || TR.k === 'toLobby')) drawLobbyDoor(TR.dO); return }
+    if (TR.on) { if (TR.dO > .02 && (TR.k === 'toForest' || TR.k === 'toLobby' || TR.k === 'corridorToLobby')) drawLobbyDoor(TR.dO); return }
     if (p && !dlg && p.x > 280 && p.x < 360 && p.y > 330) { g.font = '8px monospace'; txt('Pintu keluar Dungeon \u2193', 320, 350, '#ffe9a8', 'center') }
   }
 
@@ -2669,17 +2669,44 @@ upd = function (dt) {
     for (let xx = BX0; xx < BX1; xx += 4) { rc(x, '#4a301a', xx, BY0 - 1, 4, BY1 - BY0 + 3); rc(x, xx % 8 ? '#9a7444' : '#8a6440', xx + 1, BY0, 3, BY1 - BY0 + 1); rc(x, '#b8905a', xx + 1, BY0, 3, 1) }
     [BY0 - 3, BY1 + 1].forEach((yy, k) => { rc(x, OLC, BX0 - 3, yy - 1, BX1 - BX0 + 6, 5); rc(x, k ? '#8a6440' : '#a8825a', BX0 - 2, yy, BX1 - BX0 + 4, 3); rc(x, '#c8a46a', BX0 - 2, yy, BX1 - BX0 + 4, 1); for (let xx = BX0; xx <= BX1; xx += 18) { rc(x, OLC, xx - 1, yy - 3, 6, 10); rc(x, '#7a5434', xx, yy - 2, 4, 8); rc(x, '#b8905a', xx, yy - 2, 1, 8) } });
 
+    // tanah di depan bukit sedikit menggelap (halus)
+    { const gr = x.createRadialGradient(210, 104, 30, 210, 104, 190); gr.addColorStop(0, 'rgba(16,6,30,.5)'); gr.addColorStop(1, 'rgba(24,10,40,0)'); x.fillStyle = gr; x.fillRect(0, 0, 440, 260); }
     /* --- tebing + pintu dungeon --- */
     const cx0 = cliffRect[0], cx1 = cliffRect[0] + cliffRect[2];
     for (let cx = cx0; cx <= cx1; cx++) {
       const edge = Math.min(cx - cx0, cx1 - cx), rnd = edge < 16 ? Math.sqrt(1 - Math.pow((16 - edge) / 16, 2)) : 1, hh = Math.round((82 + vnoise(cx / 16, 0, 9) * 12) * (.55 + .45 * rnd));
-      for (let yy = 0; yy < hh; yy++) { const n = vnoise(cx / 9, yy / 5, 11), n2 = vnoise(cx / 40, yy / 30, 12); let col = n < .33 ? '#4a4652' : n < .68 ? '#625e6c' : '#7a7686'; if (n2 > .66) col = n < .5 ? '#56606a' : '#6a7480'; if (yy < 4) col = '#8f8b9a'; if (yy > hh - 5) col = n < .5 ? '#3a3640' : '#4a4652'; rc(x, col, cx, yy, 1, 1) }
+      for (let yy = 0; yy < hh; yy++) { const n = vnoise(cx / 9, yy / 5, 11), n2 = vnoise(cx / 40, yy / 30, 12); let col = n < .33 ? '#1d1729' : n < .68 ? '#292139' : '#382e4e'; if (n2 > .66) col = n < .5 ? '#1d1729' : '#2d2540'; if (yy < 4) col = '#4c4068'; if (yy > hh - 5) col = n < .5 ? '#0f0b18' : '#1d1729'; rc(x, col, cx, yy, 1, 1) }
       rc(x, OLC, cx, hh, 1, 2)
     }
     for (let i = 0; i < 22; i++) { const a = cx0 + 10 + rng() * (cx1 - cx0 - 20), b = 6 + rng() * 70, l = 6 + rng() * 16; rc(x, '#34303c', a, b, 1, l); rc(x, '#8a8696', a + 1, b, 1, l * .6) }
-    for (let i = 0; i < 60; i++) { const a = cx0 + rng() * (cx1 - cx0), b = rng() * 86; if (vnoise(a / 12, b / 8, 21) > .55) { rc(x, '#4a8a3a', a, b, 3, 2); rc(x, '#6aaa4a', a, b, 2, 1) } }
-    for (let i = 0; i < 28; i++) { const a = cx0 + 8 + rng() * (cx1 - cx0 - 16), b = 80 + rng() * 10; rc(x, '#3a7a34', a, b - 6, 1, 8); rc(x, '#5a9a44', a + 1, b - 4, 1, 6) }
+    for (let i = 0; i < 60; i++) { const a = cx0 + rng() * (cx1 - cx0), b = rng() * 86; if (vnoise(a / 12, b / 8, 21) > .55) { rc(x, '#3a2a58', a, b, 3, 2); rc(x, '#5a3a78', a, b, 2, 1) } }
+    for (let i = 0; i < 28; i++) { const a = cx0 + 8 + rng() * (cx1 - cx0 - 16), b = 80 + rng() * 10; rc(x, '#2a1a40', a, b - 6, 1, 8); rc(x, '#4a2a68', a + 1, b - 4, 1, 6) }
     ell(x, 'rgba(0,0,0,.32)', 210, 98, 190, 6);
+    // --- benteng gelap sederhana di bukit (pintu & bingkainya tetap yang asli, digambar setelah ini) ---
+    F.castle = { wins: [], torches: [] };
+    {
+      const ZK = '#09060f', Z0 = '#14101e', Z1 = '#1d1729', Z2 = '#292139', Z3 = '#382e4e', Z4 = '#4c4068', wins = F.castle.wins, D0 = F.door.x;
+      const brick = (a, b, w, h) => {
+        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) { const row = (yy / 6) | 0, mort = yy % 6 === 0 || (xx + (row & 1) * 5) % 11 === 0, n = vnoise((a + xx) / 6, (b + yy) / 4, 31); rc(x, mort ? Z0 : n < .3 ? Z1 : n < .68 ? Z2 : Z3, a + xx, b + yy, 1, 1) }
+        rc(x, ZK, a - 1, b, 1, h); rc(x, ZK, a + w, b, 1, h); rc(x, 'rgba(0,0,0,.35)', a + w - 4, b, 4, h);
+      };
+      const battl = (a, y, w) => { for (let xx = a + 1; xx < a + w - 6; xx += 10) { rc(x, ZK, xx - 1, y - 7, 8, 8); rc(x, Z2, xx, y - 6, 6, 7); rc(x, Z4, xx, y - 6, 6, 1) } rc(x, ZK, a, y, w, 1) };
+      const roof = (cx, w, base, tip) => {
+        for (let yy = tip; yy < base; yy++) { const hw = Math.max(1, Math.round((w / 2 + 3) * (yy - tip) / (base - tip))), l = cx - hw; rc(x, ZK, l - 1, yy, hw * 2 + 2, 1); for (let xx = l; xx < l + hw * 2; xx++) rc(x, (xx - l) / (hw * 2) < .5 ? '#3a2a58' : '#241a3a', xx, yy, 1, 1) }
+        rc(x, ZK, cx - w / 2 - 4, base - 1, w + 8, 3); rc(x, Z3, cx - w / 2 - 3, base, w + 6, 1);
+      };
+      const slit = (cx, cy, h) => { rc(x, ZK, cx - 2, cy - 1, 5, h + 2); rc(x, '#b02038', cx - 1, cy, 3, h); wins.push([cx, cy + h / 2, 10]) };
+      const tower = (cx, w, top, tip) => {
+        const a = cx - w / 2; brick(a, top, w, 96 - top); roof(cx, w, top, tip); rc(x, ZK, a - 2, top - 1, w + 4, 3); rc(x, Z3, a - 1, top, w + 2, 1);
+        slit(cx, top + 10, 12);
+      };
+      brick(cx0 + 10, 56, cx1 - cx0 - 20, 40); battl(cx0 + 10, 56, cx1 - cx0 - 20);
+      slit(D0 - 140, 68, 11); slit(D0 - 70, 68, 11); slit(D0 + 70, 68, 11); slit(D0 + 140, 68, 11);
+      tower(D0 - 104, 30, 36, 16); tower(D0 + 104, 30, 36, 16);
+      // dua obor kecil di sisi pintu
+      [-38, 38].forEach(dx => { const tx = D0 + dx; rc(x, ZK, tx - 2, 72, 5, 4); rc(x, '#5a5060', tx - 1, 72, 3, 2); rc(x, ZK, tx - 4, 66, 9, 7); rc(x, '#3a3048', tx - 3, 67, 7, 5); F.castle.torches.push([tx, 65]) });
+    }
+
     // bingkai pintu (batu)
     const DX = F.door.x; rc(x, OLC, DX - 25, 30, 50, 68); rc(x, '#a79c8b', DX - 24, 31, 48, 66); rc(x, '#c8bca8', DX - 24, 31, 48, 3);
     for (let j = 0; j < 7; j++) { rc(x, '#7a7060', DX - 24, 36 + j * 9, 7, 1); rc(x, '#7a7060', DX + 17, 36 + j * 9, 7, 1) }
@@ -2859,10 +2886,10 @@ upd = function (dt) {
     // label NPC
     g.font = '8px monospace'; for (const n of NP) { const d = dist(n, p); if (d < 90) { if (!n.sign) txt(n.n.split(',')[0], n.x, n.y - 28, '#ffe9a8', 'center'); if (d < (n.rng || 36) && !dlg) txt('[G] ' + (n.verb || (n.sign ? 'Baca' : 'Bicara')), n.x, n.y - (n.sign ? 22 : 38), '#fff', 'center') } if (n.fresh && !dlg && !n.sign) { g.fillStyle = '#ffd34d'; g.fillRect(Math.round(n.x) - 1, Math.round(n.y - 36 + Math.sin(t * 4)), 3, 6); g.fillRect(Math.round(n.x) - 1, Math.round(n.y - 28 + Math.sin(t * 4)), 3, 2) } }
     // kupu-kupu
-    for (const b of F.bf) { const a = t * .5 + b.ph, X = b.cx + Math.sin(a * 1.3) * 40 + Math.cos(a * .7) * 20, Y = b.cy + Math.sin(a * .9) * 20 - 14 + Math.sin(t * 5 + b.ph) * 2; if (X < camX - 10 || X > camX + W / CAM_Z + 10 || Y < camY - 10 || Y > camY + H / CAM_Z + 10) continue; const fl = Math.abs(Math.sin(t * 14 + b.ph)); g.fillStyle = b.c; g.fillRect(Math.round(X) - 2 - (fl > .5 ? 1 : 0), Math.round(Y), 2, 2); g.fillRect(Math.round(X) + 1, Math.round(Y), 2 + (fl > .5 ? 1 : 0), 2); g.fillStyle = '#2a1a10'; g.fillRect(Math.round(X), Math.round(Y), 1, 2) }
+    for (const b of (WORLD.WX && (WORLD.WX.night > .5 || WORLD.WX.rain > .25) ? [] : F.bf)) { const a = t * .5 + b.ph, X = b.cx + Math.sin(a * 1.3) * 40 + Math.cos(a * .7) * 20, Y = b.cy + Math.sin(a * .9) * 20 - 14 + Math.sin(t * 5 + b.ph) * 2; if (X < camX - 10 || X > camX + W / CAM_Z + 10 || Y < camY - 10 || Y > camY + H / CAM_Z + 10) continue; const fl = Math.abs(Math.sin(t * 14 + b.ph)); g.fillStyle = b.c; g.fillRect(Math.round(X) - 2 - (fl > .5 ? 1 : 0), Math.round(Y), 2, 2); g.fillRect(Math.round(X) + 1, Math.round(Y), 2 + (fl > .5 ? 1 : 0), 2); g.fillStyle = '#2a1a10'; g.fillRect(Math.round(X), Math.round(Y), 1, 2) }
     const vw = W / CAM_Z, vh = H / CAM_Z;
     // berkas cahaya matahari
-    g.save(); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 4; i++) { const bx = camX + ((i * .27 + .08 + Math.sin(t * .13 + i) * .03) * vw), wd = 30 + i * 9, al = .045 + .02 * Math.sin(t * .6 + i * 1.7), gr = g.createLinearGradient(bx, camY, bx + wd, camY + vh); gr.addColorStop(0, 'rgba(255,240,170,' + al + ')'); gr.addColorStop(1, 'rgba(255,240,170,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(bx, camY); g.lineTo(bx + wd, camY); g.lineTo(bx + wd - vh * .45, camY + vh); g.lineTo(bx - vh * .45, camY + vh); g.fill() }
+    g.save(); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 4; i++) { const bx = camX + ((i * .27 + .08 + Math.sin(t * .13 + i) * .03) * vw), wd = 30 + i * 9, al = (.045 + .02 * Math.sin(t * .6 + i * 1.7)) * (1 - Math.min(1, WORLD.WX ? WORLD.WX.night * 1.4 + WORLD.WX.rain * .8 : 0)), gr = g.createLinearGradient(bx, camY, bx + wd, camY + vh); gr.addColorStop(0, 'rgba(255,240,170,' + al + ')'); gr.addColorStop(1, 'rgba(255,240,170,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(bx, camY); g.lineTo(bx + wd, camY); g.lineTo(bx + wd - vh * .45, camY + vh); g.lineTo(bx - vh * .45, camY + vh); g.fill() }
     // kunang-kunang & serbuk sari
     for (const f of F.ff) { const X = camX + (((f.bx * vw - t * f.sx * .5 - camX * .15) % vw) + vw) % vw, Y = camY + (((f.by * vh + Math.sin(t * .8 + f.ph) * 12 + f.sy * t * .3) % vh) + vh) % vh, a = .35 + .5 * Math.max(0, Math.sin(t * 2 + f.ph)); g.fillStyle = f.k < .5 ? 'rgba(255,245,160,' + a + ')' : 'rgba(255,255,255,' + a * .6 + ')'; g.fillRect(Math.round(X), Math.round(Y), 2, 2); if (f.k < .5) { g.fillStyle = 'rgba(255,240,140,' + a * .25 + ')'; g.fillRect(Math.round(X) - 1, Math.round(Y) - 1, 4, 4) } }
     g.restore();
@@ -2872,9 +2899,270 @@ upd = function (dt) {
 })();
 
 
+/* ===== Efek halus benteng gelap: jendela menyala, obor ungu, aura tipis ===== */
+(function () {
+  const F = WORLD.AREAS.forest; if (!F) return;
+  const lightL = WORLD.lightL, DX = F.door.x, _env = F.env;
+  F.env = function () {
+    _env.call(this);
+    const C = F.castle; if (!C || camY > 220 || camX > 470) return;
+    const vx0 = camX - 60, vx1 = camX + W / CAM_Z + 60;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    lightL(DX, 50, 190, '110,30,190', .07 + .02 * Math.sin(t * .9));
+    for (const w of C.wins) { if (w[0] < vx0 || w[0] > vx1) continue; lightL(w[0], w[1], w[2], '255,50,70', .22 * (.8 + .2 * Math.sin(t * 2.3 + w[0] * .3))) }
+    for (const q of C.torches) {
+      const X = q[0], Y = q[1]; if (X < vx0 || X > vx1) continue;
+      lightL(X, Y - 4, 44 + Math.sin(t * 9 + X) * 3, '150,90,255', .26 + .05 * Math.sin(t * 13 + X));
+      for (let i = 0; i < 3; i++) { const h = Math.round(5 + Math.sin(t * 12 + i * 2 + X) * 1.5 + (i === 1 ? 3 : 0)), a = X - 2 + i * 2; g.fillStyle = '#6a2ad8'; g.fillRect(a - 1, Y - h, 3, h + 1); g.fillStyle = '#b090ff'; g.fillRect(a, Y - h + 2, 1, h - 2) }
+    }
+    g.restore();
+  };
+})();
+
 /* ===== Pintu tebing hutan -> kembali ke lobby Dungeon ===== */
 (function () {
   WORLD.onDungeonDoor = function () { WORLD.start('toLobby', { x0: p.x, y0: p.y }); msg('Kau kembali masuk ke Dungeon...') };
+})();
+
+/* =====================================================================
+   LORONG DUNGEON — ruangan lorong antara Lobby dan pintu keluar ke Hutan
+   Alur: Lobby (pintu selatan) -> LORONG -> pintu di ujung lorong -> Hutan Bisikan
+         Hutan (pintu bukit) -> LORONG (ujung selatan) -> pintu utara -> Lobby
+   ===================================================================== */
+(function () {
+  'use strict';
+  const { E, mkRng, mkCv, rc, ell, hash, vnoise, h2r, mixc, person } = WORLD, AREAS = WORLD.AREAS, SEQ = WORLD.SEQ, TR = WORLD.TR;
+  if (!SEQ || !AREAS.forest || !SEQ.toForest || !SEQ.toLobby) return;
+  const CW = 720, CH = 560, CX = 360;
+  const ND = { x: CX, y: 26 }, SD = { x: CX, y: 500 };            // pintu utara (ke Lobby) & selatan (ke Hutan): y = tepi atas bukaan pintu (tinggi 32)
+  const C = AREAS.corridor = { name: 'LORONG DUNGEON', sub: 'Dungeon Passage', w: CW, h: CH, spawn: [CX, 112], ready: 0, objs: [], dyn: [], npcs: [], walls: [], bg: null, inO: 0, outO: 0, torches: [], eyes: [], ff: [], fires: [], _L: [] };
+  const inOpen = (x, y) => (x >= 280 && x < 440 && y >= 58 && y < 500) || (x >= 232 && x < 280 && y >= 170 && y < 240) || (x >= 440 && x < 488 && y >= 330 && y < 400) || (x >= 196 && x < 280 && y >= 404 && y < 492);   // lorong utama, 2 ceruk patung/peti mati, dan pos perkemahan
+
+  /* ---------- pembuatan ruangan (sekali) ---------- */
+  C.build = function () {
+    const rng = mkRng(77), [bg, x] = mkCv(CW, CH); C.bg = bg;
+    const walls = C.walls = [], objs = C.objs = [];
+    const N = CW * CH, op = new Uint8Array(N), BIG = 999;
+    for (let yy = 0; yy < CH; yy++) for (let xx = 0; xx < CW; xx++) op[yy * CW + xx] = inOpen(xx, yy) ? 1 : 0;
+    const dt = (val) => {   // jarak chessboard ke piksel bernilai val
+      const out = new Float32Array(N); for (let i = 0; i < N; i++) out[i] = op[i] === val ? 0 : BIG;
+      for (let yy = 0; yy < CH; yy++) for (let xx = 0; xx < CW; xx++) { const i = yy * CW + xx; let v = out[i]; if (v === 0) continue; if (xx > 0) v = Math.min(v, out[i - 1] + 1); if (yy > 0) { v = Math.min(v, out[i - CW] + 1); if (xx > 0) v = Math.min(v, out[i - CW - 1] + 1); if (xx < CW - 1) v = Math.min(v, out[i - CW + 1] + 1) } out[i] = v }
+      for (let yy = CH - 1; yy >= 0; yy--) for (let xx = CW - 1; xx >= 0; xx--) { const i = yy * CW + xx; let v = out[i]; if (v === 0) continue; if (xx < CW - 1) v = Math.min(v, out[i + 1] + 1); if (yy < CH - 1) { v = Math.min(v, out[i + CW] + 1); if (xx < CW - 1) v = Math.min(v, out[i + CW + 1] + 1); if (xx > 0) v = Math.min(v, out[i + CW - 1] + 1) } out[i] = v }
+      return out;
+    };
+    const dWall = dt(1), dFloor = dt(0);
+    const RK0 = h2r('#13101b'), RK1 = h2r('#262033'), B0 = h2r('#1f1a2c'), B1 = h2r('#3a3150'), BM = h2r('#0e0b16'), F0 = h2r('#2c2838'), F1 = h2r('#403a52'), FM = h2r('#1a1724'), CP = h2r('#5a1020'), CPD = h2r('#2a060e'), CPL = h2r('#7a1c30'), GOLD = h2r('#a8843a'), RIM = h2r('#6a5f86');
+    const id = x.createImageData(CW, CH), d = id.data;
+    for (let yy = 0; yy < CH; yy++) for (let xx = 0; xx < CW; xx++) {
+      const i = yy * CW + xx, o4 = i * 4; let c;
+      if (op[i]) {                                           // lantai batu + karpet merah
+        const row = (yy / 16) | 0, off = (row & 1) * 11, col = ((xx + off) / 22) | 0, sh = hash(col, row, 5), mort = yy % 16 === 0 || (xx + off) % 22 === 0, cd = Math.abs(xx - CX);
+        c = mixc(F0, F1, sh * .75 + vnoise(xx / 6, yy / 6, 6) * .25); if (mort) c = FM;
+        if (yy >= 60 && yy < 498 && cd < 30) {
+          c = mixc(CP, CPL, vnoise(xx / 3, yy / 3, 7) * .25);
+          if (cd >= 27) c = CPD; else if (cd >= 24 && cd < 26) c = GOLD;
+          else { const ddy = ((yy - 60) % 26) - 13, m = cd + Math.abs(ddy); if (m < 9 && cd < 22) c = m < 5 ? CPL : mixc(CP, CPL, .55) }
+          if (yy < 63 || yy >= 495) c = ((xx + yy) & 1) ? GOLD : CPD;
+        }
+        const ao = dFloor[i]; if (ao < 10) { const k = 1 - (10 - ao) / 10 * .55; c = [c[0] * k, c[1] * k, c[2] * k] }
+      } else {                                               // dinding bata & batuan
+        const dd = dWall[i], lim = (yy < 80 || yy > 480) ? 46 : 28;
+        if (dd <= lim) {
+          const row = (yy / 6) | 0, mort = yy % 6 === 0 || (xx + (row & 1) * 5) % 11 === 0, n = vnoise(xx / 6, yy / 4, 31);
+          c = mixc(B0, B1, n); if (mort) c = BM; const k = .55 + .45 * (1 - dd / lim); c = [c[0] * k, c[1] * k, c[2] * k];
+          if (dd <= 1) c = RIM;
+        } else c = mixc(RK0, RK1, vnoise(xx / 18, yy / 14, 3) * .6 + vnoise(xx / 5, yy / 5, 4) * .4);
+      }
+      d[o4] = c[0]; d[o4 + 1] = c[1]; d[o4 + 2] = c[2]; d[o4 + 3] = 255;
+    }
+    x.putImageData(id, 0, 0);
+    const K = '#09060f';
+    // bingkai pintu utara (ke Lobby) & selatan (ke Hutan)
+    rc(x, K, CX - 29, ND.y - 7, 58, 39); rc(x, '#4a4260', CX - 28, ND.y - 6, 56, 38); rc(x, '#6a5f86', CX - 28, ND.y - 6, 56, 1);
+    for (let i = 0; i < 9; i++) { rc(x, i % 2 ? '#5a5272' : '#4a4260', CX - 28 + i * 6, ND.y - 5, 5, 6); rc(x, K, CX - 28 + i * 6 + 5, ND.y - 5, 1, 6) }
+    rc(x, '#07060c', CX - 22, ND.y, 44, 32);
+    rc(x, K, CX - 27, SD.y - 1, 54, 41); rc(x, '#4a4260', CX - 26, SD.y, 52, 40); rc(x, '#6a5f86', CX - 26, SD.y + 38, 52, 1); rc(x, '#07060c', CX - 22, SD.y, 44, 32);
+    // spanduk merah di dinding utara
+    [-52, 52].forEach(dx => { const bx = CX + dx; rc(x, K, bx - 8, 16, 16, 3); rc(x, '#7a6a50', bx - 7, 17, 14, 1); for (let xx = -5; xx < 5; xx++) { const h = 26 - (xx % 3 === 0 ? 4 : xx % 2 ? 2 : 0); rc(x, K, bx + xx, 19, 1, h + 1); rc(x, xx < -1 ? '#9a1830' : xx < 2 ? '#7a1020' : '#520a16', bx + xx, 19, 1, h) } rc(x, '#c8a050', bx - 1, 26, 2, 8); rc(x, '#c8a050', bx - 3, 29, 6, 2) });
+    // dudukan obor (api digambar hidup di drawFront)
+    const sconce = (a, b) => { rc(x, K, a - 4, b, 9, 8); rc(x, '#5a5060', a - 2, b + 1, 5, 2); rc(x, K, a - 5, b - 6, 11, 7); rc(x, '#3a3048', a - 4, b - 5, 9, 5); rc(x, '#7a6a98', a - 4, b - 5, 9, 1); C.torches.push([a, b - 6]) };
+    [96, 280, 372].forEach(b => sconce(276, b)); sconce(201, 440);[96, 200, 290, 470].forEach(b => sconce(444, b)); sconce(CX - 36, 52); sconce(CX + 36, 52);
+    // retakan lantai, puing, tulang, sarang laba-laba
+    for (let i = 0; i < 9; i++) { let a = 290 + rng() * 140, b = 70 + rng() * 410; if (Math.abs(a - CX) < 34) continue; const L = 6 + rng() * 14; for (let k = 0; k < L; k++) { rc(x, '#12101a', a, b, 1, 1); a += (rng() - .5) * 2; b += .8 } }
+    for (let i = 0; i < 16; i++) { const a = 288 + rng() * 144, b = 70 + rng() * 420; if (Math.abs(a - CX) < 34) continue; rc(x, '#1a1724', a, b + 1, 4, 2); rc(x, '#4a4560', a, b, 3, 2); rc(x, '#625c78', a, b, 1, 1) }
+    [[300, 462], [418, 120], [290, 96]].forEach(([a, b]) => { rc(x, '#cfc6d8', a, b, 5, 1); rc(x, '#cfc6d8', a - 1, b - 1, 1, 3); rc(x, '#cfc6d8', a + 5, b - 1, 1, 3); rc(x, K, a + 8, b - 2, 6, 5); rc(x, '#d8d0e0', a + 9, b - 1, 4, 3); rc(x, K, a + 10, b, 1, 1); rc(x, K, a + 12, b, 1, 1) });
+    [[282, 62, 1], [438, 62, -1]].forEach(([a, b, s]) => { for (let k = 0; k < 14; k++) { rc(x, 'rgba(220,215,235,.35)', a + s * k, b + k * .6, 1, 1); rc(x, 'rgba(220,215,235,.3)', a + s * k * .5, b + k, 1, 1) } for (let k = 0; k < 10; k++) rc(x, 'rgba(220,215,235,.25)', a + s * k, b + 4 + k * .5, 1, 1) });
+    // pos perkemahan: tikar anyaman & bekas api unggun
+    ell(x, '#1a1008', 244, 456, 40, 28); ell(x, '#5a3a24', 244, 455, 38, 26); ell(x, '#7a4a2c', 244, 455, 33, 22); ell(x, '#5a3a24', 244, 455, 27, 17); ell(x, '#8a5a34', 244, 455, 21, 12); ell(x, '#5a3a24', 244, 455, 15, 8);
+    for (let a = 0; a < 6.283; a += .12) rc(x, '#a8843a', 244 + Math.cos(a) * 33, 455 + Math.sin(a) * 22, 1, 1);
+    ell(x, '#120c08', 244, 458, 15, 8);
+    // lingkaran rune pudar di tengah karpet
+    for (let a = 0; a < 6.283; a += .05) { rc(x, 'rgba(200,160,70,.5)', CX + Math.cos(a) * 36, 290 + Math.sin(a) * 28, 1, 1); if ((a * 10 | 0) % 4 === 0) rc(x, 'rgba(200,160,70,.7)', CX + Math.cos(a) * 41, 290 + Math.sin(a) * 32, 1, 1) }
+    rc(x, 'rgba(200,160,70,.55)', CX - 1, 280, 2, 20); rc(x, 'rgba(200,160,70,.55)', CX - 8, 289, 16, 2);
+    /* --- objek berdiri: pilar, patung, peti mati batu, peti kayu, tong --- */
+    const Z1 = '#1d1729', Z2 = '#292139', Z3 = '#382e4e', Z4 = '#4c4068';
+    const spr = (s, px, py, solid, sy) => { objs.push({ img: s.img, x: px, y: sy === undefined ? py : sy, ox: s.ox, oy: s.oy, dy: py }); if (solid) walls.push(solid) };
+    const pillar = () => { const [c, q] = mkCv(22, 58); ell(q, 'rgba(0,0,0,.35)', 11, 55, 10, 3); rc(q, K, 3, 46, 16, 10); rc(q, '#4a4262', 4, 47, 14, 8); rc(q, '#6a5f86', 4, 47, 14, 1); rc(q, K, 5, 8, 12, 40); rc(q, '#3a3250', 6, 8, 10, 39); rc(q, '#4e4668', 6, 8, 3, 39); rc(q, '#262034', 13, 8, 3, 39); rc(q, '#2c2640', 10, 10, 1, 36); rc(q, K, 2, 2, 18, 8); rc(q, '#4a4262', 3, 3, 16, 6); rc(q, '#6a5f86', 3, 3, 16, 1); return { img: c, ox: 11, oy: 55 } };
+    const knight = () => {
+      const [c, q] = mkCv(28, 58); ell(q, 'rgba(0,0,0,.35)', 14, 55, 12, 3);
+      rc(q, K, 2, 46, 24, 10); rc(q, '#4a4262', 3, 47, 22, 8); rc(q, '#6a5f86', 3, 47, 22, 1);
+      rc(q, K, 8, 32, 12, 15); rc(q, '#5a5470', 9, 33, 10, 13); rc(q, K, 7, 16, 14, 18); rc(q, '#6a6482', 8, 17, 12, 16); rc(q, '#8a84a2', 8, 17, 3, 16); rc(q, '#4a4560', 17, 17, 3, 16);
+      rc(q, K, 5, 16, 18, 4); rc(q, '#8a84a2', 6, 17, 16, 2);
+      rc(q, K, 9, 4, 11, 13); rc(q, '#6a6482', 10, 5, 9, 11); rc(q, '#8a84a2', 10, 5, 3, 11); rc(q, '#07060c', 11, 9, 7, 2); rc(q, '#ff4a5e', 12, 9, 1, 1); rc(q, '#ff4a5e', 16, 9, 1, 1); rc(q, K, 13, 0, 3, 6); rc(q, '#7a1626', 14, 0, 1, 6);
+      rc(q, K, 22, 14, 4, 34); rc(q, '#a8a4b8', 23, 15, 2, 31); rc(q, K, 19, 24, 9, 3); rc(q, '#8a7a50', 20, 25, 7, 1);
+      rc(q, K, 1, 20, 8, 15); rc(q, '#4a2a6a', 2, 21, 6, 13); rc(q, '#a8843a', 4, 23, 2, 8); rc(q, '#a8843a', 3, 26, 4, 2);
+      return { img: c, ox: 14, oy: 54 };
+    };
+    const coffin = () => { const [c, q] = mkCv(44, 30); ell(q, 'rgba(0,0,0,.35)', 22, 26, 20, 3); rc(q, K, 1, 8, 42, 18); rc(q, '#3a3250', 2, 9, 40, 16); rc(q, '#4e4668', 2, 9, 40, 2); rc(q, '#262034', 2, 22, 40, 3); rc(q, K, 0, 4, 44, 6); rc(q, '#5a5272', 1, 5, 42, 4); rc(q, '#7a7092', 1, 5, 42, 1); rc(q, '#2c2640', 8, 11, 28, 1); rc(q, '#a8843a', 21, 12, 2, 9); rc(q, '#a8843a', 18, 14, 8, 2); return { img: c, ox: 22, oy: 26 } };
+    const crate = () => { const [c, q] = mkCv(22, 24); ell(q, 'rgba(0,0,0,.35)', 11, 21, 10, 3); rc(q, K, 1, 2, 20, 19); rc(q, '#6a4a2a', 2, 3, 18, 17); rc(q, '#8a6238', 2, 3, 18, 2); rc(q, '#3e2a16', 2, 11, 18, 2); rc(q, '#3e2a16', 10, 3, 2, 17); rc(q, '#a8843a', 3, 4, 2, 2); rc(q, '#a8843a', 16, 17, 2, 2); return { img: c, ox: 11, oy: 20 } };
+    const barrel = () => { const [c, q] = mkCv(18, 26); ell(q, 'rgba(0,0,0,.35)', 9, 23, 8, 3); rc(q, K, 1, 3, 16, 19); rc(q, '#6a4a2a', 2, 4, 14, 17); rc(q, '#8a6238', 3, 4, 3, 17); rc(q, '#3e2a16', 12, 4, 4, 17); rc(q, '#3a3548', 1, 8, 16, 2); rc(q, '#3a3548', 1, 16, 16, 2); rc(q, K, 2, 1, 14, 4); rc(q, '#8a6238', 3, 2, 12, 2); return { img: c, ox: 9, oy: 22 } };
+    const PIL = pillar();[128, 290, 440].forEach(b => { spr(PIL, 296, b, [289, b - 4, 14, 6]); spr(PIL, 424, b, [417, b - 4, 14, 6]) });
+    const KN = knight(); spr(KN, 256, 232, [243, 226, 26, 8]); C.eyes.push([256 - 14 + 12, 232 - 54 + 9], [256 - 14 + 16, 232 - 54 + 9]);
+    spr(coffin(), 464, 392, [443, 384, 42, 10]);
+    spr(crate(), 298, 478, [288, 472, 20, 8]); spr(crate(), 316, 486, [306, 480, 20, 8]); spr(barrel(), 424, 480, [416, 474, 16, 8]);
+    const bedroll = () => { const [c, q] = mkCv(30, 16); ell(q, 'rgba(0,0,0,.3)', 15, 13, 14, 3); rc(q, K, 1, 3, 28, 11); rc(q, '#3a5a8a', 2, 4, 26, 9); rc(q, '#4a70a8', 2, 4, 26, 2); rc(q, '#2a4268', 2, 11, 26, 2); rc(q, K, 1, 2, 9, 8); rc(q, '#e8dcc0', 2, 3, 7, 6); rc(q, '#fff8e0', 2, 3, 7, 1); rc(q, '#2a4268', 17, 5, 1, 7); return { img: c, ox: 15, oy: 12 } };
+    const campfire = () => { const [c, q] = mkCv(34, 22); ell(q, 'rgba(0,0,0,.3)', 17, 17, 15, 4); for (let a = 0; a < 6.283; a += .55) { const sx = 17 + Math.cos(a) * 13, sy = 12 + Math.sin(a) * 7; rc(q, K, sx - 3, sy - 2, 6, 5); rc(q, '#6a6478', sx - 2, sy - 1, 4, 3); rc(q, '#8a849a', sx - 2, sy - 1, 4, 1) } rc(q, K, 8, 9, 18, 5); rc(q, '#4a2e18', 9, 10, 16, 3); rc(q, '#6a4424', 9, 10, 16, 1); rc(q, K, 12, 6, 3, 8); rc(q, '#5a3a22', 13, 7, 1, 6); rc(q, K, 20, 6, 3, 8); rc(q, '#5a3a22', 21, 7, 1, 6); return { img: c, ox: 17, oy: 15 } };
+    const rack = () => { const [c, q] = mkCv(34, 34); ell(q, 'rgba(0,0,0,.3)', 17, 31, 15, 3); rc(q, K, 1, 6, 32, 5); rc(q, '#5a3a22', 2, 7, 30, 3); rc(q, K, 1, 6, 4, 26); rc(q, '#5a3a22', 2, 7, 2, 24); rc(q, K, 29, 6, 4, 26); rc(q, '#5a3a22', 30, 7, 2, 24); rc(q, K, 1, 20, 32, 4); rc(q, '#5a3a22', 2, 21, 30, 2);[8, 14, 20].forEach((a, i) => { rc(q, K, a - 1, 0, 4, 28); rc(q, i === 1 ? '#a8a4b8' : '#8a7a50', a, 1, 2, 26); rc(q, i === 1 ? '#8a7a50' : '#a8a4b8', a - 1, i === 1 ? 20 : 1, 4, 3) }); rc(q, K, 23, 12, 9, 11); rc(q, '#7a1626', 24, 13, 7, 9); rc(q, '#a8843a', 26, 15, 3, 5); return { img: c, ox: 17, oy: 31 } };
+    const sack = () => { const [c, q] = mkCv(34, 22); ell(q, 'rgba(0,0,0,.3)', 17, 18, 14, 3); rc(q, K, 2, 4, 14, 15); rc(q, '#8a6a42', 3, 5, 12, 13); rc(q, '#a8864e', 3, 5, 3, 13); rc(q, K, 6, 1, 6, 5); rc(q, '#6a4a2a', 7, 2, 4, 3); rc(q, K, 18, 8, 13, 11); rc(q, '#6a7a8a', 19, 9, 11, 9); rc(q, '#8a9aaa', 19, 9, 11, 2); rc(q, '#3a4452', 22, 12, 5, 3); return { img: c, ox: 17, oy: 19 } };
+    spr(bedroll(), 212, 436, null, 414); spr(campfire(), 244, 458, [232, 452, 24, 10]); C.fires.push([244, 448]);
+    spr(rack(), 296, 372, [283, 366, 26, 8]); spr(sack(), 262, 428, [248, 424, 28, 7]);
+    // NPC yang sedang beristirahat
+    const addN = o => { C.npcs.push(o); objs.push({ n: o, i: C.npcs.length - 1, x: o.x, y: o.y, ox: 0, oy: 0 }); return o };
+    addN({
+      n: 'Sera, Tabib Pengembara', x: 222, y: 466, fc: 1, sit: 1, fresh: 1, rng: 44, cd: -99, verb: 'Bicara', sk: '#e8c0a0', hair: '#5a3a1a', hs: 'long', hat: 'hood', hc: '#2f6a4a', c1: '#2f8a5a', c2: '#e8e4d8', c3: '#2a3a30', apron: '#e8e4d8', prop: 'bottle', pc: '#5ad06a',
+      get lines() { return t - this.cd < 25 ? ['Istirahatlah dulu, lukamu tidak separah itu. Tehnya masih hangat, kok.'] : ['Duduk, duduk. Kau terlihat baru keluar dari Aula Kuno. Minumlah ramuan hangat ini.', 'Aku Sera, tabib pengembara. Lorong ini satu-satunya tempat di dungeon yang aman untuk berhenti, monster tak pernah berani dekat api unggun ini.'] },
+      act() { this.fresh = 0; if (t - this.cd < 25) return; this.cd = t; p.hp = mhp(); p.st = 100; p.sc = [0, 0, 0]; p.ec = 0; try { SFX.potion(); SFX.focus() } catch (e) { } fx.push({ k: 'ring', x: p.x, y: p.y, r: 20, w: 3, life: .5, max: .5, col: '#ffd9a0' }, { k: 'gl', x: p.x, y: p.y, r: 40, c: '255,200,120', life: .5, max: .5 }); dn(p.x, p.y - 14, 'HP & Stamina pulih', 0, '#ffd9a0') }
+    });
+    addN({
+      n: 'Borin, Prajurit Letih', x: 209, y: 424, fc: 1, sit: 1, zz: 1, rng: 40, sk: '#d9a07a', hair: '#3a2a1a', hat: 'helm', armor: 1, beard: '#3a2a1a', c1: '#4b5aa0', c2: '#c2a06b', c3: '#3a3d48', prop: 'spear',
+      lines: ['Zzz... hah?! Aku tidak tidur! Aku cuma... memejamkan mata dengan sungguh-sungguh.', 'Aku Borin, bekas pengawal ekspedisi. Kami menembus Aula Kuno tiga hari lalu. Teman-temanku sudah pulang ke desa, aku malah ketiduran di sini.', 'Hati-hati di lantai bawah. Morvath si Banteng Abyss tidak kenal ampun. Tapi kalau kau tumbang, setidaknya kau terbangun lagi di lobby.']
+    });
+    addN({
+      n: 'Lyra, Penyihir Magang', x: 410, y: 172, fc: -1, sit: 1, rng: 40, sk: '#e8c0a0', hair: '#7a3a8a', hs: 'long', c1: '#4a3a8a', c2: '#c8a0ff', c3: '#2a2040', prop: 'scroll',
+      lines: ['Sst! Aku sedang membaca. Naskah ini tentang Abyss, tulisannya kuno sekali.', 'Katanya cahaya lentera desa menjaga bisikan Abyss tetap jauh. Makanya hutan di luar terasa tenang.', 'Kalau kau menemukan gulungan bertanda rune merah di dungeon, bawa padaku ya. Aku penasaran sekali!']
+    });
+    objs.sort((a, b) => a.y - b.y);
+    // dinding & lantai tidak boleh ditembus
+    walls.push([0, 0, CW, 56], [0, 0, 280, 170], [0, 170, 232, 70], [0, 240, 280, 164], [0, 404, 196, 88], [0, 492, 280, CH - 492], [440, 0, 280, 330], [488, 330, 232, 70], [440, 400, 280, CH - 400], [0, 508, CW, CH - 508]);
+    // debu melayang
+    for (let i = 0; i < 28; i++) C.ff.push({ x: 292 + rng() * 136, y: 70 + rng() * 420, sp: 2 + rng() * 4, ph: rng() * 6 });
+  };
+  C.enter = function () { };
+
+  /* ---------- update: pintu utara (Lobby) & selatan (Hutan) ---------- */
+  C.tick = function (dt) {
+    if (TR.on) return;
+    const F = AREAS.forest; if (!F.ready && p.y > 300) { F.ready = 1; F.build() }       // siapkan Hutan sebelum keluar
+    if (TR.cool > 0 || dlg) return;
+    if (p.y < ND.y + 58 && Math.abs(p.x - CX) < 22 && p.vy < -6) { p.y = ND.y + 58; p.vy = 0; WORLD.start('corridorToLobby', { x0: p.x, y0: p.y }); msg('Kau kembali ke Lobby...'); return }
+    if (p.y > SD.y - 6 && Math.abs(p.x - CX) < 24 && p.vy > 6) { p.y = SD.y - 6; p.vy = 0; WORLD.start('corridorToForest', { x0: p.x, y0: p.y }); msg('Kau melangkah keluar dari Dungeon...') }
+  };
+
+  /* ---------- gambar ---------- */
+  function lightL(a, b, rr, col, al) { g.save(); g.globalCompositeOperation = 'lighter'; const q = g.createRadialGradient(a, b, 0, a, b, rr); q.addColorStop(0, 'rgba(' + col + ',' + al + ')'); q.addColorStop(1, 'rgba(' + col + ',0)'); g.fillStyle = q; g.fillRect(a - rr, b - rr, rr * 2, rr * 2); g.restore() }
+  function drawDoor(cx, y0, o, cols, spill, dir) {
+    const w = 44, h = 32, x0 = cx - w / 2, R = (c, a, b, ww, hh) => { g.fillStyle = c; g.fillRect(a, b, ww, hh) };
+    R('#07060c', x0, y0, w, h);
+    if (o > .02) cols.forEach((c, i) => R('rgb(' + (7 + (c[0] - 7) * o | 0) + ',' + (6 + (c[1] - 6) * o | 0) + ',' + (12 + (c[2] - 12) * o | 0) + ')', x0 + i * 4, y0 + i * 3, w - i * 8, h - i * 3));
+    g.save(); g.beginPath(); g.rect(x0, y0, w, h); g.clip(); const off = Math.round(o * 22);
+    [x0 - off, cx + off].forEach(a => { R('#5c5260', a, y0, 22, h); R('#7a7088', a, y0, 22, 1);[5, 11, 17].forEach(q => R('#3e3646', a + q, y0, 1, h)); R('#2e2836', a, y0 + 9, 22, 2); R('#2e2836', a, y0 + 21, 22, 2);[2, 19].forEach(q => { R('#9a8a60', a + q, y0 + 9, 1, 1); R('#9a8a60', a + q, y0 + 21, 1, 1) }); R('#1e1a24', a, y0 + h - 1, 22, 1) });
+    if (off < 3) { R('#9a8a60', cx - 1, y0, 2, h); R('#b8a070', cx - 3, y0 + 13, 6, 7) }
+    g.restore();
+    if (o > .02) { g.save(); g.globalCompositeOperation = 'lighter'; for (let k = 0; k < 28; k++) { const tt = k / 28, half = Math.round(20 + tt * 34), a = Math.round(.22 * o * (1 - tt) * 25) / 25, yy = dir > 0 ? y0 + h + k * 2 : y0 - k * 2 - 2; if (a > 0) { g.fillStyle = 'rgba(' + spill + ',' + a + ')'; g.fillRect(cx - half, yy, half * 2, 2) } } g.restore() }
+  }
+  const WARM = [[120, 70, 30], [205, 122, 52], [255, 192, 112], [255, 232, 170]], DAY = [[70, 110, 50], [130, 190, 100], [200, 235, 160], [245, 255, 215]];
+  C.env = function () { drawDoor(ND.x, ND.y, C.inO, WARM, '255,205,140', 1); drawDoor(SD.x, SD.y, C.outO, DAY, '220,255,190', -1) };
+  function drawObj(o) { if (o.n) { person(o.n, o.i); return } g.drawImage(o.img, o.x - o.ox, o.y - o.oy) }
+  C.drawBack = function () {
+    const x0 = camX - 40, x1 = camX + W / CAM_Z + 40, y0 = camY - 10, y1 = camY + H / CAM_Z + 90; C._L = [];
+    for (const o of C.objs) { if (o.x < x0 || o.x > x1 || o.y < y0 || o.y - o.oy > y1) continue; C._L.push(o) }
+    const py = p.y + 3; for (const o of C._L) if (o.y <= py) drawObj(o);
+  };
+  C.drawFront = function () {
+    const py = p.y + 3; for (const o of C._L) if (o.y > py) drawObj(o);
+    const vw = W / CAM_Z, vh = H / CAM_Z;
+    g.font = '8px monospace';
+    if (!dlg && !TR.on) { if (p.y < 130 && Math.abs(p.x - CX) < 50) txt('Kembali ke Lobby \u2191', CX, 96, '#ffe9a8', 'center'); if (p.y > 420 && Math.abs(p.x - CX) < 50) txt('Pintu keluar ke Hutan \u2193', CX, 490, '#ffe9a8', 'center') }
+    // label NPC & prompt bicara
+    for (const n of NP) { const d = dist(n, p); if (d < 90) { txt(n.n.split(',')[0], n.x, n.y - 28, '#ffe9a8', 'center'); if (d < (n.rng || 36) && !dlg) txt('[G] ' + (n.verb || 'Bicara'), n.x, n.y - 38, '#fff', 'center') } if (n.fresh && !dlg) { g.fillStyle = '#ffd34d'; g.fillRect(Math.round(n.x) - 1, Math.round(n.y - 36 + Math.sin(t * 4)), 3, 6); g.fillRect(Math.round(n.x) - 1, Math.round(n.y - 28 + Math.sin(t * 4)), 3, 2) } }
+    // lorong remang: gelap, hanya diterangi obor
+    g.fillStyle = 'rgba(6,4,14,.36)'; g.fillRect(camX - 4, camY - 4, vw + 8, vh + 8);
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (const q of C.torches) {
+      const X = q[0], Y = q[1]; if (X < camX - 80 || X > camX + vw + 80 || Y < camY - 80 || Y > camY + vh + 80) continue;
+      lightL(X, Y - 2, 74 + Math.sin(t * 9 + Y) * 4, '255,160,70', .34 + .05 * Math.sin(t * 13 + X + Y));
+      for (let i = 0; i < 3; i++) { const h = Math.round(5 + Math.sin(t * 12 + i * 2 + Y) * 1.5 + (i === 1 ? 3 : 0)), a = X - 2 + i * 2; g.fillStyle = '#e8561f'; g.fillRect(a - 1, Y - h, 3, h + 1); g.fillStyle = '#ff9a3c'; g.fillRect(a, Y - h + 2, 1, h - 2); if (i === 1) { g.fillStyle = '#ffe28a'; g.fillRect(a, Y - 3, 1, 3) } }
+      if (Math.random() < .05) dp.push({ k: 'p', x: X + (Math.random() - .5) * 4, y: Y - 6, vx: (Math.random() - .5) * 8, vy: -20 - Math.random() * 16, life: .8, max: .8, s: 1.5, c: Math.random() < .5 ? '#ffb050' : '#ff7a2a' });
+    }
+    for (const f of C.fires) {   // api unggun pos istirahat
+      const X = f[0], Y = f[1]; lightL(X, Y, 100 + Math.sin(t * 11) * 6, '255,150,60', .4);
+      for (let i = 0; i < 3; i++) { const h = Math.round(7 + Math.sin(t * 13 + i * 2) * 2 + (i === 1 ? 4 : 0)), a = X - 5 + i * 5; g.fillStyle = '#e8561f'; g.fillRect(a - 2, Y - h, 5, h + 2); g.fillStyle = '#ff9a3c'; g.fillRect(a - 1, Y - h + 2, 3, h - 1); g.fillStyle = '#ffe28a'; g.fillRect(a, Y - 4, 1, 3) }
+      if (Math.random() < .12) dp.push({ k: 'p', x: X + (Math.random() - .5) * 8, y: Y - 6, vx: (Math.random() - .5) * 12, vy: -24 - Math.random() * 20, life: .8, max: .8, s: 1.5, c: Math.random() < .5 ? '#ffb050' : '#ff7a2a' });
+    }
+    lightL(CX, 290, 46, '220,170,80', .07 + .05 * Math.sin(t * 1.4));   // lingkaran rune berdenyut pelan
+    for (const e of C.eyes) lightL(e[0], e[1], 7, '255,60,80', .5 + .25 * Math.sin(t * 2.4 + e[0]));
+    lightL(p.x, p.y - 10, 70, '255,215,160', .1);
+    for (const f of C.ff) { const X = f.x + Math.sin(t * .4 + f.ph) * 8, Y = 70 + ((f.y - 70 + t * f.sp) % 420), a = .18 + .3 * Math.max(0, Math.sin(t * 1.3 + f.ph)); if (X < camX - 4 || X > camX + vw + 4 || Y < camY - 4 || Y > camY + vh + 4) continue; g.fillStyle = 'rgba(255,225,180,' + a + ')'; g.fillRect(Math.round(X), Math.round(Y), 1, 1) }
+    g.restore();
+    // "Zzz" di atas NPC yang tertidur
+    for (const n of C.npcs) { if (!n.zz || (dlg && dlg.n === n)) continue; g.textAlign = 'left'; for (let j = 0; j < 3; j++) { const k = (t * .5 + j / 3) % 1, a = Math.sin(k * Math.PI); g.font = 'bold ' + (6 + j * 2) + 'px monospace'; g.fillStyle = 'rgba(210,225,255,' + a + ')'; g.fillText('z', n.x + 5 + k * 8 + j * 3, n.y - 30 - k * 16) } g.font = '8px monospace' }
+  };
+
+  /* ---------- transisi: Lobby <-> Lorong <-> Hutan ---------- */
+  const showB = () => { const b = WORLD.banner; b.t = 0; b.a = C.name; b.b = C.sub };
+  const door = () => { try { SFX.door() } catch (e) { } };
+  const walk = (dt, vy, mv) => { p.wb += ((mv ? 1 : 0) - p.wb) * Math.min(1, dt * 12); p.wph += dt * 12 * (.2 + p.wb * .8) * Math.max(1, Math.min(1.5, Math.abs(vy) / 85)); p.idt += dt * 3 };
+  const _toForest = SEQ.toForest, _toLobby = SEQ.toLobby;
+  // Lobby -> Lorong (pintu selatan Lobby tetap sama; setelah keluar pintu pahlawan muncul di ujung utara lorong)
+  SEQ.toForest = {
+    dur: 4.0, f(T, dt) {
+      if (T < 1.0) { const r = _toForest.f(T, dt); TR.white = 0; return r }
+      if (!TR.sw) { TR.sw = 1; TR.dO = 0; AREAS.forest.doorO = 0; WORLD.setArea('corridor'); p.x = CX; p.y = ND.y + 28; p.vx = p.vy = 0; p.face = Math.PI / 2; camInit = false; camUpd(0); C.inO = 1; C.outO = 0; showB(); TR.s2 = 0 }
+      const u = T - 1.0; if (!TR.s2) { TR.s2 = 1; door() }
+      C.inO = u < 1.6 ? 1 : 1 - E((u - 1.6) / .8);
+      TR.hide = u < .35; TR.fade = 1 - E((u - .1) / .9); TR.white = 0;
+      const k = E((u - .35) / 1.4); p.x = CX; p.y = ND.y + 28 + 56 * k; p.vx = 0; p.vy = 40 * (k > 0 && k < 1 ? 1 : 0); p.face = Math.PI / 2; walk(dt, 90, k > 0 && k < 1)
+    }
+  };
+  // Lorong -> Hutan (pintu di ujung selatan lorong)
+  SEQ.corridorToForest = {
+    dur: 4.7, f(T, dt) {
+      if (T < 1.0) {
+        if (!TR.s1) { TR.s1 = 1; door() }
+        C.outO = E(T / .45);
+        p.x = TR.x0 + (CX - TR.x0) * E(T / .35); p.y = TR.y0 + (SD.y + 42 - TR.y0) * E((T - .3) / .7);
+        p.vx = 0; p.vy = T > .3 ? 70 : 0; p.face = Math.PI / 2; walk(dt, 90, T > .3);
+        TR.white = 1; TR.fade = E((T - .45) / .55); TR.hide = T > .85;
+      } else {
+        if (!TR.sw) { TR.sw = 1; C.outO = 0; WORLD.setArea('forest'); const F = AREAS.forest; p.x = F.door.x; p.y = F.door.y - 6; p.vx = p.vy = 0; camInit = false; camUpd(0); F.doorO = 1; const b = WORLD.banner; b.t = 0; b.a = F.name; b.b = F.sub; TR.s2 = 0 }
+        SEQ.emerge.f(T - 1.0, dt)
+      }
+    }
+  };
+  // Hutan -> Lorong (masuk lewat pintu bukit; muncul di ujung selatan lorong)
+  SEQ.toLobby = {
+    dur: 3.3, f(T, dt) {
+      if (T < .95) return _toLobby.f(T, dt);
+      const F = AREAS.forest, sy = SD.y + 34;
+      if (!TR.sw) { TR.sw = 1; F.doorO = 0; TR.hide = 1; WORLD.setArea('corridor'); p.x = CX; p.y = sy; p.vx = p.vy = 0; p.face = -Math.PI / 2; camInit = false; camUpd(0); C.outO = 1; C.inO = 0; showB(); TR.s2 = 0 }
+      TR.fade = 1 - E((T - .95) / .6); TR.white = 0; TR.hide = T < 1.1;
+      const k = E((T - 1.1) / 1.2); p.x = CX; p.y = sy - 66 * k; p.vx = 0; p.vy = (k > 0 && k < 1) ? -70 : 0; p.face = -Math.PI / 2; walk(dt, 90, k > 0 && k < 1);
+      if (T >= 2.0 && !TR.s2) { TR.s2 = 1; door() }
+      C.outO = T < 2.0 ? 1 : 1 - E((T - 2.0) / .6)
+    }
+  };
+  // Lorong -> Lobby (pintu utara lorong)
+  SEQ.corridorToLobby = {
+    dur: 3.35, f(T, dt) {
+      if (T < 1.0) {
+        if (!TR.s1) { TR.s1 = 1; door() }
+        C.inO = E(T / .45);
+        p.x = TR.x0 + (CX - TR.x0) * E(T / .35); p.y = TR.y0 + (ND.y + 10 - TR.y0) * E((T - .3) / .7);
+        p.vx = 0; p.vy = T > .3 ? -70 : 0; p.face = -Math.PI / 2; walk(dt, 90, T > .3);
+        TR.white = 0; TR.fade = E((T - .45) / .55); TR.hide = T > .85;
+      } else { C.inO = 0; _toLobby.f(T - 1.0 + .95, dt) }
+    }
+  };
 })();
 
 /* =====================================================================
@@ -3503,6 +3791,8 @@ upd = function (dt) {
   const sm = x => x * x * (3 - 2 * x), cl = (x, a, b) => Math.max(a, Math.min(b, x));
   const POND = { x: 210, y: 650, rx: 96, ry: 44 }, POND2 = { x: 1580, y: 690, rx: 78, ry: 30 }, PLAZA = { x: 640, y: 380, r: 86 };
   const DAY = 420; // detik nyata per 24 jam desa
+  const STAYS = /Penjaga|Pemilik Penginapan/;   // penjaga gerbang & pemilik penginapan tetap di luar saat malam; warga lain pulang ke rumah
+  const HOME_AT = 17.5, WAKE_AT = 5.5;          // jam mulai pulang (tiap warga +0..2 jam acak) & jam keluar rumah (+0..1 jam acak)
   V.clock = 15; V.night = 0; V.rain = 0; V.rainOn = 0; V.rainT = 90 + Math.random() * 60;
   /* cuaca acak: V.wx = 0 cerah | 1 hujan biasa | 2 hujan petir. V.rain = intensitas hujan, V.storm = intensitas badai (0..1) */
   const P_STORM = .4;          // peluang hujan yang datang berupa badai petir
@@ -3600,19 +3890,33 @@ upd = function (dt) {
     mk({ n: 'Marta, Pembawa Keranjang', fc: 1, sk: '#e8c0a0', hair: '#8a5a2a', hs: 'bun', hat: 'bonnet', c1: '#a8483a', c2: '#e8d8a0', c3: '#4a2a1a', apron: '#f0e8dc', prop: 'basket', lines: ['Aku belanja untuk makan malam. Telur Wren paling segar di desa ini!', 'Jalan utama ramai sekali sejak kau muncul, pahlawan. Semua orang membicarakanmu.'] }, 2);
     mk({ n: 'Salim, Saudagar Kain', fc: -1, sk: '#c9946e', hair: '#3a2a1a', hs: 'bald', beard: '#3a2a1a', c1: '#5a3a7a', c2: '#d8b84a', c3: '#2a2a40', vest: '#c8a040', prop: 'scroll', lines: ['Salim, saudagar kain dari kota seberang. Aku singgah menjual sutra pada Rina.', 'Kudengar Tamsin membeli apa saja. Kalau kau punya herba berlebih, jual padanya!'] }, 7);
     mk({ n: 'Nox, Penyala Lentera', fc: 1, sk: '#d0986c', hair: '#2a1a14', hs: 'short', hat: 'cap', hc: '#3a3a4a', c1: '#2a3a5a', c2: '#c9a95a', c3: '#1a1a28', prop: 'staff', pc: '#ffd34d', nightOnly: 1, lines: ['Aku Nox. Tiap malam kuperiksa semua lentera desa, supaya bisikan Abyss tak berani mendekat.', 'Kalau malam begini kau ingin tenang, bermalamlah di penginapan Hanna. Pagi di sini indah.'] }, 5);
-    V.npcs.forEach(n => { if (n.kid || /Petani|Peternak|Nelayan|Penebang|Penjahit|Tukang Taman/.test(n.n)) n.sleeps = 1 });
+    V.npcs.forEach(n => { if (!n.nightOnly && !STAYS.test(n.n)) { n.sleeps = 1; n._hx = n.x; n._hy = n.y; n._orig = n.path || null; n._lv = Math.random() * 2; n._wk = Math.random() } });
     V._all = V.dyn.slice();
     V.npcs.forEach(n => { if (n.nightOnly) { const k = NP.indexOf(n); if (k >= 0) NP.splice(k, 1) } });
     V._nt = false; V.dyn = V._all.filter(o => !(o.n && o.n.nightOnly));
   }
 
-  // warga tidur di malam hari (hanya berganti saat tidak terlihat pemain, kecuali malam sudah pekat)
+  // malam hari: warga berjalan pulang lalu masuk rumah (desa sepi); pagi hari mereka keluar lagi
+  const isHomeTime = (n, h) => h >= HOME_AT + n._lv || h < WAKE_AT + n._wk;
   function shift(force) {
-    if (!V._all) return; const nt = !!V._nt, ext = nt ? V.night > .95 : V.night < .05;
+    if (!V._all) return; const h = V.clock, nt = !!V._nt;
     V.npcs.forEach(n => {
-      const on = n.nightOnly ? nt : !(nt && n.sleeps), k = NP.indexOf(n); if (on === (k >= 0) || (dlg && dlg.n === n)) return;
-      if (!force && !ext && Math.hypot(n.x - p.x, n.y - p.y) < 240) return;
-      if (on) NP.push(n); else NP.splice(k, 1)
+      if (dlg && dlg.n === n) return; const k = NP.indexOf(n), shown = k >= 0, d = Math.hypot(n.x - p.x, n.y - p.y);
+      if (n.nightOnly) {                                   // penyala lentera: hanya muncul di malam hari
+        if (nt === shown) return; if (!force && d < 240 && (nt ? V.night < .95 : V.night > .05)) return;
+        if (nt) NP.push(n); else NP.splice(k, 1); return
+      }
+      if (!n.sleeps || n._hx === undefined) return;
+      const hide = () => { NP.splice(NP.indexOf(n), 1); n.x = n._hx; n.y = n._hy; n.vx = n.vy = 0; n.spd = 0; n.mv = 0; n._b = null };
+      if (isHomeTime(n, h)) {
+        if (!shown) return;
+        if (!n._going) { n._going = 1; if (n.path) { n.path = [[n._hx, n._hy]]; n.pi = 0; n.stopHere = 1; n.wait = 0 } }   // jalan pulang ke rumah
+        const dh = Math.hypot(n.x - n._hx, n.y - n._hy);
+        if (n.path ? (dh < 22 || (force && d > 260)) : (d > 200 || V.night > .95)) hide()   // tiba di rumah -> masuk; yang diam di tempat masuk saat tak terlihat pemain
+      } else {
+        if (n._going) { n._going = 0; if (n._orig) { let bi = 0, bd = 1e9; n._orig.forEach((q, i) => { const dd = Math.hypot(q[0] - n._hx, q[1] - n._hy); if (dd < bd) { bd = dd; bi = i } }); n.path = n._orig; n.pi = bi; n.wait = Math.random() * 2; n.stopHere = 0 } }
+        if (!shown) { n.x = n._hx; n.y = n._hy; NP.push(n) }                                              // pagi: keluar dari rumah
+      }
     });
     V.dyn = V._all.filter(o => { const s = o.n; return !s || NP.indexOf(s) >= 0 })
   }
@@ -3652,7 +3956,7 @@ upd = function (dt) {
     V._th = .25 + Math.random() * 1.5;                         // guntur menyusul setelah kilat
   }
 
-  function life(dt) {
+  function wxTick(dt) {   // cuaca + jam dunia: dipakai bersama oleh Desa dan Hutan
     V.clock = (V.clock + dt * 24 / DAY) % 24; V.night = nightOf(V.clock); V._nt = V.night > (V._nt ? .5 : .62);
     V.rainT -= dt;
     if (V.rainT <= 0) {
@@ -3667,8 +3971,11 @@ upd = function (dt) {
     if (V._th != null && (V._th -= dt) <= 0) { V._th = null; thunder(); V._rbT = V._rb = 1.6 + Math.random() * .8; shake = Math.max(shake, 1.8 * CAM_SHAKE) }
     if (V._rb > 0) { V._rb -= dt; shake = Math.max(shake, 1.1 * CAM_SHAKE * Math.max(0, V._rb) / V._rbT) }   // gemuruh guntur: getar halus yang memudar
     if (V.storm > .5) { if ((V._ltT -= dt) <= 0) strike() } else V._ltT = 2 + Math.random() * 3;
-    if (V.wx !== V._pw) { weatherMood(V._pw, V.wx); V._pw = V.wx }
-    V._sc = (V._sc || 0) - dt; if (V._sc <= 0) { V._sc = 1; shift() }
+    if (V.wx !== V._pw) { if (window.AREA === 'village') weatherMood(V._pw, V.wx); V._pw = V.wx }
+  }
+  function life(dt) {
+    wxTick(dt);
+    V._sc = (V._sc || 0) - dt; if (V._sc <= 0) { V._sc = .25; shift() }
     moods(dt);
     for (const b of pigeons) {
       const d = Math.hypot(b.x - p.x, b.y - p.y);
@@ -3724,16 +4031,10 @@ upd = function (dt) {
     }
   }
 
-  function sky() {
+  /* atmosfer bersama: malam, senja, kabut, hujan, badai, petir. A = area (desa/hutan), vil = true bila di desa */
+  function atmo(A, vil) {
     const vw = W / CAM_Z, vh = H / CAM_Z, n = V.night, r = V.rain, h = V.clock;
-    g.save(); bunting(0);
-    if (n < .5 && r < .25) for (const b of bfly) {
-      const X = b.hx + Math.sin(t * .7 + b.ph * 1.3) * 52, Y = b.hy - 16 + Math.cos(t * .55 + b.ph) * 26 + Math.sin(t * 3 + b.ph) * 3;
-      if (X < camX - 20 || X > camX + vw + 20 || Y < camY - 20 || Y > camY + vh + 20) continue; const w = Math.abs(Math.sin(t * 16 + b.ph)) * 3;
-      R('rgba(0,0,0,.18)', X, Y + 14, 3, 1); R(b.c, X - w, Y - 2, w, 3); R(b.c, X + 1, Y - 2, w, 3); R('#2a1a10', X, Y - 1, 1, 3)
-    }
-    const ca = .075 * (1 - n) * (1 - r * .4);
-    if (ca > .005) for (let i = 0; i < 5; i++) { const X = ((t * 7 + i * 470) % 2300) - 250, Y = 120 + i * 190 + Math.sin(i * 2.3) * 50, rx = 150 + (i % 3) * 40, ry = 55 + (i % 2) * 20; g.fillStyle = 'rgba(8,24,40,' + ca + ')'; g.beginPath(); g.ellipse(X, Y, rx, ry, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(X + 12, Y - 4, rx * .62, ry * .6, 0, 0, 7); g.fill() }
+    g.save();
     const mist = cl(1 - Math.abs(h - 5.2) / 2.2, 0, 1);
     if (mist > .02) for (let i = 0; i < 6; i++) { const X = ((t * 4 + i * 390) % 2400) - 300, Y = 260 + i * 120; g.fillStyle = 'rgba(232,240,255,' + .11 * mist + ')'; g.beginPath(); g.ellipse(X, Y, 230, 36, 0, 0, 7); g.fill() }
     const gold = Math.max(cl(1 - Math.abs(h - 17.8) / 1.8, 0, 1), cl(1 - Math.abs(h - 6.4) / 1.3, 0, 1));
@@ -3743,15 +4044,15 @@ upd = function (dt) {
     if (V.storm > .02) { g.fillStyle = 'rgba(8,12,32,' + .3 * V.storm + ')'; g.fillRect(camX, camY, vw, vh) }
     if (n > .04) {
       g.globalCompositeOperation = 'lighter';
-      for (const o of V.objs) {
+      for (const o of A.objs) {
         if (o.x < camX - 100 || o.x > camX + vw + 100 || o.y < camY - 60 || o.y > camY + vh + 140) continue;
         if (o.glow) lightL(o.x, o.y - 32, 64 + Math.sin(t * 6 + o.x) * 3, '255,196,100', .5 * n);
         if (o.lamp) o.lamp.forEach(([a, b]) => lightL(a, b + 4, 34, '255,205,120', .5 * n));
         if (o.forge) lightL(o.forge[0], o.forge[1], 52 + Math.sin(t * 11) * 4, '255,120,40', .35 * n)
       }
-      lightL(p.x, p.y - 12, 80, '255,214,150', .26 * n); bunting(1);
-      for (let i = 0; i < 36; i++) {
-        const f = V.ff[i % V.ff.length], X = camX + (((f.bx * vw - t * f.sx * .4 - camX * .12 + i * 7) % vw) + vw) % vw, Y = camY + (((f.by * vh + Math.sin(t * .7 + f.ph + i) * 14) % vh) + vh) % vh, a = n * (1 - r) * (.35 + .6 * Math.max(0, Math.sin(t * 2.4 + f.ph + i)));
+      lightL(p.x, p.y - 12, 80, '255,214,150', .26 * n); if (vil) bunting(1); else { lightL(570, 470, 100 + Math.sin(t * 11) * 6, '255,150,60', .5 * n); lightL(1008, 166, 80, '120,220,255', .4 * n) }
+      for (let i = 0; A.ff && i < 36; i++) {
+        const f = A.ff[i % A.ff.length], X = camX + (((f.bx * vw - t * f.sx * .4 - camX * .12 + i * 7) % vw) + vw) % vw, Y = camY + (((f.by * vh + Math.sin(t * .7 + f.ph + i) * 14) % vh) + vh) % vh, a = n * (1 - r) * (.35 + .6 * Math.max(0, Math.sin(t * 2.4 + f.ph + i)));
         g.fillStyle = 'rgba(190,255,140,' + a + ')'; g.fillRect(Math.round(X), Math.round(Y), 2, 2); g.fillStyle = 'rgba(190,255,140,' + a * .25 + ')'; g.fillRect(Math.round(X) - 1, Math.round(Y) - 1, 4, 4)
       }
       g.globalCompositeOperation = 'source-over'
@@ -3773,6 +4074,20 @@ upd = function (dt) {
       g.fillStyle = 'rgba(210,222,255,' + .42 * V._fl + ')'; g.fillRect(camX, camY, vw, vh);
     }
     g.restore();
+  }
+
+  function sky() {
+    const vw = W / CAM_Z, vh = H / CAM_Z, n = V.night, r = V.rain, h = V.clock;
+    g.save(); bunting(0);
+    if (n < .5 && r < .25) for (const b of bfly) {
+      const X = b.hx + Math.sin(t * .7 + b.ph * 1.3) * 52, Y = b.hy - 16 + Math.cos(t * .55 + b.ph) * 26 + Math.sin(t * 3 + b.ph) * 3;
+      if (X < camX - 20 || X > camX + vw + 20 || Y < camY - 20 || Y > camY + vh + 20) continue; const w = Math.abs(Math.sin(t * 16 + b.ph)) * 3;
+      R('rgba(0,0,0,.18)', X, Y + 14, 3, 1); R(b.c, X - w, Y - 2, w, 3); R(b.c, X + 1, Y - 2, w, 3); R('#2a1a10', X, Y - 1, 1, 3)
+    }
+    const ca = .075 * (1 - n) * (1 - r * .4);
+    if (ca > .005) for (let i = 0; i < 5; i++) { const X = ((t * 7 + i * 470) % 2300) - 250, Y = 120 + i * 190 + Math.sin(i * 2.3) * 50, rx = 150 + (i % 3) * 40, ry = 55 + (i % 2) * 20; g.fillStyle = 'rgba(8,24,40,' + ca + ')'; g.beginPath(); g.ellipse(X, Y, rx, ry, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(X + 12, Y - 4, rx * .62, ry * .6, 0, 0, 7); g.fill() }
+    atmo(V, 1);
+    g.restore();
     // bubble obrolan di atas segalanya
     g.save(); g.font = '7px monospace'; g.textAlign = 'center';
     for (const q of V.npcs) {
@@ -3788,12 +4103,20 @@ upd = function (dt) {
   const _t = V.tick; V.tick = function (dt) { _t.call(this, dt); if (!WORLD.TR.on) guard(() => life(dt)) };
   const _db = V.drawBack; V.drawBack = function () { guard(ground); _db.call(this) };
   const _df = V.drawFront; V.drawFront = function () { _df.call(this); guard(sky) };
+  WORLD.WX = V;   // cuaca & jam dunia bersama (dipakai Hutan juga)
+  const C_ = WORLD.AREAS.corridor;
+  if (C_) { const _ct = C_.tick; C_.tick = function (dt) { _ct.call(this, dt); if (!WORLD.TR.on) guard(() => wxTick(dt)) } }
+  const F_ = WORLD.AREAS.forest;
+  if (F_) {
+    const _ft = F_.tick; F_.tick = function (dt) { _ft.call(this, dt); if (!WORLD.TR.on) guard(() => wxTick(dt)) };
+    const _fd = F_.drawFront; F_.drawFront = function () { _fd.call(this); guard(() => atmo(F_, 0)) };
+  }
 
   // jam desa di HUD (di bawah pill emas)
   const _dr = draw;
   draw = function () {
     _dr.apply(this, arguments);
-    if (window.AREA !== 'village' || !p || typeof W === 'undefined') return;
+    if ((window.AREA !== 'village' && window.AREA !== 'forest') || !p || typeof W === 'undefined') return;
     guard(() => {
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
       const hh = V.clock | 0, mm = (((V.clock % 1) * 6) | 0) * 10, s = (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; g.font = 'bold 9px monospace';
