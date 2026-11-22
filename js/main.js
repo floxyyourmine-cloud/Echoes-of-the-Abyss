@@ -156,6 +156,7 @@ const SFX = (() => {
     cg.gain.value = xv;
     try { swPrep(); } catch (e) { }
     try { dgPrep(); } catch (e) { }
+    try { bwPrep(); } catch (e) { }
     if (wg && wg.out)
       wg.out.gain.value = 1.1 * xv;
     mu = ac.createGain();
@@ -1550,7 +1551,12 @@ const SFX = (() => {
     const o = { ult: M.ult };
     M.ult = function (w) {
       const wk = typeof w == 'number' ? w : (typeof wi == 'number' ? wi : 0);
-      if (wk == 0) { swPrep(); SWM = 0; if (swPlay()) return; }
+      if (wk == 0) {
+        swPrep(); SWM = 0;
+        const ok = swPlay();
+        try { msg(ok ? '[DEBUG SFX] Ulti Pedang: MP3 dimainkan' : '[DEBUG SFX] Ulti Pedang: MP3 BELUM siap (state=' + swState + '), pakai suara lama'); } catch (e) { }
+        if (ok) return;
+      }
       return o.ult.apply(this, arguments);
     };
   });
@@ -1605,7 +1611,72 @@ const SFX = (() => {
     const o = { ult: M.ult };
     M.ult = function (w) {
       const wk = typeof w == 'number' ? w : (typeof wi == 'number' ? wi : 0);
-      if (wk == 4) { dgPrep(); DGM = 0; if (dgPlay()) return; }
+      if (wk == 4) {
+        dgPrep(); DGM = 0;
+        const ok = dgPlay();
+        try { msg(ok ? '[DEBUG SFX] Ulti Belati: MP3 dimainkan' : '[DEBUG SFX] Ulti Belati: MP3 BELUM siap (state=' + dgState + '), pakai suara lama'); } catch (e) { }
+        if (ok) return;
+      }
+      return o.ult.apply(this, arguments);
+    };
+  });
+  /* ===== ULTIMATE BOW (Heaven Barrage): memakai suara kustom assets/audio/sound_ultimate_bow.mp3 =====
+     Dimainkan sekali saat ulti busur dimulai (durasi ulti 3.7s; MP3 ~5.0s).
+     Suara sintetis lama ulti busur + dentuman penutup (SFX.slam di akhir ulti) dimatikan selama MP3 aktif.
+     Jika MP3 gagal dimuat, otomatis kembali ke suara sintetis lama. */
+  const BW_SND = 'assets/audio/sound_ultimate_bow.mp3', BW_GAIN = 1;
+  let bwBuf = null, bwState = 0, bwSrc = null, BWM = 0;
+  let bwA = null, bwAok = 0;
+  function bwFail() {
+    bwState = 3;
+    try { console.warn('[SFX] Gagal memuat ' + BW_SND + ' (cek lokasi file: harus di folder assets/audio/ di samping index.html). Memakai cadangan.'); } catch (e) { }
+    try {
+      if (!bwA) { bwA = new Audio(BW_SND); bwA.preload = 'auto'; bwA.oncanplaythrough = () => { bwAok = 1; }; bwA.onerror = () => { bwAok = 0; }; bwA.onended = () => { BWM = 0; }; bwA.load(); }
+    } catch (e) { }
+  }
+  function bwPrep() {
+    if (bwState || !ac)
+      return;
+    bwState = 1;
+    fetch(BW_SND).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(b => ac.decodeAudioData(b, x => { bwBuf = x; bwState = 2; }, () => { bwFail(); }))
+      .catch(() => { bwFail(); });
+  }
+  function bwPlay() {
+    if (!ac || !on)
+      return false;
+    if (!bwBuf) {
+      if (bwState == 3 && bwA && bwAok) {
+        try { bwA.volume = Math.min(1, .6 * xv * BW_GAIN); bwA.currentTime = 0; const q = bwA.play(); if (q && q.catch) q.catch(() => { BWM = 0; }); BWM = 1; return true; } catch (e) { return false; }
+      }
+      return false;
+    }
+    try {
+      if (bwSrc) { try { bwSrc.stop(); } catch (e) { } }
+      const s = ac.createBufferSource(), g = ac.createGain();
+      s.buffer = bwBuf;
+      g.gain.value = BW_GAIN * xv;
+      s.connect(g);
+      g.connect(mg);
+      s.onended = () => { if (bwSrc === s) BWM = 0; };
+      s.start();
+      bwSrc = s;
+      BWM = 1;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  [OLDM, NEWM].forEach(M => {
+    const o = { ult: M.ult };
+    M.ult = function (w) {
+      const wk = typeof w == 'number' ? w : (typeof wi == 'number' ? wi : 0);
+      if (wk == 2) {
+        bwPrep(); BWM = 0;
+        const ok = bwPlay();
+        try { msg(ok ? '[DEBUG SFX] Ulti Busur: MP3 dimainkan' : '[DEBUG SFX] Ulti Busur: MP3 BELUM siap (state=' + bwState + '), pakai suara lama'); } catch (e) { }
+        if (ok) return;
+      }
       return o.ult.apply(this, arguments);
     };
   });
@@ -1742,7 +1813,7 @@ const SFX = (() => {
     } catch (e) { }
   };
   return {
-    swMp3: () => SWM, dgMp3: () => DGM, init, ready: () => !!ac, state: () => ac ? ac.state : 'none', opening, intro, cut, finale() {
+    swMp3: () => SWM, dgMp3: () => DGM, bwMp3: () => BWM, init, ready: () => !!ac, state: () => ac ? ac.state : 'none', opening, intro, cut, finale() {
       if (!ac)
         return; cut(); bigChord(ac.currentTime + .05, newIg());
     },
@@ -4225,13 +4296,13 @@ const UL = [
       for (let i = 0; i < 64; i++)
         skLater(.5 + i * .045, () => {
           const q = R() * 6.283, d = Math.sqrt(R()) * 120, x = tx + Math.cos(q) * d, y = ty + Math.sin(q) * d; skRain(x, y, 22 * m, 34); fx.push({ k: 'ring', x, y, r: 34, w: 2, life: .3, max: .3, col: '#d8ffb0' }); if (i % 4 == 0)
-            SFX.boom(34);
+            if (!SFX.bwMp3()) SFX.boom(34);
         });
       skLater(3.45, () => {
         skRain(tx, ty, 85 * m, 95); for (let i = 0; i < 3; i++)
           fx.push({
             k: 'ring', x: tx, y: ty, r: 50 + i * 35, w: 5 - i, life: .5 + i * .1, max: .5 + i * .1, col: i % 2 ? '#fff' : '#b6ff8a'
-          }); fx.push({ k: 'pil', x: tx, y: ty, w: 120, h: 260, c: '200,255,150', life: .7, max: .7 }); shake = Math.max(shake, 12); SFX.slam();
+          }); fx.push({ k: 'pil', x: tx, y: ty, w: 120, h: 260, c: '200,255,150', life: .7, max: .7 }); shake = Math.max(shake, 12); if (!SFX.bwMp3()) SFX.slam();
       });
     }
   },
