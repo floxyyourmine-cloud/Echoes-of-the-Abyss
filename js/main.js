@@ -154,6 +154,8 @@ const SFX = (() => {
       wg = null;
     }
     cg.gain.value = xv;
+    try { swPrep(); } catch (e) { }
+    try { dgPrep(); } catch (e) { }
     if (wg && wg.out)
       wg.out.gain.value = 1.1 * xv;
     mu = ac.createGain();
@@ -190,6 +192,7 @@ const SFX = (() => {
       d[i] = Math.random() * 2 - 1;
     nt = ac.currentTime + .2;
     setInterval(music, 120);
+    bhPrep();
   };
   const env = (gn, t0, v, dur, at) => { gn.gain.setValueAtTime(0, t0); gn.gain.linearRampToValueAtTime(v, t0 + at); gn.gain.exponentialRampToValueAtTime(.0001, t0 + dur); };
   const tone = (f0, f1, dur, type, v, dl = 0, dest, at = .008) => {
@@ -1457,6 +1460,155 @@ const SFX = (() => {
         return; BLAST(2.1, 0, 1); T(60, 20, 2.2, 'sine', .85, .02, { send: .6 }); RING(500, .08, 1.6, .05, { send: .7 }); N(1.4, .35, 9000, 200, .8, 'highpass', .02, { at: .02, send: .5 }); arp([196, 261.6, 329.6, 392, 523.25], .1, .05, 1.2); ORC.timp(0, .7, 45); ORC.choir(98, 0, 2.6, .08); ORC.cym(0, 1, .14);[98, 146.8, 196].forEach(f => HORN(f, .12, 1.6, .05));
     }
   };
+  /* ===== ULTIMATE STAFF (Event Horizon): memakai suara kustom assets/audio/sound_ultimate_staff.mp3 =====
+     Dimainkan sekali saat ulti dimulai (durasi 5.8s; dentuman besar di ~3.75s = saat ledakan black hole).
+     Suara sintetis lama (bhPulse/bhCollapse/bhBlast) dimatikan selama MP3 aktif.
+     Jika MP3 gagal dimuat, otomatis kembali ke suara sintetis lama. */
+  const BH_SND = 'assets/audio/sound_ultimate_staff.mp3', BH_GAIN = 1;
+  let bhBuf = null, bhState = 0, bhSrc = null, BHM = 0;
+  function bhPrep() {
+    if (bhState || !ac)
+      return;
+    bhState = 1;
+    fetch(BH_SND).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(b => ac.decodeAudioData(b, x => { bhBuf = x; bhState = 2; }, () => { bhState = 3; }))
+      .catch(() => { bhState = 3; });
+  }
+  function bhPlay() {
+    if (!ac || !on || !bhBuf)
+      return false;
+    try {
+      if (bhSrc) { try { bhSrc.stop(); } catch (e) { } }
+      const s = ac.createBufferSource(), g = ac.createGain();
+      s.buffer = bhBuf;
+      g.gain.value = BH_GAIN * xv;
+      s.connect(g);
+      g.connect(mg);
+      s.start();
+      bhSrc = s;
+      BHM = 1;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  [OLDM, NEWM].forEach(M => {
+    const o = { bhOpen: M.bhOpen, bhPulse: M.bhPulse, bhCollapse: M.bhCollapse, bhBlast: M.bhBlast };
+    M.bhOpen = function () { bhPrep(); BHM = 0; if (bhPlay()) return; return o.bhOpen.apply(this, arguments); };
+    M.bhPulse = function () { if (BHM) return; return o.bhPulse.apply(this, arguments); };
+    M.bhCollapse = function () { if (BHM) return; return o.bhCollapse.apply(this, arguments); };
+    M.bhBlast = function () { if (BHM) return; return o.bhBlast.apply(this, arguments); };
+  });
+  /* ===== ULTIMATE SWORD (Excalibur Judgement): memakai suara kustom assets/audio/sound_ultimate_sword.mp3 =====
+     Dimainkan sekali saat ulti pedang dimulai (durasi ulti 3.2s; MP3 ~4.6s).
+     Suara sintetis lama ulti pedang + dentuman penutup (SFX.slam di akhir ulti) dimatikan selama MP3 aktif.
+     Jika MP3 gagal dimuat, otomatis kembali ke suara sintetis lama. */
+  const SW_SND = 'assets/audio/sound_ultimate_sword.mp3', SW_GAIN = 1;
+  let swBuf = null, swState = 0, swSrc = null, SWM = 0;
+  let swA = null, swAok = 0;
+  function swFail() {
+    swState = 3;
+    try { console.warn('[SFX] Gagal memuat ' + SW_SND + ' (cek lokasi file: harus di folder assets/audio/ di samping index.html). Memakai cadangan.'); } catch (e) { }
+    try {
+      if (!swA) { swA = new Audio(SW_SND); swA.preload = 'auto'; swA.oncanplaythrough = () => { swAok = 1; }; swA.onerror = () => { swAok = 0; }; swA.onended = () => { SWM = 0; }; swA.load(); }
+    } catch (e) { }
+  }
+  function swPrep() {
+    if (swState || !ac)
+      return;
+    swState = 1;
+    fetch(SW_SND).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(b => ac.decodeAudioData(b, x => { swBuf = x; swState = 2; }, () => { swFail(); }))
+      .catch(() => { swFail(); });
+  }
+  function swPlay() {
+    if (!ac || !on)
+      return false;
+    if (!swBuf) {
+      if (swState == 3 && swA && swAok) {
+        try { swA.volume = Math.min(1, .6 * xv * SW_GAIN); swA.currentTime = 0; const q = swA.play(); if (q && q.catch) q.catch(() => { SWM = 0; }); SWM = 1; return true; } catch (e) { return false; }
+      }
+      return false;
+    }
+    try {
+      if (swSrc) { try { swSrc.stop(); } catch (e) { } }
+      const s = ac.createBufferSource(), g = ac.createGain();
+      s.buffer = swBuf;
+      g.gain.value = SW_GAIN * xv;
+      s.connect(g);
+      g.connect(mg);
+      s.onended = () => { if (swSrc === s) SWM = 0; };
+      s.start();
+      swSrc = s;
+      SWM = 1;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  [OLDM, NEWM].forEach(M => {
+    const o = { ult: M.ult };
+    M.ult = function (w) {
+      const wk = typeof w == 'number' ? w : (typeof wi == 'number' ? wi : 0);
+      if (wk == 0) { swPrep(); SWM = 0; if (swPlay()) return; }
+      return o.ult.apply(this, arguments);
+    };
+  });
+  /* ===== ULTIMATE DAGGERS (Thousand Shadows): memakai suara kustom assets/audio/sound_ultimate_deggers.mp3 =====
+     Dimainkan sekali saat ulti belati dimulai (durasi ulti 4.1s; MP3 ~5.6s).
+     Suara sintetis lama ulti belati + dentuman penutup (SFX.slam di akhir ulti) dimatikan selama MP3 aktif.
+     Jika MP3 gagal dimuat, otomatis kembali ke suara sintetis lama. */
+  const DG_SND = 'assets/audio/sound_ultimate_deggers.mp3', DG_GAIN = 1;
+  let dgBuf = null, dgState = 0, dgSrc = null, DGM = 0;
+  let dgA = null, dgAok = 0;
+  function dgFail() {
+    dgState = 3;
+    try { console.warn('[SFX] Gagal memuat ' + DG_SND + ' (cek lokasi file: harus di folder assets/audio/ di samping index.html). Memakai cadangan.'); } catch (e) { }
+    try {
+      if (!dgA) { dgA = new Audio(DG_SND); dgA.preload = 'auto'; dgA.oncanplaythrough = () => { dgAok = 1; }; dgA.onerror = () => { dgAok = 0; }; dgA.onended = () => { DGM = 0; }; dgA.load(); }
+    } catch (e) { }
+  }
+  function dgPrep() {
+    if (dgState || !ac)
+      return;
+    dgState = 1;
+    fetch(DG_SND).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(b => ac.decodeAudioData(b, x => { dgBuf = x; dgState = 2; }, () => { dgFail(); }))
+      .catch(() => { dgFail(); });
+  }
+  function dgPlay() {
+    if (!ac || !on)
+      return false;
+    if (!dgBuf) {
+      if (dgState == 3 && dgA && dgAok) {
+        try { dgA.volume = Math.min(1, .6 * xv * DG_GAIN); dgA.currentTime = 0; const q = dgA.play(); if (q && q.catch) q.catch(() => { DGM = 0; }); DGM = 1; return true; } catch (e) { return false; }
+      }
+      return false;
+    }
+    try {
+      if (dgSrc) { try { dgSrc.stop(); } catch (e) { } }
+      const s = ac.createBufferSource(), g = ac.createGain();
+      s.buffer = dgBuf;
+      g.gain.value = DG_GAIN * xv;
+      s.connect(g);
+      g.connect(mg);
+      s.onended = () => { if (dgSrc === s) DGM = 0; };
+      s.start();
+      dgSrc = s;
+      DGM = 1;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  [OLDM, NEWM].forEach(M => {
+    const o = { ult: M.ult };
+    M.ult = function (w) {
+      const wk = typeof w == 'number' ? w : (typeof wi == 'number' ? wi : 0);
+      if (wk == 4) { dgPrep(); DGM = 0; if (dgPlay()) return; }
+      return o.ult.apply(this, arguments);
+    };
+  });
   const GM = {};
   Object.keys(Object.assign({}, OLDM, NEWM)).forEach(k => {
     GM[k] = function () {
@@ -1590,7 +1742,7 @@ const SFX = (() => {
     } catch (e) { }
   };
   return {
-    init, ready: () => !!ac, state: () => ac ? ac.state : 'none', opening, intro, cut, finale() {
+    swMp3: () => SWM, dgMp3: () => DGM, init, ready: () => !!ac, state: () => ac ? ac.state : 'none', opening, intro, cut, finale() {
       if (!ac)
         return; cut(); bigChord(ac.currentTime + .05, newIg());
     },
@@ -4004,7 +4156,7 @@ const UL = [
         }
         fx.push({ k: 'pil', x: p.x, y: p.y, w: 90, h: 240, c: '200,235,255', life: .7, max: .7 });
         shake = Math.max(shake, 12);
-        SFX.slam();
+        if (!SFX.swMp3()) SFX.slam();
       });
     }
   },
@@ -4127,7 +4279,7 @@ const UL = [
           });
         fx.push({ k: 'pil', x: p.x, y: p.y, w: 80, h: 200, c: '255,130,100', life: .6, max: .6 });
         shake = Math.max(shake, 12);
-        SFX.slam();
+        if (!SFX.dgMp3()) SFX.slam();
       });
     }
   }

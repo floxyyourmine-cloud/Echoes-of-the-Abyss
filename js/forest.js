@@ -279,6 +279,7 @@
   function drawObj(o) {
     if (o.img) { g.drawImage(o.img, o.x - o.ox, o.y - o.oy); if (o.lamp) o.lamp.forEach(([a, b]) => lightL(a, b + 4, 40 + Math.sin(t * 9 + a) * 3, '255,200,110', .3)); return }
     if (o.n) { person(o.n, o.i); return }
+    if (o.w) { if (F.drawWolf) F.drawWolf(o.w); return }
     if (o.c) {
       const c = o.c, hop = c.st ? Math.abs(Math.sin(Math.min(1, c.hz / .34) * Math.PI)) * 6 : 0, X = Math.round(c.x), Y = Math.round(c.y); g.save(); g.translate(X, Y); g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(-4, 1, 9, 2); g.translate(0, -Math.round(hop)); g.scale(c.fc, 1);
       const R = (a, b, w, h, col) => { g.fillStyle = col; g.fillRect(a, b, w, h) }; R(-5, -5, 11, 6, '#1a1210'); R(-4, -4, 9, 5, c.col); R(-4, -4, 9, 2, 'rgba(255,255,255,.18)'); R(2, -8, 5, 5, '#1a1210'); R(3, -7, 3, 4, c.col); R(3, -12, 2, 5, '#1a1210'); R(3, -11, 1, 4, c.col); R(5, -11, 2, 4, '#1a1210'); R(5, -10, 1, 3, '#e8b8b0'); R(5, -6, 1, 1, '#1a1210'); R(-7, -4, 3, 3, '#f4efe6'); R(-3, 0, 2, 1, '#1a1210'); R(2, 0, 2, 1, '#1a1210'); g.restore(); return
@@ -288,7 +289,7 @@
   function renderList() {
     const x0 = camX - 70, x1 = camX + W / CAM_Z + 70, y0 = camY - 10, y1 = camY + H / CAM_Z + 90, L = [];
     for (const o of F.objs) { if (o.x < x0 || o.x > x1 || o.y < y0 || o.y - o.oy > y1) continue; L.push(o) }
-    for (const o of F.dyn) { const y = o.y; if (y < y0 - 20 || y > y1) continue; const s = o.n || o.c || o.ch; if (s.x < x0 || s.x > x1) continue; if (o.n) { const n = o.n; L.push({ y: n.y + (n.sit ? 0 : 0), n, i: o.i }) } else if (o.c) L.push({ y: o.c.y, c: o.c }); else L.push({ y: o.y, ch: o.ch }) }
+    for (const o of F.dyn) { const y = o.y; if (y < y0 - 20 || y > y1) continue; const s = o.n || o.c || o.ch || o.w; if (s.x < x0 || s.x > x1) continue; if (o.n) { const n = o.n; L.push({ y: n.y + (n.sit ? 0 : 0), n, i: o.i }) } else if (o.c) L.push({ y: o.c.y, c: o.c }); else if (o.w) L.push({ y: o.w.y, w: o.w }); else L.push({ y: o.y, ch: o.ch }) }
     L.sort((a, b) => a.y - b.y); return L;
   }
   F.drawBack = function () { F._L = renderList(); const py = p.y + 3; for (const o of F._L) if (o.y <= py) drawObj(o) };
@@ -344,5 +345,166 @@
       WORLD.start('gate', { to: 'village', dx: 1, spawn: V.spawn }); msg('Memasuki Desa Lembah Lentera...'); return
     }
     return _tick.call(this, dt)
+  };
+})();
+
+/* ===== SERIGALA MALAM: tiap malam 50% muncul (1-3 ekor acak), 50% tidak muncul ===== */
+(function () {
+  'use strict';
+  const F = WORLD.AREAS.forest; if (!F) return;
+  const FW = 1800, FH = 720, TAU = Math.PI * 2, lightL = WORLD.lightL;
+  const WOLF = {
+    chance: .5,             // peluang ada serigala tiap malam (0.5 = 50%)
+    minPack: 1, maxPack: 3, // jumlah serigala sekali muncul (acak, rata)
+    hp: 30,
+    speed: 96, lungeSpeed: 230,
+    dmgPct: .08,            // damage gigitan = 8% HP maksimum pemain (minimal 3)
+    playerDmg: 12,          // damage serangan cadangan ke serigala (lihat attackKey)
+    attackKey: 'KeyJ'       // tombol serang cadangan; isi null bila serangan game sudah memanggil F.hitWolves
+  };
+  const S = { rolled: false, queue: 0, base: 0, spawnCd: 0, fails: 0, told: false, pInv: 0, atk: 0, tk: 0 };
+  const wolves = [];
+  const night = () => (WORLD.WX ? WORLD.WX.night : 0);
+
+  /* ---------- damage ke pemain ---------- */
+  function hurtPlayer(dmg, fx0, fy0) {
+    // sambungkan ke fungsi damage game kamu lewat WORLD.hurtPlayer(dmg, dariX, dariY)
+    if (typeof WORLD.hurtPlayer === 'function') { WORLD.hurtPlayer(dmg, fx0, fy0); return }
+    // cadangan: kurangi HP langsung (tidak sampai mati)
+    p.hp = Math.max(1, p.hp - dmg);
+    dn(p.x, p.y - 18, '-' + dmg, 0, '#ff5a5a');
+    for (let i = 0; i < 6; i++) dp.push({ k: 'p', x: p.x, y: p.y - 8, vx: (Math.random() - .5) * 60, vy: -20 - Math.random() * 30, life: .4, max: .4, s: 1.5, c: '#c83030' });
+  }
+
+  /* ---------- muncul di luar layar ---------- */
+  function trySpawn() {
+    const R = Math.hypot(W / CAM_Z, H / CAM_Z) / 2 + 40;
+    for (let k = 0; k < 30; k++) {
+      const a = S.base + (Math.random() - .5) * (.7 + k * .2), d = R + Math.random() * 70, x = p.x + Math.cos(a) * d, y = p.y + Math.sin(a) * d;
+      if (x < 40 || x > FW - 40 || y < 150 || y > FH - 30 || blk(x, y, 6)) continue;
+      const w = { x, y, vx: 0, vy: 0, hp: WOLF.hp, mhp: WOLF.hp, fc: x < p.x ? 1 : -1, st: 'chase', tm: 0, cd: .6 + Math.random() * .8, fl: Math.random() * TAU, ph: Math.random() * 6, hit: 0, fade: 0, dead: 0, bit: 0, sk: 0, jit: 0, ja: 0, br: 0 };
+      wolves.push(w); F.dyn.push({ w, get y() { return w.y } }); return true
+    }
+    return false
+  }
+
+  /* ---------- gerak & AI ---------- */
+  function move(w, vx, vy, dt) {
+    const ox = w.x, oy = w.y, nx = w.x + vx * dt, ny = w.y + vy * dt;
+    if (!blk(nx, w.y, 5)) w.x = nx; if (!blk(w.x, ny, 5)) w.y = ny;
+    return Math.hypot(w.x - ox, w.y - oy)
+  }
+  // kalau pemain di seberang sungai, serigala menyeberang lewat jembatan
+  function goal(w) {
+    const sw = w.x < 830, sp = p.x < 830;
+    if (sw === sp) { w.br = 0; return null }
+    const ax = sw ? 768 : 892, bx = sw ? 892 : 768;
+    if (!w.br && Math.hypot(w.x - ax, w.y - 300) < 18) w.br = 1;
+    return w.br ? [bx, 300] : [ax, 300]
+  }
+  function upd(w, dt) {
+    w.hit = Math.max(0, w.hit - dt); w.cd -= dt;
+    if (w.dead) { w.fade += dt; return }
+    const dx = p.x - w.x, dy = p.y - w.y, d = Math.hypot(dx, dy) || 1;
+    if (w.st === 'flee') { w.fade += dt; move(w, -dx / d * 120, -dy / d * 120, dt); w.fc = dx < 0 ? 1 : -1; return }
+    if (w.st === 'chase') {
+      const wp = goal(w); let tx, ty;
+      if (wp) { tx = wp[0]; ty = wp[1] } else { const r = d > 90 ? 0 : 30; tx = p.x + Math.cos(w.fl + t * .6) * r; ty = p.y + Math.sin(w.fl + t * .6) * r * .8 }
+      let hx = tx - w.x, hy = ty - w.y; const hd = Math.hypot(hx, hy) || 1; hx /= hd; hy /= hd;
+      if (w.jit > 0) { w.jit -= dt; const c = Math.cos(w.ja), s = Math.sin(w.ja); const nx = hx * c - hy * s; hy = hx * s + hy * c; hx = nx }
+      const sp = hd < 6 ? 0 : WOLF.speed, mv = move(w, hx * sp, hy * sp, dt);
+      if (sp && mv < sp * dt * .3) { w.sk += dt; if (w.sk > .5) { w.sk = 0; w.jit = .6; w.ja = (Math.random() < .5 ? 1 : -1) * 1.4 } } else w.sk = Math.max(0, w.sk - dt * 2);
+      w.fc = (d < 80 ? dx : hx) >= 0 ? 1 : -1;
+      if (d < 60 && w.cd <= 0 && !wp) { w.st = 'wind'; w.tm = .4 }
+    } else if (w.st === 'wind') {            // merunduk, mata merah
+      w.fc = dx >= 0 ? 1 : -1; w.tm -= dt;
+      if (w.tm <= 0) { w.st = 'lunge'; w.tm = .22; w.vx = dx / d * WOLF.lungeSpeed; w.vy = dy / d * WOLF.lungeSpeed; w.bit = 0 }
+    } else if (w.st === 'lunge') {           // terkam
+      move(w, w.vx, w.vy, dt); w.tm -= dt;
+      if (!w.bit && d < 15 && S.pInv <= 0) { w.bit = 1; S.pInv = .7; hurtPlayer(Math.max(3, Math.round(mhp() * WOLF.dmgPct)), w.x, w.y) }
+      if (w.tm <= 0) { w.st = 'rec'; w.tm = .55; w.cd = 1 + Math.random() * .9 }
+    } else if (w.st === 'rec') {             // mundur sebentar
+      w.fc = dx >= 0 ? 1 : -1; move(w, -dx / d * 38, -dy / d * 38, dt); w.tm -= dt;
+      if (w.tm <= 0) w.st = 'chase'
+    }
+  }
+
+  /* ---------- serangan pemain ke serigala ---------- */
+  F.hitWolves = function (x, y, r, dmg) {
+    let n = 0;
+    for (const w of wolves) {
+      if (w.dead || Math.hypot(w.x - x, w.y - y) > r) continue;
+      n++; w.hp -= dmg; w.hit = .15;
+      const a = Math.atan2(w.y - p.y, w.x - p.x); move(w, Math.cos(a) * 160, Math.sin(a) * 160, .07);
+      if (w.st === 'wind' || w.st === 'lunge') { w.st = 'rec'; w.tm = .5; w.cd = 1 }
+      dn(w.x, w.y - 16, '-' + dmg, 0, '#ffd34d');
+      for (let i = 0; i < 5; i++) dp.push({ k: 'p', x: w.x, y: w.y - 6, vx: (Math.random() - .5) * 70, vy: -20 - Math.random() * 30, life: .35, max: .35, s: 1.5, c: '#c8ccd8' });
+      if (w.hp <= 0) { w.dead = 1; w.fade = 0; dn(w.x, w.y - 22, 'Serigala tumbang', 0, '#fff') }
+    }
+    return n
+  };
+  WORLD.hitWolves = F.hitWolves;
+  if (WOLF.attackKey) addEventListener('keydown', e => {
+    if (e.code !== WOLF.attackKey || e.repeat || performance.now() - S.tk > 200 || dlg || WORLD.TR.on || S.atk > 0) return;
+    S.atk = .4; fx.push({ k: 'ring', x: p.x, y: p.y - 4, r: 14, w: 2, life: .18, max: .18, col: '#ffffff' });
+    F.hitWolves(p.x, p.y - 4, 38, WOLF.playerDmg)
+  });
+
+  /* ---------- siklus malam ---------- */
+  const _enter = F.enter;
+  F.enter = function () {
+    const r = _enter && _enter.apply(this, arguments);
+    wolves.length = 0; F.dyn = F.dyn.filter(o => !o.w); S.rolled = false; S.queue = 0; S.pInv = 0;
+    return r
+  };
+  const _tick = F.tick;
+  F.tick = function (dt) {
+    const r = _tick.call(this, dt);
+    if (WORLD.TR.on) return r;
+    S.tk = performance.now(); S.pInv -= dt; S.atk -= dt;
+    const nt = night();
+    if (nt < .3) {                           // pagi: serigala kabur, undian direset
+      S.rolled = false; S.queue = 0;
+      for (const w of wolves) if (!w.dead && w.st !== 'flee') { w.st = 'flee'; w.fade = 0 }
+    } else if (nt > .5 && !S.rolled) {       // malam tiba: undi sekali per malam
+      S.rolled = true; S.fails = 0; S.told = false;
+      if (Math.random() < WOLF.chance) { S.queue = WOLF.minPack + (Math.random() * (WOLF.maxPack - WOLF.minPack + 1) | 0); S.base = Math.random() * TAU }
+    }
+    if (!dlg) {
+      S.spawnCd -= dt;
+      if (S.queue > 0 && S.spawnCd <= 0) {
+        S.spawnCd = .4;
+        if (trySpawn()) { S.queue--; S.fails = 0; if (!S.told) { S.told = true; msg('Lolongan serigala menggema di antara pepohonan...') } }
+        else if (++S.fails > 25) S.queue = 0
+      }
+      for (const w of wolves) upd(w, dt)
+    }
+    for (let i = wolves.length - 1; i >= 0; i--) {
+      const w = wolves[i];
+      if ((w.dead && w.fade > .8) || (w.st === 'flee' && w.fade > 1.4)) { wolves.splice(i, 1); const j = F.dyn.findIndex(o => o.w === w); if (j >= 0) F.dyn.splice(j, 1) }
+    }
+    return r
+  };
+
+  /* ---------- gambar serigala (pixel art) ---------- */
+  F.drawWolf = function (w) {
+    const X = Math.round(w.x), Y = Math.round(w.y), run = (w.st === 'chase' || w.st === 'lunge' || w.st === 'flee') ? Math.sin(t * 16 + w.ph) : 0;
+    const al = w.dead ? Math.max(0, 1 - w.fade / .8) : w.st === 'flee' ? Math.max(0, 1 - w.fade / 1.4) : 1;
+    const dk = '#14101a', B = w.hit > 0 ? '#ffffff' : '#6e727e', D = '#474a55', L = '#a4a8b4', hot = w.st === 'wind' || w.st === 'lunge', eye = hot ? '#ff3a3a' : '#ffd34d';
+    const R = (a, b, ww, hh, c) => { g.fillStyle = c; g.fillRect(a, b, ww, hh) };
+    g.save(); g.globalAlpha = al; g.translate(X, Y); g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(-9, 0, 19, 3);
+    g.scale(w.fc, w.dead ? .4 : 1);
+    const cr = w.st === 'wind' ? 2 : 0; g.translate(0, cr);
+    R(-13, -12, 5, 6, dk); R(-12, -11, 3, 4, D);                                                              // ekor
+    [[-8, run], [-5, -run], [3, -run], [6, run]].forEach(([a, s]) => { const o = Math.round(s * 2); R(a + o, -3, 3, 4 - cr, dk); R(a + o + 1, -3, 1, 3 - cr, D) });   // kaki
+    R(-9, -10, 18, 8, dk); R(-8, -9, 16, 6, B); R(-8, -9, 16, 2, 'rgba(255,255,255,.14)'); R(-6, -4, 11, 1, L); // badan
+    R(6, -14, 9, 8, dk); R(7, -13, 7, 6, B); R(13, -10, 5, 4, dk); R(13, -9, 4, 2, L); R(17, -10, 1, 1, '#000'); // kepala & moncong
+    R(7, -17, 3, 4, dk); R(8, -16, 1, 2, D); R(11, -17, 3, 4, dk); R(12, -16, 1, 2, D);                       // telinga
+    R(11, -11, 2, 1, eye);                                                                                     // mata
+    g.restore();
+    if (!w.dead && al > .3) {
+      lightL(X + w.fc * 11, Y - 11 + cr, 12, hot ? '255,60,60' : '255,210,80', .28);
+      if (w.hp < w.mhp) { const bw = 16; g.fillStyle = '#14101a'; g.fillRect(X - bw / 2 - 1, Y - 24, bw + 2, 4); g.fillStyle = '#5a1a1a'; g.fillRect(X - bw / 2, Y - 23, bw, 2); g.fillStyle = '#e04848'; g.fillRect(X - bw / 2, Y - 23, Math.max(0, Math.round(bw * w.hp / w.mhp)), 2) }
+    }
   };
 })();
