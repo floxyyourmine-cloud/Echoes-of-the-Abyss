@@ -1257,8 +1257,8 @@ draw = function () {
   };
 })();
 /* ===== ANIMASI MASUK DUNGEON =====
-   Lobby: portal ungu terbuka di gerbang Ã¢â€ â€™ pahlawan berputar & tersedot Ã¢â€ â€™ kilat + layar gelap
-   Dungeon: pahlawan muncul dari portal biru Ã¢â€ â€™ banner nama level & kesulitan */
+   Lobby: portal ungu terbuka di gerbang \u2192 pahlawan berputar & tersedot \u2192 kilat + layar gelap
+   Dungeon: pahlawan muncul dari portal biru \u2192 banner nama level & kesulitan */
 (function () {
   var cl = function (v, a, b) { a = a == null ? 0 : a; b = b == null ? 1 : b; return Math.max(a, Math.min(b, v)); };
   var ez = function (u) { return u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u); };
@@ -1270,7 +1270,7 @@ draw = function () {
       SFX[f](a);
     } catch (e) { }
   }
-  var A = 2.2, B = 1.4, BT = 3.8; /* detik: tersedot Ã‚Â· muncul Ã‚Â· lama banner */
+  var A = 2.2, B = 1.4, BT = 3.8; /* detik: tersedot \u00b7 muncul \u00b7 lama banner */
   var D = { on: 0, ph: 0, t: 0, x: 0, y: 0, open: 0, fl: 0, rg: 0, pend: 0, bt: -1, lv: 1, df: 1 };
   var PS = [];
   var VIO = {
@@ -1617,7 +1617,7 @@ draw = function () {
     g.fillRect((W - lw) / 2, by + bh - 1, lw, 1);
     g.font = '8px monospace';
     g.fillStyle = '#b9b4c8';
-    g.fillText('Ã¢â‚¬â€ M E M A S U K I   D U N G E O N Ã¢â‚¬â€', W / 2, by + 15 - (1 - inn) * 6);
+    g.fillText('\u2014 M E M A S U K I   D U N G E O N \u2014', W / 2, by + 15 - (1 - inn) * 6);
     var sc = 1 + (1 - inn) * .22;
     g.save();
     g.translate(W / 2, by + 41);
@@ -1630,7 +1630,7 @@ draw = function () {
     g.restore();
     g.font = '8px monospace';
     g.fillStyle = d.c;
-    g.fillText('LEVEL ' + D.lv + '  Ã‚Â·  ' + d.n + '  Ã‚Â·  GELOMBANG 1', W / 2, by + 58 + (1 - inn) * 5);
+    g.fillText('LEVEL ' + D.lv + '  \u00b7  ' + d.n + '  \u00b7  GELOMBANG 1', W / 2, by + 58 + (1 - inn) * 5);
     g.restore();
   }
 
@@ -1804,7 +1804,7 @@ envFx = function () {
   g.restore();
   const bob = Math.round(Math.sin(t * 3) * 2);
   g.font = 'bold 9px monospace';
-  txt('Ã¢â€“Â² DUNGEON', 320, 100 + bob, 'rgba(230,200,255,' + (.7 + .3 * pu) + ')', 'center');
+  txt('\u25b2 DUNGEON', 320, 100 + bob, 'rgba(230,200,255,' + (.7 + .3 * pu) + ')', 'center');
 };
 /* ===== MODE ENDLESS: gelombang tanpa akhir di arena pertama, makin banyak & kuat, mini bos tiap 5 gelombang ===== */
 let ENDLESS = 0, ESEL = 0, EDEAD = 0, EBEST = 0, ELW = -1, ELV = 0, ELS = 0;
@@ -1821,7 +1821,7 @@ const _enterEN = enterDungeon;
 enterDungeon = function () {
   ENDLESS = ESEL ? 1 : 0; EDEAD = 0; ELW = -1; ELV = 0; if (ENDLESS && !ELS)
     ELS = LVL; _enterEN(); if (ENDLESS)
-    msg('Ã¢â„¢Â¾ ENDLESS Ã‚Â· Colosseum Abyss Ã¢â‚¬â€ bertahan selama mungkin! Rekor: Gelombang ' + EBEST);
+    msg('\u267e ENDLESS \u00b7 Colosseum Abyss \u2014 bertahan selama mungkin! Rekor: Gelombang ' + EBEST);
 };
 const _spawnEN = spawn;
 spawn = function () {
@@ -1834,7 +1834,7 @@ spawn = function () {
       ELV = v;
       ELW = wave;
       if (wave > 1)
-        msg('Ã¢â„¢Â¾ Gelombang ' + wave + ' Ã¢â‚¬â€ musuh ' + ETH[v]);
+        msg('\u267e Gelombang ' + wave + ' \u2014 musuh ' + ETH[v]);
     }
     LVL = ELV;
     try {
@@ -1871,7 +1871,7 @@ upd = function (dt) {
           localStorage.setItem('eoa_endless_best', EBEST);
         } catch (er) { }
       }
-      msg('Ã¢â„¢Â¾ ENDLESS selesai Ã¢â‚¬â€ bertahan sampai Gelombang ' + wave + (nb ? ' Ã‚Â· REKOR BARU!' : ' Ã‚Â· Rekor: ' + EBEST));
+      msg('\u267e ENDLESS selesai \u2014 bertahan sampai Gelombang ' + wave + (nb ? ' \u00b7 REKOR BARU!' : ' \u00b7 Rekor: ' + EBEST));
     }
     if (!es.length && !clr && !doorOn && p.dead <= 0) {
       if (wave % 5 == 0 && !MBD) {
@@ -1882,7 +1882,7 @@ upd = function (dt) {
           if (e.mini)
             e.hp = e.mhp = Math.round(e.mhp * m);
         });
-        msg('Ã¢â„¢Â¾ Gelombang ' + wave + ' Ã¢â‚¬â€ MINI BOS muncul!');
+        msg('\u267e Gelombang ' + wave + ' \u2014 MINI BOS muncul!');
       } else {
         clr = 3.5;
         if (wave > EBEST) {
@@ -1894,7 +1894,7 @@ upd = function (dt) {
         p.hp = Math.min(mhp(), p.hp + Math.round(mhp() * (wave % 5 == 0 ? .4 : .12)));
         if (wave % 3 == 0)
           p.pot = Math.min(5, (p.pot || 0) + 1);
-        msg('Gelombang ' + wave + ' selesai! HP pulih' + (wave % 3 == 0 ? ' + potion' : '') + ' Ã¢â‚¬â€ gelombang ' + (wave + 1) + ' lebih kuat...');
+        msg('Gelombang ' + wave + ' selesai! HP pulih' + (wave % 3 == 0 ? ' + potion' : '') + ' \u2014 gelombang ' + (wave + 1) + ' lebih kuat...');
         SFX.clear();
       }
     }
@@ -1906,7 +1906,7 @@ draw = function () {
   _drawEN(); if (ENDLESS && !lobby && room == 0) {
     g.save();
     g.font = 'bold 10px monospace';
-    txt('Ã¢â„¢Â¾ ENDLESS  Ã‚Â·  GELOMBANG ' + wave + '  Ã‚Â·  ' + ETH[LVL] + '  Ã‚Â·  REKOR ' + EBEST, W / 2, 14, '#ffd98a', 'center');
+    txt('\u267e ENDLESS  \u00b7  GELOMBANG ' + wave + '  \u00b7  ' + ETH[LVL] + '  \u00b7  REKOR ' + EBEST, W / 2, 14, '#ffd98a', 'center');
     g.restore();
   }
 };
@@ -1948,11 +1948,11 @@ draw = function () {
   };
   document.getElementById('dsGo').addEventListener('click', () => {
     if (ESEL)
-      msg('Ã¢â„¢Â¾ ENDLESS Ã‚Â· Colosseum Abyss Ã¢â‚¬â€ bertahan selama mungkin! Rekor: Gelombang ' + EBEST);
+      msg('\u267e ENDLESS \u00b7 Colosseum Abyss \u2014 bertahan selama mungkin! Rekor: Gelombang ' + EBEST);
   });
   sync();
 })();
-/* ===== ARENA ENDLESS: "Colosseum Abyss" Ã¢â‚¬â€ peta 1 ruangan khusus (bukan Ancient Hall), warna mengikuti level ===== */
+/* ===== ARENA ENDLESS: "Colosseum Abyss" \u2014 peta 1 ruangan khusus (bukan Ancient Hall), warna mengikuti level ===== */
 const WE = [
   ...WB(), ...[[190, 130], [190, 350], [420, 100], [420, 380], [640, 250], [560, 80], [560, 400]].map(([x, y]) => [x - 14, y - 14, 28, 28])
 ];
@@ -2079,3 +2079,44 @@ upd = function (dt) {
     }
   };
 });
+
+/* ===== BOS LAVA DEPTHS & FROST CRYPT: begitu masuk FASE 3, HP bos terisi penuh lagi; fase 3 tetap dipertahankan ===== */
+(function () {
+  var HP = ['hp', 'health'], MX = ['mhp', 'maxhp', 'maxHp', 'hpMax', 'hpmax', 'maxHealth', 'max'];
+  var pick = function (o, names) { for (var i = 0; i < names.length; i++) if (typeof o[names[i]] == 'number') return names[i]; return null; };
+  var st = { healed: 0, peak: 0, lastPh: 0, logged: 0 };
+  /* objek yang menyimpan HP bos: BOSS sendiri, atau entitas bos di daftar musuh */
+  var target = function () {
+    if (typeof BOSS == 'undefined' || !BOSS) return null;
+    if (pick(BOSS, HP)) return BOSS;
+    if (typeof es != 'undefined' && es) for (var i = 0; i < es.length; i++) { var e = es[i]; if (e && (e.boss || e.isBoss || /boss/i.test(e.k || '')) && pick(e, HP)) return e; }
+    return null;
+  };
+  var bossFight = function () {
+    if (typeof BOSS == 'undefined' || !BOSS || typeof room == 'undefined' || room != 2) return false;
+    if (typeof ENDLESS != 'undefined' && ENDLESS) return false;
+    return typeof LVL != 'undefined' && (LVL == 2 || LVL == 3);
+  };
+  var tick = function () {
+    if (!bossFight() || (typeof p != 'undefined' && p && p.dead > 0)) { st.healed = 0; st.peak = 0; st.lastPh = 0; return; }   // keluar ruang bos / pemain mati = pertarungan baru
+    var ph = BOSS.ph || 1, o = target();
+    if (!st.healed && ph < 3) { if (o) { var hk0 = pick(o, HP); if (o[hk0] > st.peak) st.peak = o[hk0]; var mk0 = pick(o, MX); if (mk0 && o[mk0] > st.peak) st.peak = o[mk0]; } }
+    if (ph >= 3 && st.lastPh < 3 && !st.healed && o) {
+      var hk = pick(o, HP), mk = pick(o, MX), full = Math.max(mk ? o[mk] : 0, st.peak, o[hk]);
+      o[hk] = full; if (mk && o[mk] < full) o[mk] = full;
+      st.healed = 1;
+      try { msg('FASE 3! Bos mengamuk \u2014 HP pulih penuh!'); } catch (e) { }
+      try { if (typeof shake != 'undefined') shake = Math.max(shake, 10); } catch (e) { }
+    }
+    /* kunci fase 3: HP kembali penuh tidak boleh menurunkan fase */
+    if (st.healed && BOSS.ph < 3) BOSS.ph = 3;
+    st.lastPh = st.healed ? 3 : ph;
+    if (!st.logged && o) { st.logged = 1; try { console.info('[boss-p3] HP:', pick(o, HP), ' MAX:', pick(o, MX) || '(puncak terpantau)'); } catch (e) { } }
+  };
+  var _u = upd;
+  upd = function (dt) {
+    if (st.healed && typeof BOSS != 'undefined' && BOSS && BOSS.ph < 3 && bossFight()) BOSS.ph = 3;
+    _u(dt);
+    try { tick(); } catch (e) { }
+  };
+})();

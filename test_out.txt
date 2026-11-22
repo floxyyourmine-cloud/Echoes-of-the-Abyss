@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+  <meta charset="utf-8">
+  <title>Test Runner</title>
+<style>
+  #wshop{position:fixed;inset:0;z-index:99998;display:none;align-items:center;justify-content:center;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 2px,transparent 2px 4px),radial-gradient(ellipse at 50% 35%,rgba(110,70,30,.5),rgba(6,4,10,.94) 75%);font-family:'Press Start 2P','Courier New',monospace;color:#f1e6cf;padding:env(safe-area-inset-top,0) 14px env(safe-area-inset-bottom,0);image-rendering:pixelated}
+  #wshop.on{display:flex}
+  #wshop .bx{--b:#c2a06b;width:min(640px,96vw);max-height:92vh;overflow:auto;padding:clamp(12px,2.6vh,22px) clamp(12px,2.6vw,22px);background-color:#1e1710;background-image:conic-gradient(rgba(255,255,255,.03) 25%,transparent 0 50%,rgba(255,255,255,.03) 0 75%,transparent 0);background-size:8px 8px;box-shadow:0 -4px 0 0 var(--b),0 4px 0 0 var(--b),-4px 0 0 0 var(--b),4px 0 0 0 var(--b),inset 4px 4px 0 rgba(255,255,255,.07),inset -4px -4px 0 rgba(0,0,0,.45),0 14px 0 0 rgba(0,0,0,.5);scrollbar-width:thin;scrollbar-color:#c2a06b #1e1710}
+  #wshop h2{margin:0;text-align:center;font:400 clamp(11px,2.8vh,17px)/1.4 'Press Start 2P',monospace;color:#ffd34d;text-shadow:3px 3px 0 #7a2a0c,5px 5px 0 #000;letter-spacing:.06em}
+  #wshop .sb{text-align:center;margin:6px 0 10px;font:400 clamp(7px,1.4vh,9px)/1.5 'Press Start 2P',monospace;color:#b8a888}
+  #wshop .gd{display:flex;justify-content:center;align-items:center;gap:8px;margin:0 auto 12px;padding:8px 12px;width:max-content;background:#120d08;box-shadow:0 0 0 3px #4a3a22;font-size:clamp(9px,1.8vh,12px);color:#ffe28a}
+  #wshop .gd svg{width:16px;height:16px;color:#f2c230}
+  #wshop .sec{display:flex;align-items:center;gap:8px;margin:12px 0 8px;font-size:clamp(7px,1.4vh,9px);color:#a89878;letter-spacing:.1em}
+  #wshop .sec::before,#wshop .sec::after{content:"";flex:1;height:3px;background:repeating-linear-gradient(90deg,#5a4a30 0 6px,transparent 6px 10px)}
+  #wshop .it{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:9px 10px;background:#2a2016;box-shadow:0 0 0 3px #4a3a22}
+  #wshop .ic{flex:0 0 34px;height:34px;display:flex;align-items:center;justify-content:center;background:#120d08;box-shadow:0 0 0 2px #3a2c1a}
+  #wshop .ic svg{width:24px;height:24px}
+  #wshop .tx{flex:1;min-width:0;text-align:left}
+  #wshop .tx b{display:block;font-weight:400;font-size:clamp(8px,1.6vh,10px);color:#fff3d0;margin-bottom:4px;line-height:1.4}
+  #wshop .tx small{display:block;font-size:clamp(6px,1.25vh,8px);color:#a89878;line-height:1.6}
+  #wshop button{font:400 clamp(7px,1.4vh,9px)/1 'Press Start 2P',monospace;cursor:pointer;color:#fff3d0;background:#5a7a2a;border:0;padding:9px 10px;box-shadow:inset -3px -3px 0 rgba(0,0,0,.4),inset 3px 3px 0 rgba(255,255,255,.2),0 0 0 2px #1a2a0a;white-space:nowrap}
+  #wshop button:active{transform:translateY(1px)}
+  #wshop button.sl{background:#8a5a22;box-shadow:inset -3px -3px 0 rgba(0,0,0,.4),inset 3px 3px 0 rgba(255,255,255,.2),0 0 0 2px #2a1a0a}
+  #wshop button:disabled{background:#3a3a3a;color:#777;cursor:not-allowed;box-shadow:inset -3px -3px 0 rgba(0,0,0,.4),0 0 0 2px #1a1a1a}
+  #wshop .pr{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+  #wshop .pr em{font-style:normal;color:#ffe28a;font-size:clamp(7px,1.5vh,10px)}
+  #wshop .ft{display:flex;justify-content:center;margin-top:14px}
+  #wshop .ft button{background:#7a2a2a;padding:11px 22px}
+  #wshop .hint{text-align:center;margin-top:10px;font-size:7px;color:#6a5a40}</style></head>
+<body>
+  <canvas id="scene" width="764" height="485"></canvas>
+  <canvas id="c" width="640" height="406"></canvas>
+  <div id="tutPanel" class="hidden"></div>
+  <div id="settings" class="hidden"></div>
+  <div id="exitPopup" class="hidden"></div>
+  <div id="menu" class="hidden"></div>
+  <div id="charSel" class="hidden"></div>
+  <div id="mobileControls" class="hidden"></div>
+  <div id="statModal" class="hidden"></div>
+  <div id="ckpt" class="hidden"></div>
+  <div id="aldAsk" class="hidden"></div>
+  <div id="intro" class="hidden"><canvas id="introCv"></canvas></div>
+
+  <!-- Scripts in order -->
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      var d = document.createElement('div');
+      d.className = 'script-err';
+      d.textContent = 'SCRIPT_ERROR: ' + url + ':' + line + ':' + col + ' ' + msg;
+      document.body.appendChild(d);
+    };
+  </script>
+  <script src="js/save-system.js"></script>
+  <script src="js/main.js"></script><div class="script-err">SCRIPT_ERROR: file:///C:/Users/Finza%20Naufal%20Arkana/Documents/game/js/main.js:11044:40 Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')</div>
+  <script src="js/player.js"></script>
+  <script src="js/combat.js"></script><div class="script-err">SCRIPT_ERROR: file:///C:/Users/Finza%20Naufal%20Arkana/Documents/game/js/combat.js:7:20 Uncaught ReferenceError: drawRock is not defined</div>
+  <script src="js/enemies.js"></script>
+  <script src="js/dungeon.js"></script>
+  <script src="js/lobby.js"></script>
+  <script src="js/forest.js"></script><div class="script-err">SCRIPT_ERROR: file:///C:/Users/Finza%20Naufal%20Arkana/Documents/game/js/forest.js:347:1 Uncaught SyntaxError: Unexpected end of input</div>
+  <script src="js/village.js"></script><div id="wshop"></div>
+  <script src="js/inventory.js"></script>
+  <script src="js/multiplayer.js"></script>
+
+  <div id="test-results">TEST_FAILED: ASSERTION FAILED: forest area registered<br>Stack: Error: ASSERTION FAILED: forest area registered<br>    at assert (file:///C:/Users/Finza%20Naufal%20Arkana/Documents/game/test_runner.html:54:15)<br>    at file:///C:/Users/Finza%20Naufal%20Arkana/Documents/game/test_runner.html:66:7</div>
+
+  <script>
+    const logs = [];
+    const errs = [];
+    window.onerror = function(msg, url, line, col, error) {
+      errs.push({ msg, url, line, col, err: String(error) });
+      console.error("WINDOW ERROR:", msg, line, col);
+    };
+
+    function assert(cond, desc) {
+      if (!cond) {
+        throw new Error("ASSERTION FAILED: " + desc);
+      }
+      logs.push("PASS: " + desc);
+    }
+
+    try {
+      // 1. Basic initialization
+      assert(typeof window.WORLD !== 'undefined', "WORLD object exists");
+      assert(typeof window.WORLD.AREAS !== 'undefined', "WORLD.AREAS exists");
+      
+      // 2. Check all areas registered
+      assert(typeof window.WORLD.AREAS.corridor !== 'undefined', "corridor area registered");
+      assert(typeof window.WORLD.AREAS.forest !== 'undefined', "forest area registered");
+      assert(typeof window.WORLD.AREAS.village !== 'undefined', "village area registered");
+
+      // 3. Check Corridor build
+      const C = window.WORLD.AREAS.corridor;
+      assert(typeof C.build === 'function', "Corridor has build function");
+      C.build();
+      assert(C.walls.length > 0, "Corridor walls built: " + C.walls.length);
+      assert(C.npcs.length >= 3, "Corridor NPCs registered: " + C.npcs.length);
+
+      // 4. Check Forest build
+      const F = window.WORLD.AREAS.forest;
+      assert(typeof F.build === 'function', "Forest has build function");
+      F.build();
+      assert(F.objs.length > 0, "Forest objects built: " + F.objs.length);
+      assert(F.chests.length >= 4, "Forest chests built: " + F.chests.length);
+
+      // 5. Check Village build
+      const V = window.WORLD.AREAS.village;
+      assert(typeof V.build === 'function', "Village has build function");
+      V.build();
+      assert(V.objs.length > 0, "Village objects built: " + V.objs.length);
+      assert(V.npcs.length > 0, "Village NPCs built: " + V.npcs.length);
+
+      // 6. Check transitions exist
+      const SEQ = window.WORLD.SEQ;
+      assert(typeof SEQ.emerge === 'object', "SEQ.emerge exists");
+      assert(typeof SEQ.toForest === 'object', "SEQ.toForest exists");
+      assert(typeof SEQ.toLobby === 'object', "SEQ.toLobby exists");
+      assert(typeof SEQ.gate === 'object', "SEQ.gate exists");
+      assert(typeof SEQ.corridorToForest === 'object', "SEQ.corridorToForest exists");
+      assert(typeof SEQ.corridorToLobby === 'object', "SEQ.corridorToLobby exists");
+      assert(typeof SEQ.portalLobby === 'object', "SEQ.portalLobby exists");
+
+      // 7. Check Area switching
+      window.WORLD.setArea('corridor');
+      assert(window.AREA === 'corridor', "Switched to corridor");
+
+      window.WORLD.setArea('forest');
+      assert(window.AREA === 'forest', "Switched to forest");
+
+      window.WORLD.setArea('village');
+      assert(window.AREA === 'village', "Switched to village");
+
+      window.WORLD.setLobby();
+      assert(window.AREA === 'lobby', "Switched to lobby");
+
+      // 8. Check Dungeon systems
+      assert(typeof buildLavaBossBG === 'function', "buildLavaBossBG exists in dungeon.js");
+      assert(typeof buildLavaRoom === 'function', "buildLavaRoom exists in dungeon.js");
+      assert(typeof buildEndBG === 'function', "buildEndBG exists in dungeon.js");
+      assert(typeof enterDungeon === 'function', "enterDungeon exists in dungeon.js");
+
+      // 9. Check Combat systems
+      assert(typeof drawRock === 'function', "drawRock exists in combat.js");
+      assert(typeof pfire === 'function', "pfire exists in combat.js");
+      assert(typeof hurt === 'function', "hurt exists in combat.js");
+
+      document.getElementById('test-results').innerText = "ALL_TESTS_PASSED:\n" + logs.join("\n");
+      console.log("=== ALL_TESTS_PASSED ===");
+    } catch (e) {
+      document.getElementById('test-results').innerText = "TEST_FAILED: " + e.message + "\nStack: " + e.stack;
+      console.error("TEST FAILED:", e);
+    }
+  </script>
+
+
+</body></html>

@@ -17,8 +17,9 @@
   const VW = 1800, VH = 940, OLC = '#14100c';
   const V = WORLD.AREAS.village = { name: 'DESA LEMBAH LENTERA', sub: 'Lanternvale Village', w: VW, h: VH, spawn: [96, 384], ready: 0, objs: [], dyn: [], npcs: [], walls: [], bg: null, _L: [] };
   const MAINST = [[0, 380], [200, 380], [420, 380], [640, 380], [900, 380], [1100, 380], [1320, 380], [1520, 380], [1800, 380]];
-  const NS = [[640, 90], [640, 250], [640, 380], [640, 520], [640, 740], [640, 850]];
-  const SIDE = [[[330, 380], [330, 292]], [[930, 380], [930, 300]], [[640, 520], [800, 520], [800, 600]], [[200, 380], [200, 470]], [[420, 380], [380, 560], [250, 640]], [[1100, 380], [1100, 470]]];
+  const NS = [[640, 90], [640, 250], [640, 380], [640, 520], [640, 740], [640, 842]];
+  const SIDE = [[[330, 380], [330, 268]], [[930, 380], [930, 282]], [[640, 520], [800, 520], [800, 600]], [[200, 380], [200, 470]], [[420, 380], [380, 560], [312, 606]], [[1100, 380], [1100, 470]],
+  [[150, 224], [150, 380]], [[1040, 254], [1040, 380]], [[1180, 254], [1180, 380]], [[280, 526], [280, 548], [376, 548]], [[460, 604], [460, 642]]];
   const PLAZA = { x: 640, y: 380, r: 86 };
   const PZ = V.PZ = { x: 482, y: 694, rx: 128, ry: 46 };   // PLAZA PORTAL: lahan lapang khusus teleport (selatan-tengah desa)
 
@@ -34,7 +35,18 @@
     [[1700, 608], [1700, 852]]
   ];
   NEWH.forEach(([a, b, w, ln]) => SIDE.push(ln === 'm' ? [[a, 380], [a, b + 4]] : ln === 'n' ? [[640, 252], [a, 254], [a, b + 4]] : ln === 'e' ? [[a, 608], [a, b + 4]] : [[a, 852], [a, b + 4]]));
-  const MAINd = dense(MAINST, 4), NSd = dense(NS, 4), SIDEd = SIDE.map(s => dense(s, 4)), LANEd = LANE.map(s => dense(s, 4));
+  /* tikungan jalan dibulatkan (fillet kuadratik) supaya belokan halus, bukan siku-siku tajam */
+  const fillet = (pts, rmax) => {
+    if (pts.length < 3) return pts;
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1], l1 = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), l2 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]), r = Math.min(rmax, l1 * .45, l2 * .45);
+      const a = [p1[0] + (p0[0] - p1[0]) * r / l1, p1[1] + (p0[1] - p1[1]) * r / l1], b = [p1[0] + (p2[0] - p1[0]) * r / l2, p1[1] + (p2[1] - p1[1]) * r / l2];
+      for (let k = 0; k <= 10; k++) { const u = k / 10, w0 = (1 - u) * (1 - u), w1 = 2 * u * (1 - u), w2 = u * u; out.push([a[0] * w0 + p1[0] * w1 + b[0] * w2, a[1] * w0 + p1[1] * w1 + b[1] * w2]) }
+    }
+    out.push(pts[pts.length - 1]); return out;
+  };
+  const MAINd = dense(MAINST, 4), NSd = dense(NS, 4), SIDEd = SIDE.map(s => dense(fillet(s, 56), 4)), LANEd = LANE.map(s => dense(fillet(s, 40), 4));
   const BLD = [];
   const POND = { x: 210, y: 650, rx: 96, ry: 44 }, POND2 = { x: 1580, y: 690, rx: 78, ry: 30 };
 
@@ -140,8 +152,8 @@
 
   V.build = function () {
     const rng = mkRng(777), [bg, x] = mkCv(VW, VH); V.bg = bg;
-    const id = x.createImageData(VW, VH), d = id.data, GD = h2r('#4a7a34'), GL = h2r('#7aa848'), GW = h2r('#9aa040');
-    for (let yy = 0; yy < VH; yy++) for (let xx = 0; xx < VW; xx++) { const v = vnoise(xx / 70, yy / 70, 4) * .6 + vnoise(xx / 14, yy / 14, 5) * .4, wm = vnoise(xx / 160, yy / 160, 6), sp = hash(xx, yy, 10); let c = mixc(GD, GL, v); c = mixc(c, GW, wm * .25); if (sp < .05) c = mixc(c, [10, 40, 20], .28); else if (sp > .965) c = mixc(c, [230, 240, 150], .2); const o = (yy * VW + xx) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255 }
+    const id = x.createImageData(VW, VH), d = id.data, GD = h2r('#4a7a34'), GL = h2r('#7aa848'), GW = h2r('#9aa040'), GLUSH = h2r('#2f6a30'), GEDGE = h2r('#1f4a2a');
+    for (let yy = 0; yy < VH; yy++) for (let xx = 0; xx < VW; xx++) { const v = vnoise(xx / 70, yy / 70, 4) * .6 + vnoise(xx / 14, yy / 14, 5) * .4, wm = vnoise(xx / 160, yy / 160, 6), sp = hash(xx, yy, 10); let c = mixc(GD, GL, v); c = mixc(c, GW, wm * .25); const lu = vnoise(xx / 240, yy / 240, 9); if (lu > .58) c = mixc(c, GLUSH, Math.min(.5, (lu - .58) * 1.6)); const ed = Math.min(xx, VW - xx, yy, VH - yy); if (ed < 120) c = mixc(c, GEDGE, (1 - ed / 120) * .42); if (sp < .05) c = mixc(c, [10, 40, 20], .28); else if (sp > .965) c = mixc(c, [230, 240, 150], .2); const o = (yy * VW + xx) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255 }
     x.putImageData(id, 0, 0);
     for (let i = 0; i < 2700; i++) art.grassTuft(x, rng() * VW, rng() * VH, rng);
     const fc = ['#ffffff', '#ffd34d', '#ff9ac0', '#b48cff', '#7ab8ff'];
@@ -156,22 +168,87 @@
     const FARM = { x: 990, y: 470, w: 300, h: 250 }; rc(x, '#4a3020', FARM.x - 2, FARM.y - 2, FARM.w + 4, FARM.h + 4); rc(x, '#6a4a2c', FARM.x, FARM.y, FARM.w, FARM.h);
     for (let r = 0; r < 10; r++) { const yy = FARM.y + 12 + r * 23; rc(x, '#4a301a', FARM.x + 6, yy + 12, FARM.w - 12, 4); rc(x, '#7a5836', FARM.x + 6, yy + 2, FARM.w - 12, 8); for (let i = 0; i < 22; i++) { const a = FARM.x + 12 + i * 13; if (r < 4) { rc(x, '#3a8a34', a, yy - 3, 4, 8); rc(x, '#58b04a', a + 1, yy - 4, 2, 6); rc(x, '#8ad070', a + 1, yy - 4, 1, 2) } else if (r < 7) { rc(x, '#c9a02a', a + 1, yy - 6, 2, 11); rc(x, '#e8c850', a, yy - 8, 4, 4); rc(x, '#a8841a', a + 3, yy - 2, 1, 5) } else { rc(x, '#2a7a2a', a - 1, yy - 2, 7, 6); rc(x, '#4aa83a', a, yy - 3, 5, 4); rc(x, '#8ad070', a + 1, yy - 3, 2, 1) } } }
 
-    const RC = { side: ['#a08a64', '#8a7650', '#b8a47c'], main: ['#9a9488', '#85807a', '#b4aea0'] };
-    const unit = (dn, i) => { const p = dn[Math.max(0, i - 1)], q = dn[Math.min(dn.length - 1, i + 1)], dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l] };
-    const roadOutline = (dn, w) => dn.forEach(([a, b]) => disc(x, '#4a463e', a, b, w / 2 + 3));
-    const roadFill = (dn, w, col) => {
-      dn.forEach(([a, b]) => disc(x, col[0], a, b, w / 2 + 1)); const rows = Math.max(2, Math.floor((w - 4) / 6));
-      dn.forEach(([a, b], i) => { if (i % 2) return; const [ux, uy] = unit(dn, i), nx = -uy, ny = ux; for (let r = 0; r < rows; r++) { const off = (r - (rows - 1) / 2) * 6, sh = ((i / 2 + r) % 2) * 4, px = a + nx * off + ux * sh, py = b + ny * off + uy * sh; rc(x, col[1], px - 2, py - 1, 5, 3); rc(x, col[2], px - 2, py - 1, 4, 2) } })
+    /* ===== JALAN v2: semua jalan digabung dalam satu mask -> persimpangan mulus, batu tersusun rapi (grid dunia),
+       trotoar/curb bercahaya, bahu jalan tanah, lumut halus. Dilukis sekali di akhir (lihat paintRoads). ===== */
+    const STUBS = [];
+    const paintRoads = () => {
+      const roads = [...SIDEd.map(d => [d, 22, 1]), ...LANEd.map(d => [d, 30, 2]), [NSd, 44, 2], [MAINd, 46, 2],
+      [dense([[626, 694], [592, 694]], 4), 34, 2], [[[312, 606]], 36, 1], ...STUBS.map(d => [d, 18, 1])];
+      const N = VW * VH, cls = new Uint8Array(N);
+      const stamp = (a, b, r, k) => {
+        const r2 = r * r, ya = Math.max(0, Math.floor(b - r)), yb = Math.min(VH - 1, Math.ceil(b + r)), xa = Math.max(0, Math.floor(a - r)), xb = Math.min(VW - 1, Math.ceil(a + r));
+        for (let yy = ya; yy <= yb; yy++) for (let xx = xa; xx <= xb; xx++) { const dx = xx - a, dy = yy - b; if (dx * dx + dy * dy <= r2) { const o = yy * VW + xx; if (cls[o] < k) cls[o] = k } }
+      };
+      roads.forEach(([dn, w, k]) => dn.forEach(([a, b]) => stamp(a, b, w / 2 + .5, k)));
+      const PX = PLAZA.x, PY = PLAZA.y, PR = PLAZA.r, PRY = PR * .7;
+      for (let yy = Math.floor(PY - PRY) - 1; yy <= PY + PRY + 1; yy++) for (let xx = Math.floor(PX - PR) - 1; xx <= PX + PR + 1; xx++) if (((xx - PX) / PR) ** 2 + ((yy - PY) / PRY) ** 2 <= 1) cls[yy * VW + xx] = 3;
+      /* jarak ke tepi terdekat (chamfer 3-4): dalam jalan = tebal trotoar, di luar = lebar bahu jalan */
+      const D = new Uint16Array(N), INF = 60000;
+      for (let yy = 0; yy < VH; yy++) for (let xx = 0; xx < VW; xx++) {
+        const o = yy * VW + xx, v = cls[o] > 0;
+        D[o] = ((xx > 0 && (cls[o - 1] > 0) !== v) || (xx < VW - 1 && (cls[o + 1] > 0) !== v) || (yy > 0 && (cls[o - VW] > 0) !== v) || (yy < VH - 1 && (cls[o + VW] > 0) !== v)) ? 3 : INF;
+      }
+      for (let yy = 0; yy < VH; yy++) for (let xx = 0; xx < VW; xx++) {
+        const o = yy * VW + xx; let d = D[o];
+        if (xx > 0) d = Math.min(d, D[o - 1] + 3);
+        if (yy > 0) { d = Math.min(d, D[o - VW] + 3); if (xx > 0) d = Math.min(d, D[o - VW - 1] + 4); if (xx < VW - 1) d = Math.min(d, D[o - VW + 1] + 4) }
+        D[o] = Math.min(d, INF);
+      }
+      for (let yy = VH - 1; yy >= 0; yy--) for (let xx = VW - 1; xx >= 0; xx--) {
+        const o = yy * VW + xx; let d = D[o];
+        if (xx < VW - 1) d = Math.min(d, D[o + 1] + 3);
+        if (yy < VH - 1) { d = Math.min(d, D[o + VW] + 3); if (xx < VW - 1) d = Math.min(d, D[o + VW + 1] + 4); if (xx > 0) d = Math.min(d, D[o + VW - 1] + 4) }
+        D[o] = Math.min(d, INF);
+      }
+      const img = x.getImageData(0, 0, VW, VH), d = img.data, H = c => h2r(c);
+      const PAL = {
+        1: { st: ['#b29c74', '#a38d66', '#bda985', '#96815c'].map(H), mo: H('#6f6046'), cu: H('#cdbb92'), gw: 7, gh: 4 },
+        2: { st: ['#9d978b', '#8f8a7f', '#aaa496', '#858074'].map(H), mo: H('#625d54'), cu: H('#bdb7a8'), gw: 9, gh: 5 },
+        3: { st: ['#b9b3a3', '#aea898', '#c4bdac', '#a39d8e'].map(H), mo: H('#6c675e'), cu: H('#d2ccbb'), gw: 9, gh: 5 }
+      };
+      const DIRT = H('#7d6d4c'), OUT = H('#4a463e'), MOSS = [74, 120, 52], PEB = [168, 162, 148], GOLD = H('#c9a85a'), SLATE = H('#5b564d');
+      const put = (o, c, sh) => { d[o * 4] = Math.max(0, Math.min(255, c[0] + sh)); d[o * 4 + 1] = Math.max(0, Math.min(255, c[1] + sh)); d[o * 4 + 2] = Math.max(0, Math.min(255, c[2] + sh)) };
+      const mix = (o, c, t) => { d[o * 4] += (c[0] - d[o * 4]) * t; d[o * 4 + 1] += (c[1] - d[o * 4 + 1]) * t; d[o * 4 + 2] += (c[2] - d[o * 4 + 2]) * t };
+      for (let yy = 0; yy < VH; yy++) for (let xx = 0; xx < VW - 28; xx++) {   // 28px terakhir = daun pintu gerbang timur, jangan ditimpa
+        const o = yy * VW + xx, k = cls[o], dd = D[o];
+        if (k === 0) {                                              // bahu jalan di luar tepi
+          if (dd > 21) continue; const dist = (dd + 2) / 3 | 0, h = hash(xx, yy, 3);
+          if (dist === 1) put(o, OUT, 0);
+          else if (dist <= 3) { if (h < .82) mix(o, DIRT, dist === 2 ? .55 : .38) }
+          else if (h < .4 - (dist - 4) * .13) mix(o, DIRT, .3); else if (h > .987) put(o, PEB, 0);
+          continue;
+        }
+        const P = PAL[k], din = (dd + 2) / 3 | 0;
+        if (din <= 2) {                                             // trotoar (curb) dengan penyinaran dari atas
+          const top = !cls[o - VW] || (din === 2 && !cls[o - 2 * VW]), bot = !cls[o + VW] || (din === 2 && !cls[o + 2 * VW]);
+          put(o, P.cu, (top ? 16 : bot ? -30 : -4) + (din === 2 ? -10 : 0) + ((((xx >> 2) + (yy >> 2)) & 1) ? -9 : 0)); continue;
+        }
+        let c, sh = 0;
+        if (k === 3) {                                              // plaza: cincin & irisan radial
+          const rx = (xx - PX) / PR, ry = (yy - PY) / PRY, rho = Math.sqrt(rx * rx + ry * ry), an = (Math.atan2(ry, rx) + Math.PI) / (Math.PI * 2);
+          if (rho > .9) { const f = (an * 56) % 1, si = (an * 56) | 0; c = f < .07 ? P.mo : P.st[(si & 1) ? 0 : 2]; sh = f < .07 ? 0 : ((si & 1) ? -6 : 6) }
+          else if (rho > .86) { c = (rho > .875 && rho < .89) ? GOLD : SLATE }
+          else if (rho > .62) { const f = (an * 16) % 1, wi = (an * 16) | 0; if (f < .035) { c = P.mo } else { const gw = 9, gh = 5, row = (yy / gh) | 0, ox = (row & 1) ? 4 : 0, cx = ((xx + ox) / gw) | 0, lx = (xx + ox) % gw, ly = yy % gh; if (lx === 0 || ly === 0) c = P.mo; else { c = P.st[(hash(cx, row, 27) * 4) | 0]; sh = ((wi & 1) ? -7 : 7) + (ly === 1 ? 10 : 0) } } }
+          else if (rho > .6) { c = GOLD }
+          else if (rho > .575) { c = SLATE }
+          else { const gw = 9, gh = 5, row = (yy / gh) | 0, ox = (row & 1) ? 4 : 0, cx = ((xx + ox) / gw) | 0, lx = (xx + ox) % gw, ly = yy % gh; if (lx === 0 || ly === 0) c = SLATE; else { c = P.st[(hash(cx, row, 29) * 4) | 0]; sh = -26 } }
+        } else {                                                    // batu jalan: grid dunia + selang-seling
+          const gw = P.gw, gh = P.gh, row = (yy / gh) | 0, ox = (row & 1) ? (gw >> 1) : 0, cx = ((xx + ox) / gw) | 0, lx = (xx + ox) % gw, ly = yy % gh;
+          if (lx === 0 || ly === 0) { c = P.mo }
+          else { const h = hash(cx, row, 21 + k); c = P.st[(h * 4) | 0]; sh = ((h * 2 - 1) * 7) + (ly === 1 ? 13 : 0) + (lx === 1 ? 7 : 0) + (ly === gh - 1 ? -11 : 0) + (lx === gw - 1 ? -7 : 0); if (din <= 8 && hash(cx, row, 63) > .9) { put(o, c, sh); mix(o, MOSS, .3 + (hash(xx, yy, 5) - .5) * .2); continue } }
+        }
+        put(o, c, sh + (vnoise(xx / 11, yy / 11, 41) - .5) * 16 + (hash(xx, yy, 55) > .988 ? -14 : 0));
+      }
+      x.putImageData(img, 0, 0);
+      /* hiasan tepi jalan: rumput & bunga kecil menyatukan jalan dengan tanah */
+      const fr = mkRng(2468), FCs = ['#ffffff', '#ffd34d', '#ff9ac0', '#b48cff', '#7ab8ff'];
+      const okDeco = (a, b) => a > 56 && a < VW - 56 && b > 66 && b < VH - 58 && ((a - POND.x) / (POND.rx + 16)) ** 2 + ((b - POND.y) / (POND.ry + 14)) ** 2 > 1 && ((a - POND2.x) / (POND2.rx + 16)) ** 2 + ((b - POND2.y) / (POND2.ry + 14)) ** 2 > 1 && !(a > FARM.x - 10 && a < FARM.x + FARM.w + 10 && b > FARM.y - 10 && b < FARM.y + FARM.h + 10) && ((a - PZ.x) / (PZ.rx + 14)) ** 2 + ((b - PZ.y) / (PZ.ry + 14)) ** 2 > 1;
+      for (let yy = 70; yy < VH - 60; yy += 3) for (let xx = 56; xx < VW - 56; xx += 3) {
+        const o = yy * VW + xx; if (cls[o]) continue; const dist = (D[o] + 2) / 3 | 0; if (dist < 6 || dist > 11 || fr() > .04) continue;
+        const a = xx + fr() * 3, b = yy + fr() * 3; if (!okDeco(a, b)) continue;
+        if (fr() < .55) art.grassTuft(x, a, b, fr); else art.flower(x, a, b, FCs[(fr() * 5) | 0]);
+      }
     };
-    const cobble = (dn, w, col, fo) => { roadOutline(fo ? dn.filter(fo) : dn, w); roadFill(dn, w, col) };
-    const RDS = [...SIDEd.map(d => [d, 22, RC.side]), ...LANEd.map(d => [d, 30, RC.main]), [NSd, 44, RC.main], [MAINd, 46, RC.main]];
-    RDS.forEach(([d, w]) => roadOutline(d, w)); RDS.forEach(([d, w, c]) => roadFill(d, w, c));
-    RDS.forEach(([d, w]) => d.forEach(([a, b], i) => { if (i % 2) return; const [ux, uy] = unit(d, i), nx = -uy, ny = ux;[-1, 1].forEach(sd => { const px = a + nx * sd * (w / 2 + 1), py = b + ny * sd * (w / 2 + 1); if (RDS.some(r => r[0] !== d && distPoly(px, py, r[0]) < r[1] / 2 + 1)) return; rc(x, '#5e5a50', px - 2, py - 1, 4, 3); rc(x, '#a29e92', px - 2, py - 1, 4, 1) }) }));
-    ell(x, '#4a463e', PLAZA.x, PLAZA.y, PLAZA.r + 3, PLAZA.r * .7 + 3); ell(x, '#9a9488', PLAZA.x, PLAZA.y, PLAZA.r, PLAZA.r * .7);
-    for (let i = 0; i < 360; i++) { const an = rng() * TAU, dd = Math.sqrt(rng()) * PLAZA.r * .97; rc(x, rng() < .5 ? '#85807a' : '#b8b2a4', PLAZA.x + Math.cos(an) * dd, PLAZA.y + Math.sin(an) * dd * .7, 5, 3) }
-    ell(x, 'rgba(255,255,255,.06)', PLAZA.x, PLAZA.y, PLAZA.r * .55, PLAZA.r * .38); ell(x, '#7a7468', PLAZA.x, PLAZA.y, 40, 28);
-
-    for (let yy = 626; yy < 706; yy += 4) { rc(x, '#4a301a', 196, yy, 32, 4); rc(x, yy % 8 ? '#9a7444' : '#8a6440', 197, yy, 30, 3) } rc(x, '#4a301a', 194, 626, 2, 80); rc(x, '#4a301a', 228, 626, 2, 80);
 
     const walls = V.walls = [[-20, -20, VW + 40, 44], [-20, VH - 42, VW + 40, 60], [-20, -20, 48, 344], [-20, 440, 48, VH], [VW - 28, -20, 48, 344], [VW - 28, 440, 48, VH], [VW - 28, 320, 48, 124]];
     const objs = V.objs = [], spr = (s, a, b, solid, extra) => { objs.push({ x: Math.round(a), y: Math.round(b), img: s.img, ox: s.ox, oy: s.oy, oh: s.img.height, ...extra }); if (solid) walls.push(solid) };
@@ -266,7 +343,7 @@
 
     [[220, 872], [400, 872], [570, 872], [720, 872], [880, 874], [1040, 874], [1180, 872], [1340, 872], [1500, 872], [1640, 872],
     [1370, 404], [1415, 346], [1500, 404], [1575, 346], [1650, 404], [1725, 346], [1758, 404],
-    [1460, 632], [1600, 636], [1690, 632], [1735, 730], [1690, 790], [1415, 646], [1380, 520]].forEach(([a, b]) => spr(art.lantern(), a, b, [a - 3, b - 5, 6, 5], { glow: 1 }));
+    [1460, 632], [334, 600], [1600, 636], [1690, 632], [1735, 730], [1690, 790], [1415, 646], [1380, 520]].forEach(([a, b]) => spr(art.lantern(), a, b, [a - 3, b - 5, 6, 5], { glow: 1 }));
 
     [[1752, 432], [1730, 438]].forEach(([a, b]) => spr(art.haybale(), a, b, [a - 10, b - 6, 20, 8])); spr(art.crate(), 1752, 336, [1745, 332, 14, 5]); spr(art.barrel(), 1734, 336, [1728, 332, 12, 5]);
 
@@ -330,7 +407,7 @@
         if (bad || !np || best > 175) continue;
         const stub = dense([[a, b + 4], [a, b + 16], [np[0], np[1]]], 4);
         if (stub.slice(4).some(p => blk(p[0], p[1], -8) || BLD.some(h => inR(p[0], p[1], h, 4)) || (p[0] > r[0] && p[0] < r[0] + r[2] && p[1] > r[1] && p[1] < b + 2))) continue;
-        cobble(stub.filter(p => !ROADS.some(([rd, hw]) => distPoly(p[0], p[1], rd) < hw - 2)), 18, RC.side, p => !ROADS.some(([rd, hw]) => distPoly(p[0], p[1], rd) < hw + 12));
+        STUBS.push(stub);
         if (tw) { const s = fTower(pk(['#3a5a9a', '#7a3a8a', '#2f6a7a', '#8a3a3a']), pk(FLAG)); spr(s, a, b, [a - 16, b - 14, 32, 14], { lamp: s.lamp.map(l => [a + l[0], b + l[1]]) }); BLD.push({ x: a, y: b, w: 40, kind: 'tower' }) }
         else {
           place('house', a, b, w, { wall: pick(WALLC), trim: pick(TRIMC), roof: pk(ROOFF), thatch: h2() < .25, flag: h2() < .22 ? pk(FLAG) : 0, shut: pk(SHUT), fl: h2() < .45 ? 2 : 1, chimney: h2() < .65 ? 1 : 0, wins: pick(WINS) });
@@ -340,6 +417,8 @@
         placed++;
       }
     } catch (e) { console.warn('[padat-desa]', e) }
+    try { paintRoads() } catch (e) { console.warn('[jalan]', e) }
+    for (let yy = 626; yy < 706; yy += 4) { rc(x, '#4a301a', 196, yy, 32, 4); rc(x, yy % 8 ? '#9a7444' : '#8a6440', 197, yy, 30, 3) } rc(x, '#4a301a', 194, 626, 2, 80); rc(x, '#4a301a', 228, 626, 2, 80);
     const OAK = [], PINE = []; for (let i = 0; i < 5; i++) OAK.push(art.oak(i + 20, .85 + (i % 3) * .12)); for (let i = 0; i < 3; i++) PINE.push(art.pine(i + 20, .9));
     const occ = []; const free = (a, b, m) => { if (a < 52 || a > VW - 52 || b < 62 || b > VH - 54) return false; if (((a - PZ.x) / (PZ.rx + 26 + m)) ** 2 + ((b - PZ.y) / (PZ.ry + 30 + m)) ** 2 < 1) return false; if (distPoly(a, b, MAINd) < 32 + m || distPoly(a, b, NSd) < 30 + m || SIDEd.some(s => distPoly(a, b, s) < 20 + m) || LANEd.some(s => distPoly(a, b, s) < 26 + m)) return false; if (Math.hypot(a - PLAZA.x, (b - PLAZA.y) * 1.4) < PLAZA.r + m) return false; if (((a - POND.x) / (POND.rx + 22 + m)) ** 2 + ((b - POND.y) / (POND.ry + 18 + m)) ** 2 < 1) return false; if (((a - POND2.x) / (POND2.rx + 22 + m)) ** 2 + ((b - POND2.y) / (POND2.ry + 18 + m)) ** 2 < 1) return false; if (a > 1330 && a < 1500 && b > 626 && b < 740) return false; if (a > 1470 && a < 1670 && b > 400 && b < 520) return false; if (a > FARM.x - 24 - m && b > FARM.y - 24 - m && a < FARM.x + FARM.w + 24 && b < FARM.y + FARM.h + 30) return false; if (BLD.some(h => Math.abs(a - h.x) < h.w / 2 + 18 + m && b > h.y - 78 - m && b < h.y + 30 + m)) return false; if (a < 120 && Math.abs(b - 382) < 70) return false; if (a > 160 && a < 270 && b > 590 && b < 745) return false; if (objs.some(o => !o.fountain && Math.abs(o.x - a) < 28 + m && Math.abs(o.y - b) < 20 + m)) return false; return true };
     V.free = free;
@@ -1031,10 +1110,6 @@
   const PZC = ['#a29e92', '#9a9488', '#8e897d', '#b0aa9c'];
   function paintPlaza() {
     const P = V.PZ, c = V.bg.getContext('2d'), X0 = P.x, Y0 = P.y, px = (col, a, b, w, h) => rc(c, col, Math.round(a), Math.round(b), w, h);
-    // jalan batu penghubung dari jalan utara-selatan ke plaza
-    px('#4a463e', 592, 676, 34, 36); px('#85807a', 592, 678, 34, 32);
-    for (let yy = 679; yy < 708; yy += 6) for (let xx = 593 + (((yy - 679) / 6) & 1) * 3; xx < 622; xx += 8) { px(PZC[(hash(xx, yy, 9) * 4) | 0], xx, yy, 7, 5) }
-    // alas plaza: bayangan, tepi, ubin batu berselang-seling
     ellc(c, 'rgba(0,0,0,.20)', X0, Y0 + 4, P.rx + 9, P.ry + 8);
     ellc(c, '#4a463e', X0, Y0, P.rx + 3, P.ry + 3);
     ellc(c, '#7a7468', X0, Y0, P.rx, P.ry);
@@ -1063,7 +1138,7 @@
     for (let j = 0; j < 3; j++) { px('#c8a050', bx - 1, by + 28 + j * 8, 2, 2); px('#8a5ad0', bx - 3, by + 29 + j * 8, 6, 1) }
     // bunga liar mengelilingi plaza
     const rg = mkRng(4242), FC = ['#ffffff', '#b48cff', '#7ab8ff', '#ff9ac0'];
-    for (let i = 0; i < 80; i++) { const a = rg() * TAU, d = 1.05 + rg() * .16, fx = X0 + Math.cos(a) * P.rx * d, fy = Y0 + Math.sin(a) * P.ry * d + 2; if (fx > 586 && Math.abs(fy - 694) < 22) continue; art.flower(c, fx, fy, FC[(rg() * 4) | 0]) }
+    for (let i = 0; i < 80; i++) { const a = rg() * TAU, d = 1.05 + rg() * .16, fx = X0 + Math.cos(a) * P.rx * d, fy = Y0 + Math.sin(a) * P.ry * d + 2; if ((fx > 586 && Math.abs(fy - 694) < 22) || (Math.abs(fx - 460) < 18 && fy < Y0 - 30)) continue; art.flower(c, fx, fy, FC[(rg() * 4) | 0]) }
   }
 
   /* ---------- hiasan plaza: panji, lentera, obelisk kristal, bangku, bunga, pohon ---------- */
