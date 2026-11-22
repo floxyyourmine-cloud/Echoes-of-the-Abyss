@@ -93,38 +93,68 @@
     for (let i = 0; i < 60; i++) { const a = cx0 + rng() * (cx1 - cx0), b = rng() * 86; if (vnoise(a / 12, b / 8, 21) > .55) { rc(x, '#3a2a58', a, b, 3, 2); rc(x, '#5a3a78', a, b, 2, 1) } }
     for (let i = 0; i < 28; i++) { const a = cx0 + 8 + rng() * (cx1 - cx0 - 16), b = 80 + rng() * 10; rc(x, '#2a1a40', a, b - 6, 1, 8); rc(x, '#4a2a68', a + 1, b - 4, 1, 6) }
     ell(x, 'rgba(0,0,0,.32)', 210, 98, 190, 6);
-    // --- benteng gelap sederhana di bukit (pintu & bingkainya tetap yang asli, digambar setelah ini) ---
-    F.castle = { wins: [], torches: [] };
+    // --- reruntuhan benteng Abyss: batu gelap menyatu dengan tebing, berlumut & dililit sulur hutan ---
+    // (pakai RNG terpisah supaya letak pohon/tanaman/satwa di hutan tidak berubah)
+    F.castle = { wins: [], torches: [], runes: [] };
     {
-      const ZK = '#09060f', Z0 = '#14101e', Z1 = '#1d1729', Z2 = '#292139', Z3 = '#382e4e', Z4 = '#4c4068', wins = F.castle.wins, D0 = F.door.x;
-      const brick = (a, b, w, h) => {
-        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) { const row = (yy / 6) | 0, mort = yy % 6 === 0 || (xx + (row & 1) * 5) % 11 === 0, n = vnoise((a + xx) / 6, (b + yy) / 4, 31); rc(x, mort ? Z0 : n < .3 ? Z1 : n < .68 ? Z2 : Z3, a + xx, b + yy, 1, 1) }
-        rc(x, ZK, a - 1, b, 1, h); rc(x, ZK, a + w, b, 1, h); rc(x, 'rgba(0,0,0,.35)', a + w - 4, b, 4, h);
+      const cr = mkRng(7777), ZK = '#09060f', Z0 = '#14101e', Z1 = '#1d1729', Z2 = '#292139', Z3 = '#382e4e', Z4 = '#4c4068', MO = ['#1f3a26', '#2f5a34', '#4a8a3a'], wins = F.castle.wins, D0 = F.door.x, TOP = {};
+      // tembok batu bersusun: lumut di sisi atas, bercak lumut, retakan; jag = bentuk puncak (merlon / runtuh)
+      const stone = (a, b, w, h, jag) => {
+        const j0 = jag ? jag(0) | 0 : 0, j1 = jag ? jag(w - 1) | 0 : 0;
+        for (let xx = 0; xx < w; xx++) {
+          const top = jag ? jag(xx) | 0 : 0, md = 1 + vnoise((a + xx) / 7, 0, 33) * 4, k = a + xx; TOP[k] = TOP[k] === undefined ? b + top : Math.min(TOP[k], b + top);
+          for (let yy = top; yy < h; yy++) {
+            const row = (yy / 7) | 0, mort = yy % 7 === 0 || (xx + row * 5) % 13 === 0, n = vnoise((a + xx) / 5, (b + yy) / 4, 31), m = vnoise((a + xx) / 9, (b + yy) / 7, 41);
+            let c = mort ? Z0 : n < .3 ? Z1 : n < .66 ? Z2 : Z3;
+            if (xx > w - 5) c = mort ? ZK : Z1; else if (xx < 2) c = Z4;
+            if (yy - top < md) c = MO[(n * 3) | 0]; else if (m > .74 && !mort) c = MO[n < .5 ? 0 : 1]; else if (hash(a + xx, b + yy, 7) > .993) c = ZK;
+            rc(x, c, a + xx, b + yy, 1, 1)
+          }
+          rc(x, ZK, a + xx, b + top - 1, 1, 1)
+        }
+        rc(x, ZK, a - 1, b + j0, 1, h - j0); rc(x, ZK, a + w, b + j1, 1, h - j1)
       };
-      const battl = (a, y, w) => { for (let xx = a + 1; xx < a + w - 6; xx += 10) { rc(x, ZK, xx - 1, y - 7, 8, 8); rc(x, Z2, xx, y - 6, 6, 7); rc(x, Z4, xx, y - 6, 6, 1) } rc(x, ZK, a, y, w, 1) };
-      const roof = (cx, w, base, tip) => {
-        for (let yy = tip; yy < base; yy++) { const hw = Math.max(1, Math.round((w / 2 + 3) * (yy - tip) / (base - tip))), l = cx - hw; rc(x, ZK, l - 1, yy, hw * 2 + 2, 1); for (let xx = l; xx < l + hw * 2; xx++) rc(x, (xx - l) / (hw * 2) < .5 ? '#3a2a58' : '#241a3a', xx, yy, 1, 1) }
-        rc(x, ZK, cx - w / 2 - 4, base - 1, w + 8, 3); rc(x, Z3, cx - w / 2 - 3, base, w + 6, 1);
-      };
-      const slit = (cx, cy, h) => { rc(x, ZK, cx - 2, cy - 1, 5, h + 2); rc(x, '#b02038', cx - 1, cy, 3, h); wins.push([cx, cy + h / 2, 10]) };
-      const tower = (cx, w, top, tip) => {
-        const a = cx - w / 2; brick(a, top, w, 96 - top); roof(cx, w, top, tip); rc(x, ZK, a - 2, top - 1, w + 4, 3); rc(x, Z3, a - 1, top, w + 2, 1);
-        slit(cx, top + 10, 12);
-      };
-      brick(cx0 + 10, 56, cx1 - cx0 - 20, 40); battl(cx0 + 10, 56, cx1 - cx0 - 20);
-      slit(D0 - 140, 68, 11); slit(D0 - 70, 68, 11); slit(D0 + 70, 68, 11); slit(D0 + 140, 68, 11);
-      tower(D0 - 104, 30, 36, 16); tower(D0 + 104, 30, 36, 16);
-      // dua obor kecil di sisi pintu
-      [-38, 38].forEach(dx => { const tx = D0 + dx; rc(x, ZK, tx - 2, 72, 5, 4); rc(x, '#5a5060', tx - 1, 72, 3, 2); rc(x, ZK, tx - 4, 66, 9, 7); rc(x, '#3a3048', tx - 3, 67, 7, 5); F.castle.torches.push([tx, 65]) });
+      const slit = (cx, cy, h) => { rc(x, ZK, cx - 3, cy - 2, 7, h + 3); rc(x, ZK, cx - 2, cy - 3, 5, 1); rc(x, '#4a2090', cx - 2, cy - 1, 5, h); rc(x, '#a070ff', cx - 1, cy, 3, h - 1); rc(x, '#e0d0ff', cx, cy + 1, 1, 2); wins.push([cx, cy + h / 2, 10]) };
+      // 1) tembok runtuh yang tenggelam ke dalam tebing, menara kiri utuh, menara kanan patah, gerbang tengah paling tinggi
+      stone(58, 46, 112, 51, xx => 3 + vnoise(xx / 4, 1, 52) * 9 + (xx < 16 ? (16 - xx) * 1.1 : 0));
+      stone(250, 46, 112, 51, xx => 3 + vnoise(xx / 4, 2, 53) * 9 + (xx > 95 ? (xx - 95) * 1.1 : 0));
+      stone(D0 - 109, 22, 34, 75, xx => xx % 10 < 6 ? 0 : 5); rc(x, ZK, D0 - 111, 34, 38, 3); rc(x, Z3, D0 - 110, 35, 36, 1);
+      stone(D0 + 75, 30, 34, 67, xx => 3 + vnoise(xx / 3, 7, 54) * 13);
+      stone(D0 - 46, 8, 92, 90, xx => (xx + 2) % 14 < 9 ? 0 : 6);
+      // 2) pilaster, tympanum gotik dengan segel rune, ambang & kusen pintu (batu gelap, bukan krem)
+      [D0 - 35, D0 + 29].forEach((a, i) => { rc(x, ZK, a - 1, 26, 9, 72); rc(x, Z3, a, 27, 7, 71); rc(x, i ? Z2 : Z4, i ? a + 5 : a, 27, i ? 2 : 1, 71); for (let j = 0; j < 8; j++) rc(x, Z0, a, 34 + j * 8, 7, 1); rc(x, Z4, a - 1, 26, 9, 3); rc(x, ZK, a - 1, 29, 9, 1) });
+      for (let yy = 16; yy <= 33; yy++) { const hw = Math.min(22, Math.round((yy - 16) * 1.3)); rc(x, ZK, D0 - hw - 2, yy, hw * 2 + 5, 1); rc(x, Z4, D0 - hw - 1, yy, hw * 2 + 3, 1); if (hw > 0) rc(x, Z0, D0 - hw + 1, yy, hw * 2 - 1, 1) }
+      disc(x, ZK, D0, 26, 8); disc(x, '#2a1858', D0, 26, 7); disc(x, '#6a3ad8', D0, 26, 5); disc(x, '#b090ff', D0, 26, 3); disc(x, '#f0e0ff', D0, 26, 1);
+      for (let i = 0; i < 8; i++) { const an = i / 8 * TAU; rc(x, '#a888ff', Math.round(D0 + Math.cos(an) * 6), Math.round(26 + Math.sin(an) * 6), 1, 1) }
+      F.castle.runes.push([D0, 26, 34]);
+      rc(x, ZK, D0 - 28, 33, 56, 12); rc(x, Z3, D0 - 27, 34, 54, 10); rc(x, Z4, D0 - 27, 34, 54, 1); rc(x, Z2, D0 - 27, 42, 54, 2);
+      rc(x, ZK, D0 - 6, 33, 12, 10); rc(x, Z4, D0 - 5, 34, 10, 8); rc(x, '#b090ff', D0 - 1, 36, 3, 3); rc(x, '#e0d0ff', D0, 37, 1, 1);
+      [-22, -16, -11, 11, 16, 22].forEach(o => { rc(x, '#7a4ae0', D0 + o, 37, 1, 4); rc(x, '#7a4ae0', D0 + o - 1, 38, 3, 1) });
+      [D0 - 27, D0 + 18].forEach((a, i) => { rc(x, ZK, a, 44, 9, 54); rc(x, Z3, a + 1, 44, 7, 53); rc(x, i ? Z2 : Z4, i ? a + 7 : a + 1, 44, 1, 53); for (let j = 0; j < 6; j++) rc(x, Z0, a + 1, 52 + j * 8, 7, 1); for (let j = 0; j < 3; j++) rc(x, '#8a5af0', a + 4, 56 + j * 14, 1, 3) });
+      rc(x, ZK, D0 - 28, 96, 56, 4); rc(x, Z3, D0 - 27, 97, 54, 2); rc(x, Z4, D0 - 27, 97, 54, 1);
+      // 3) obor besi di sisi gerbang, panji sobek, celah jendela berpendar
+      [-41, 41].forEach(dx => { const tx = D0 + dx; rc(x, ZK, tx - 2, 73, 5, 6); rc(x, '#4a4458', tx - 1, 73, 3, 5); rc(x, ZK, tx - 5, 66, 11, 8); rc(x, '#2a2438', tx - 4, 67, 9, 6); rc(x, '#4a4458', tx - 4, 67, 9, 1); F.castle.torches.push([tx, 65]) });
+      const banner = (cx, ty, len) => { rc(x, ZK, cx - 8, ty - 1, 17, 4); rc(x, '#6a5238', cx - 7, ty, 15, 2); for (let i = 0; i < 13; i++) { const l = len - (i % 3 === 1 ? 5 : i % 5 === 0 ? 8 : 0); rc(x, ZK, cx - 6 + i, ty + 2, 1, l + 1); rc(x, i % 4 === 0 ? '#25123e' : '#3a1f5a', cx - 6 + i, ty + 2, 1, l) } rc(x, '#b090ff', cx - 1, ty + 9, 3, 3); rc(x, '#6a3ad8', cx, ty + 12, 1, 3) };
+      banner(149, 52, 26); banner(271, 54, 22);
+      slit(D0 - 92, 52, 12); slit(D0 + 92, 52, 12); slit(D0 - 38, 18, 8); slit(D0 + 38, 18, 8); slit(78, 64, 10); slit(340, 64, 10);
+      // 4) sulur & lumut menjuntai dari puncak reruntuhan
+      for (let i = 0; i < 44; i++) {
+        const xv = 56 + ((cr() * 310) | 0), ay = TOP[xv]; if (ay === undefined || Math.abs(xv - D0) < 31) continue;
+        const len = 6 + ((cr() * 26) | 0), ph = cr() * 6;
+        for (let k = 0; k < len; k++) { const vx = xv + Math.round(Math.sin(k / 4 + ph) * 1.4); rc(x, k % 6 < 3 ? MO[1] : MO[0], vx, ay + k, 1, 1); if (k % 4 === 2) rc(x, MO[2], vx + (k % 8 < 4 ? 1 : -2), ay + k, 2, 2) }
+      }
+      // 5) puing, semak, rumput & jamur bercahaya di kaki benteng
+      for (let i = 0; i < 26; i++) { const a = ([118, 302][i % 2] + (cr() - .5) * 90) | 0, b = (96 + cr() * 6) | 0, w = 3 + ((cr() * 5) | 0); rc(x, ZK, a - 1, b - 1, w + 2, 5); rc(x, cr() < .5 ? Z2 : Z3, a, b, w, 3); rc(x, Z4, a, b, w, 1) }
+      for (let i = 0; i < 70; i++) { const a = 40 + cr() * 340; if (Math.abs(a - D0) < 52) continue; art.grassTuft(x, a, 96 + cr() * 6, cr) }
+      [70, 108, 146, 262, 300, 340, 364].forEach((a, i) => { const s = art.bush(i + 21); x.drawImage(s.img, Math.round(a + (cr() - .5) * 8 - s.ox), Math.round(99 + cr() * 3 - s.oy)) });
+      [[128, 101], [291, 102], [334, 100], [87, 101]].forEach(([a, b]) => { for (let k = 0; k < 3; k++) { const mx = a + k * 5 - 5, my = b - (k % 2) * 2; rc(x, ZK, mx - 2, my - 5, 6, 4); rc(x, '#8a5af0', mx - 1, my - 4, 4, 2); rc(x, '#d0b0ff', mx, my - 4, 1, 1); rc(x, '#c8c0d8', mx, my - 2, 2, 3) } F.castle.runes.push([a, b - 3, 14]) });
+      // 6) tangga batu lebar berlumut menuju pintu, menyambung ke jalan tanah
+      [[D0 - 31, 100, 62], [D0 - 40, 104, 80], [D0 - 49, 108, 98]].forEach(([a, b, w], i) => {
+        rc(x, ZK, a - 1, b, w + 2, 6); rc(x, i % 2 ? Z2 : Z3, a, b + 1, w, 4); rc(x, Z4, a, b + 1, w, 1); rc(x, Z1, a, b + 4, w, 1);
+        for (let k = 0; k < 5; k++) rc(x, MO[(cr() * 3) | 0], (a + cr() * w) | 0, (b + 1 + cr() * 3) | 0, 2 + ((cr() * 3) | 0), 1);
+        rc(x, ZK, a + ((cr() * w) | 0), b + 2, 1, 3)
+      });
     }
-
-    // bingkai pintu (batu)
-    const DX = F.door.x; rc(x, OLC, DX - 25, 30, 50, 68); rc(x, '#a79c8b', DX - 24, 31, 48, 66); rc(x, '#c8bca8', DX - 24, 31, 48, 3);
-    for (let j = 0; j < 7; j++) { rc(x, '#7a7060', DX - 24, 36 + j * 9, 7, 1); rc(x, '#7a7060', DX + 17, 36 + j * 9, 7, 1) }
-    rc(x, '#8a7e6c', DX - 24, 34, 48, 1); rc(x, '#d8cbb4', DX - 8, 28, 16, 6); rc(x, OLC, DX - 8, 27, 16, 1); rc(x, '#a79c8b', DX - 3, 29, 6, 4); rc(x, '#4a8a3a', DX - 24, 31, 8, 3); rc(x, '#4a8a3a', DX + 12, 31, 10, 3); rc(x, '#3a7a34', DX - 22, 34, 2, 7); rc(x, '#3a7a34', DX + 18, 34, 2, 9);
-    rc(x, '#b6a38a', DX - 22, 94, 44, 4); rc(x, '#d8cbb4', DX - 22, 94, 44, 1); rc(x, '#6b5f55', DX - 22, 97, 44, 1);
-    // batu pijakan di depan pintu
-    for (let i = 0; i < 3; i++) { rc(x, '#8a8696', DX - 18 + i * 12, 100 + (i % 2) * 6, 10, 5); rc(x, '#aaa6b6', DX - 18 + i * 12, 100 + (i % 2) * 6, 10, 1) }
 
     /* --- lantai kuil mata air --- */
     ell(x, 'rgba(0,0,0,.3)', SHRC.x, SHRC.y + 4, 56, 36); ell(x, '#6a6a78', SHRC.x, SHRC.y, 54, 34); ell(x, '#8a8a98', SHRC.x, SHRC.y, 51, 31);
@@ -321,7 +351,10 @@
     const vx0 = camX - 60, vx1 = camX + W / CAM_Z + 60;
     g.save(); g.globalCompositeOperation = 'lighter';
     lightL(DX, 50, 190, '110,30,190', .07 + .02 * Math.sin(t * .9));
-    for (const w of C.wins) { if (w[0] < vx0 || w[0] > vx1) continue; lightL(w[0], w[1], w[2], '255,50,70', .22 * (.8 + .2 * Math.sin(t * 2.3 + w[0] * .3))) }
+    for (const r of (C.runes || [])) { if (r[0] < vx0 || r[0] > vx1) continue; lightL(r[0], r[1], r[2], '170,110,255', r[2] > 20 ? .26 + .08 * Math.sin(t * 1.6) : .2 + .06 * Math.sin(t * 2.2 + r[0])) }
+    for (let i = 0; i < 6; i++) { const mx = ((t * 5 + i * 67) % 440) - 20, my = 96 + Math.sin(t * .4 + i * 2) * 5; if (mx > vx0 - 40 && mx < vx1 + 40) lightL(mx, my, 46, '140,110,220', .05) }
+    for (let i = 0; i < 7; i++) { const k = (t * .22 + i / 7) % 1, mx = DX + Math.sin(i * 2.7 + t * .8) * 16, my = 92 - k * 56; g.fillStyle = 'rgba(190,150,255,' + (.7 * Math.sin(k * Math.PI)) + ')'; g.fillRect(Math.round(mx), Math.round(my), 2, 2) }
+    for (const w of C.wins) { if (w[0] < vx0 || w[0] > vx1) continue; lightL(w[0], w[1], w[2], '170,90,255', .2 * (.8 + .2 * Math.sin(t * 2.3 + w[0] * .3))) }
     for (const q of C.torches) {
       const X = q[0], Y = q[1]; if (X < vx0 || X > vx1) continue;
       lightL(X, Y - 4, 44 + Math.sin(t * 9 + X) * 3, '150,90,255', .26 + .05 * Math.sin(t * 13 + X));
@@ -357,14 +390,24 @@
     chance: .5,             // peluang ada serigala tiap malam (0.5 = 50%)
     minPack: 1, maxPack: 3, // jumlah serigala sekali muncul (acak, rata)
     hp: 30,
+    volume: .12,            // volume lolongan serigala (0 = tanpa suara)
+    shieldBlocksWolves: true, // perisai Mata Air Suci di malam hari menahan serigala (pemain di dalamnya aman)
     speed: 96, lungeSpeed: 230,
     dmgPct: .08,            // damage gigitan = 8% HP maksimum pemain (minimal 3)
     playerDmg: 12,          // damage serangan cadangan ke serigala (lihat attackKey)
-    attackKey: 'KeyJ'       // tombol serang cadangan; isi null bila serangan game sudah memanggil F.hitWolves
+    attackKeys: [], // tombol serang ke serigala (kosongkan [] bila serangan game sudah memanggil F.hitWolves)
+    attackClick: true       // klik kiri mouse juga menyerang
   };
-  const S = { rolled: false, queue: 0, base: 0, spawnCd: 0, fails: 0, told: false, pInv: 0, atk: 0, tk: 0 };
+  const S = { sh: 0, rip: [], rolled: false, queue: 0, base: 0, spawnCd: 0, fails: 0, told: false, pInv: 0, atk: 0, tk: 0 };
   const wolves = [];
   const night = () => (WORLD.WX ? WORLD.WX.night : 0);
+  const { mkCv, rc } = WORLD;
+
+  /* ---------- Mata Air Suci: lentera kristal & perisai pelindung malam hari ---------- */
+  const SX = 1008, SY = 166, CX = SX, CY = SY + 12, RX = 74, RY = 42, DH = 70, LAMPS = [[-70, 2], [70, 2], [-28, -46], [28, -46]];
+  const inShield = (x, y) => ((x - CX) / (RX + 6)) ** 2 + ((y - CY) / (RY + 6)) ** 2 < 1;
+  const shOn = () => WOLF.shieldBlocksWolves && S.sh > .6;
+  const shBlock = (x, y) => { if (!shOn() || !inShield(x, y)) return false; if (S.rip.length < 10 && Math.random() < .3) S.rip.push({ x, y, t: 0 }); return true };
 
   /* ---------- damage ke pemain ---------- */
   function hurtPlayer(dmg, fx0, fy0) {
@@ -381,17 +424,44 @@
     const R = Math.hypot(W / CAM_Z, H / CAM_Z) / 2 + 40;
     for (let k = 0; k < 30; k++) {
       const a = S.base + (Math.random() - .5) * (.7 + k * .2), d = R + Math.random() * 70, x = p.x + Math.cos(a) * d, y = p.y + Math.sin(a) * d;
-      if (x < 40 || x > FW - 40 || y < 150 || y > FH - 30 || blk(x, y, 6)) continue;
-      const w = { x, y, vx: 0, vy: 0, hp: WOLF.hp, mhp: WOLF.hp, fc: x < p.x ? 1 : -1, st: 'chase', tm: 0, cd: .6 + Math.random() * .8, fl: Math.random() * TAU, ph: Math.random() * 6, hit: 0, fade: 0, dead: 0, bit: 0, sk: 0, jit: 0, ja: 0, br: 0 };
+      if (x < 40 || x > FW - 40 || y < 150 || y > FH - 30 || blk(x, y, 6) || (shOn() && inShield(x, y))) continue;
+      const w = { x, y, vx: 0, vy: 0, hp: WOLF.hp, mhp: WOLF.hp, fc: x < p.x ? 1 : -1, st: 'chase', tm: 0, cd: .6 + Math.random() * .8, fl: Math.random() * TAU, ph: Math.random() * 6, hit: 0, fade: 0, dead: 0, bit: 0, sk: 0, jit: 0, ja: 0, br: 0, pitch: .85 + Math.random() * .3, hw: .2 + Math.random() * 1.3 };
       wolves.push(w); F.dyn.push({ w, get y() { return w.y } }); return true
     }
     return false
   }
 
+  /* ---------- suara lolongan "auuuu" (disintesis lewat WebAudio, tanpa file) ---------- */
+  let AC = null;
+  function howl(w) {
+    if (WOLF.volume <= 0) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+      const d = Math.hypot(w.x - p.x, w.y - p.y), vol = WOLF.volume * Math.max(.25, 1 - d / 520), now = AC.currentTime, k = w.pitch || 1, dur = 2.6;
+      const f = AC.createBiquadFilter(), gn = AC.createGain(), dl = AC.createDelay(), fb = AC.createGain(), eg = AC.createGain(), vg = AC.createGain(), lfo = AC.createOscillator();
+      f.type = 'lowpass'; f.frequency.value = 1400; f.Q.value = .7;
+      gn.gain.setValueAtTime(.0001, now); gn.gain.linearRampToValueAtTime(vol, now + .3); gn.gain.setValueAtTime(vol, now + 1.5); gn.gain.exponentialRampToValueAtTime(.0001, now + dur);
+      dl.delayTime.value = .32; fb.gain.value = .35; eg.gain.value = .4;   // gema jauh
+      const pan = AC.createStereoPanner ? AC.createStereoPanner() : null;
+      if (pan) { pan.pan.value = Math.max(-1, Math.min(1, (w.x - p.x) / 300)); pan.connect(AC.destination) }
+      const dest = pan || AC.destination;
+      f.connect(gn); gn.connect(dest); gn.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(eg); eg.connect(dest);
+      lfo.frequency.value = 5.5; vg.gain.setValueAtTime(0, now); vg.gain.linearRampToValueAtTime(10 * k, now + 1); lfo.connect(vg);
+      [['sawtooth', 0], ['triangle', 9]].forEach(([type, cents]) => {
+        const o = AC.createOscillator(); o.type = type; o.detune.value = cents;
+        // nada naik cepat, ditahan bergetar, lalu turun pelan: "au-uuuu"
+        o.frequency.setValueAtTime(250 * k, now); o.frequency.exponentialRampToValueAtTime(560 * k, now + .75); o.frequency.linearRampToValueAtTime(600 * k, now + 1.5); o.frequency.exponentialRampToValueAtTime(320 * k, now + dur);
+        vg.connect(o.frequency); o.connect(f); o.start(now); o.stop(now + dur + .1)
+      });
+      lfo.start(now); lfo.stop(now + dur + .1)
+    } catch (e) { }
+  }
+
   /* ---------- gerak & AI ---------- */
   function move(w, vx, vy, dt) {
     const ox = w.x, oy = w.y, nx = w.x + vx * dt, ny = w.y + vy * dt;
-    if (!blk(nx, w.y, 5)) w.x = nx; if (!blk(w.x, ny, 5)) w.y = ny;
+    if (!blk(nx, w.y, 5) && !shBlock(nx, w.y)) w.x = nx; if (!blk(w.x, ny, 5) && !shBlock(w.x, ny)) w.y = ny;
     return Math.hypot(w.x - ox, w.y - oy)
   }
   // kalau pemain di seberang sungai, serigala menyeberang lewat jembatan
@@ -405,23 +475,25 @@
   function upd(w, dt) {
     w.hit = Math.max(0, w.hit - dt); w.cd -= dt;
     if (w.dead) { w.fade += dt; return }
+    if (shOn() && inShield(w.x, w.y)) { const a = Math.atan2(w.y - CY, w.x - SX); w.x += Math.cos(a) * 140 * dt; w.y += Math.sin(a) * 140 * dt }   // terdorong keluar dari perisai
     const dx = p.x - w.x, dy = p.y - w.y, d = Math.hypot(dx, dy) || 1;
     if (w.st === 'flee') { w.fade += dt; move(w, -dx / d * 120, -dy / d * 120, dt); w.fc = dx < 0 ? 1 : -1; return }
     if (w.st === 'chase') {
-      const wp = goal(w); let tx, ty;
-      if (wp) { tx = wp[0]; ty = wp[1] } else { const r = d > 90 ? 0 : 30; tx = p.x + Math.cos(w.fl + t * .6) * r; ty = p.y + Math.sin(w.fl + t * .6) * r * .8 }
+      const wp = goal(w), safe = shOn() && inShield(p.x, p.y); let tx, ty;
+      if (wp) { tx = wp[0]; ty = wp[1] } else if (safe) { tx = CX + Math.cos(w.fl + t * .25) * (RX + 28); ty = CY + Math.sin(w.fl + t * .25) * (RY + 22) } else { const r = d > 90 ? 0 : 30; tx = p.x + Math.cos(w.fl + t * .6) * r; ty = p.y + Math.sin(w.fl + t * .6) * r * .8 }
       let hx = tx - w.x, hy = ty - w.y; const hd = Math.hypot(hx, hy) || 1; hx /= hd; hy /= hd;
       if (w.jit > 0) { w.jit -= dt; const c = Math.cos(w.ja), s = Math.sin(w.ja); const nx = hx * c - hy * s; hy = hx * s + hy * c; hx = nx }
       const sp = hd < 6 ? 0 : WOLF.speed, mv = move(w, hx * sp, hy * sp, dt);
       if (sp && mv < sp * dt * .3) { w.sk += dt; if (w.sk > .5) { w.sk = 0; w.jit = .6; w.ja = (Math.random() < .5 ? 1 : -1) * 1.4 } } else w.sk = Math.max(0, w.sk - dt * 2);
       w.fc = (d < 80 ? dx : hx) >= 0 ? 1 : -1;
-      if (d < 60 && w.cd <= 0 && !wp) { w.st = 'wind'; w.tm = .4 }
+      w.hw -= dt; if (w.hw <= 0) { w.hw = 7 + Math.random() * 5; if (d > 110) howl(w) }   // melolong saat menuju pemain
+      if (d < 60 && w.cd <= 0 && !wp && !safe) { w.st = 'wind'; w.tm = .4 }
     } else if (w.st === 'wind') {            // merunduk, mata merah
       w.fc = dx >= 0 ? 1 : -1; w.tm -= dt;
       if (w.tm <= 0) { w.st = 'lunge'; w.tm = .22; w.vx = dx / d * WOLF.lungeSpeed; w.vy = dy / d * WOLF.lungeSpeed; w.bit = 0 }
     } else if (w.st === 'lunge') {           // terkam
       move(w, w.vx, w.vy, dt); w.tm -= dt;
-      if (!w.bit && d < 15 && S.pInv <= 0) { w.bit = 1; S.pInv = .7; hurtPlayer(Math.max(3, Math.round(mhp() * WOLF.dmgPct)), w.x, w.y) }
+      if (!w.bit && d < 15 && S.pInv <= 0 && !(shOn() && inShield(p.x, p.y))) { w.bit = 1; S.pInv = .7; hurtPlayer(Math.max(3, Math.round(mhp() * WOLF.dmgPct)), w.x, w.y) }
       if (w.tm <= 0) { w.st = 'rec'; w.tm = .55; w.cd = 1 + Math.random() * .9 }
     } else if (w.st === 'rec') {             // mundur sebentar
       w.fc = dx >= 0 ? 1 : -1; move(w, -dx / d * 38, -dy / d * 38, dt); w.tm -= dt;
@@ -444,17 +516,21 @@
     return n
   };
   WORLD.hitWolves = F.hitWolves;
-  if (WOLF.attackKey) addEventListener('keydown', e => {
-    if (e.code !== WOLF.attackKey || e.repeat || performance.now() - S.tk > 200 || dlg || WORLD.TR.on || S.atk > 0) return;
-    S.atk = .4; fx.push({ k: 'ring', x: p.x, y: p.y - 4, r: 14, w: 2, life: .18, max: .18, col: '#ffffff' });
-    F.hitWolves(p.x, p.y - 4, 38, WOLF.playerDmg)
-  });
+  // uji coba dari konsol browser: WORLD.spawnWolves(2) memunculkan 2 serigala sekarang juga (abaikan jam & peluang)
+  WORLD.spawnWolves = function (n) { S.base = Math.random() * TAU; S.queue = n || 1; S.fails = 0; S.told = false };
+  const swing = () => {
+    if (performance.now() - S.tk > 200 || dlg || WORLD.TR.on || S.atk > 0) return;
+    S.atk = .4; fx.push({ k: 'ring', x: p.x, y: p.y - 4, r: 16, w: 2, life: .18, max: .18, col: '#ffffff' });
+    F.hitWolves(p.x, p.y - 4, 44, WOLF.playerDmg)
+  };
+  if (WOLF.attackKeys.length) addEventListener('keydown', e => { if (!e.repeat && WOLF.attackKeys.includes(e.code)) swing() });
+  if (WOLF.attackClick) addEventListener('mousedown', e => { if (e.button === 0) swing() });
 
   /* ---------- siklus malam ---------- */
   const _enter = F.enter;
   F.enter = function () {
     const r = _enter && _enter.apply(this, arguments);
-    wolves.length = 0; F.dyn = F.dyn.filter(o => !o.w); S.rolled = false; S.queue = 0; S.pInv = 0;
+    wolves.length = 0; F.dyn = F.dyn.filter(o => !o.w); S.rolled = false; S.queue = 0; S.pInv = 0; S.sh = night() > .45 ? 1 : 0; S.rip.length = 0;
     return r
   };
   const _tick = F.tick;
@@ -462,6 +538,8 @@
     const r = _tick.call(this, dt);
     if (WORLD.TR.on) return r;
     S.tk = performance.now(); S.pInv -= dt; S.atk -= dt;
+    S.sh = Math.max(0, Math.min(1, S.sh + (night() > .45 ? 1 : -1) * dt * .8));   // perisai menyala saat malam
+    for (let i = S.rip.length - 1; i >= 0; i--) { S.rip[i].t += dt; if (S.rip[i].t > .5) S.rip.splice(i, 1) }
     const nt = night();
     if (nt < .3) {                           // pagi: serigala kabur, undian direset
       S.rolled = false; S.queue = 0;
@@ -506,5 +584,63 @@
       lightL(X + w.fc * 11, Y - 11 + cr, 12, hot ? '255,60,60' : '255,210,80', .28);
       if (w.hp < w.mhp) { const bw = 16; g.fillStyle = '#14101a'; g.fillRect(X - bw / 2 - 1, Y - 24, bw + 2, 4); g.fillStyle = '#5a1a1a'; g.fillRect(X - bw / 2, Y - 23, bw, 2); g.fillStyle = '#e04848'; g.fillRect(X - bw / 2, Y - 23, Math.max(0, Math.round(bw * w.hp / w.mhp)), 2) }
     }
+  };
+  /* ---------- lentera kristal di sekitar mata air ---------- */
+  function lampSprite() {
+    const [c, q] = mkCv(16, 40), OL = '#0f1a12';
+    rc(q, OL, 2, 34, 12, 6); rc(q, '#6a6a78', 3, 35, 10, 4); rc(q, '#8a8a98', 3, 35, 10, 1); rc(q, '#3a8a4a', 3, 36, 3, 2);   // alas
+    rc(q, OL, 5, 12, 6, 24); rc(q, '#7a7a88', 6, 13, 4, 22); rc(q, '#9a9aa8', 6, 13, 1, 22);                                  // tiang
+    rc(q, OL, 2, 3, 12, 11); rc(q, '#4a4a58', 3, 4, 10, 9); rc(q, '#3a8ab0', 4, 5, 8, 7); rc(q, '#8fe8ff', 5, 6, 6, 5); rc(q, '#e8fcff', 7, 7, 2, 3);   // rumah lentera & kristal
+    rc(q, OL, 1, 1, 14, 3); rc(q, '#6a6a78', 2, 2, 12, 2); rc(q, OL, 6, 0, 4, 2);                                             // atap
+    return { img: c, ox: 8, oy: 38 };
+  }
+  const _build = F.build;
+  F.build = function () {
+    const r = _build.apply(this, arguments), sp = lampSprite();
+    for (const [dx, dy] of LAMPS) { const x = SX + dx, y = SY + dy + 8; F.objs.push({ x, y, img: sp.img, ox: sp.ox, oy: sp.oy, oh: sp.img.height }); F.walls.push([x - 4, y - 4, 8, 5]) }
+    F.objs.sort((a, b) => a.y - b.y); return r;
+  };
+  const _env = F.env;
+  F.env = function () {
+    _env.call(this);
+    if (Math.abs(camX + W / CAM_Z / 2 - SX) > 420) return;
+    const n = Math.max(0, Math.min(1, night())), sh = S.sh;
+    for (const [dx, dy] of LAMPS) { lightL(SX + dx, SY + dy - 22, 44 + Math.sin(t * 3 + dx) * 2, '140,225,255', .14 + .2 * n); lightL(SX + dx, SY + dy + 8, 36, '120,200,240', .05 + .1 * n) }
+    if (n > .05) lightL(SX, SY, 120, '120,220,255', .1 * n);
+    if (sh > .01) {
+      const el = F.npcs.find(q => q.n && q.n.indexOf('Elowen') === 0); if (el) lightL(el.x, el.y - 14, 28, '143,232,255', .2 * sh);
+      [[-46, -14], [46, -14], [-34, 24], [34, 24]].forEach(([dx, dy]) => lightL(SX + dx, SY + dy - 26, 18, '140,230,255', .16 * sh));
+      lightL(CX, CY, 96, '120,220,255', .1 * sh * (.85 + .15 * Math.sin(t * 2.2)));
+      g.save(); g.globalCompositeOperation = 'lighter';   // cincin segel di lantai
+      for (let i = 0; i < 20; i++) { const an = i / 20 * TAU + t * .2; g.fillStyle = 'rgba(160,240,255,' + (.7 * sh * (.5 + .5 * Math.sin(t * 2 + i))) + ')'; g.fillRect(Math.round(CX + Math.cos(an) * RX * .9), Math.round(CY + Math.sin(an) * RY * .9), 3, 1) }
+      g.restore()
+    }
+  };
+  /* ---------- kubah perisai (digambar di atas objek) ---------- */
+  function drawShield() {
+    const a = S.sh; if (a <= .01) return;
+    const vw = W / CAM_Z, vh = H / CAM_Z; if (camX > CX + RX + 40 || camX + vw < CX - RX - 40 || camY > CY + RY + 20 || camY + vh < CY - DH - 20) return;
+    const pulse = .85 + .15 * Math.sin(t * 2.2), dome = () => { g.beginPath(); g.ellipse(CX, CY, RX, DH, 0, Math.PI, TAU); g.ellipse(CX, CY, RX, RY, 0, 0, Math.PI); g.closePath() };
+    g.save(); g.globalAlpha = a; g.globalCompositeOperation = 'lighter';
+    const gr = g.createRadialGradient(CX, CY - 22, 8, CX, CY - 22, 90); gr.addColorStop(0, 'rgba(140,225,255,.03)'); gr.addColorStop(.55, 'rgba(130,220,255,.08)'); gr.addColorStop(.85, 'rgba(180,240,255,.2)'); gr.addColorStop(1, 'rgba(190,245,255,.3)');
+    g.fillStyle = gr; dome(); g.fill();
+    g.save(); dome(); g.clip();
+    const by = CY - DH + ((t * 26) % (DH + RY + 40)) - 20, bg = g.createLinearGradient(0, by - 14, 0, by + 14); bg.addColorStop(0, 'rgba(200,250,255,0)'); bg.addColorStop(.5, 'rgba(200,250,255,.22)'); bg.addColorStop(1, 'rgba(200,250,255,0)'); g.fillStyle = bg; g.fillRect(CX - RX, by - 14, RX * 2, 28);   // pita cahaya naik
+    g.lineWidth = 1; g.strokeStyle = 'rgba(180,240,255,.12)';
+    for (let i = 0; i < 6; i++) { const kx = Math.abs(Math.cos((t * .25 + i / 6) * Math.PI)); g.beginPath(); g.ellipse(CX, CY, Math.max(2, kx * RX), DH, 0, Math.PI, TAU); g.stroke() }   // garis bujur berputar
+    for (let j = 1; j < 4; j++) { const hh = j / 4 * DH, k = Math.sqrt(1 - (hh / DH) ** 2); g.beginPath(); g.ellipse(CX, CY - hh, RX * k, RY * k, 0, 0, TAU); g.stroke() }   // garis lintang
+    g.restore();
+    g.strokeStyle = 'rgba(170,240,255,' + (.55 * pulse) + ')'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(CX, CY, RX, RY, 0, 0, TAU); g.stroke();
+    g.strokeStyle = 'rgba(200,250,255,.3)'; g.lineWidth = 1; g.beginPath(); g.ellipse(CX, CY, RX, DH, 0, Math.PI, TAU); g.stroke();
+    for (let i = 0; i < 14; i++) { const u = (t * .15 + i * .071) % 1, an = i * 2.4 + t * .3; g.fillStyle = 'rgba(220,252,255,' + (.8 * Math.sin(u * Math.PI)) + ')'; g.fillRect(Math.round(CX + Math.cos(an) * RX * .92), Math.round(CY + Math.sin(an) * RY * .92 - u * DH * .9), 2, 2) }
+    for (const r of S.rip) { g.strokeStyle = 'rgba(220,250,255,' + (.85 * (1 - r.t / .5)) + ')'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(r.x, r.y - 8, 6 + r.t * 40, 4 + r.t * 26, 0, 0, TAU); g.stroke() }   // riak saat serigala menabrak
+    g.restore()
+  }
+  const atkLabel = () => (WOLF.attackKeys.length ? '[' + WOLF.attackKeys[0].replace('Key', '').replace('Space', 'Spasi') + '] / klik' : 'Klik') + ': Serang';
+  const _front = F.drawFront;
+  F.drawFront = function () {
+    _front.apply(this, arguments);
+    drawShield();
+    if (!dlg && (WOLF.attackKeys.length || WOLF.attackClick) && wolves.some(w => !w.dead && w.st !== 'flee' && Math.hypot(w.x - p.x, w.y - p.y) < 90)) { g.font = '8px monospace'; txt(atkLabel(), p.x, p.y - 34, '#ffd6d6', 'center') }
   };
 })();
