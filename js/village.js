@@ -1967,13 +1967,53 @@
     return { img: c, ox: 60, oy: 138 };
   }
   function columnSprite() {
-    const [c, q] = mkCv(34, 150), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
-    Q(OLC, 3, 128, 28, 18); Q('#b9b5a8', 4, 129, 26, 16); Q(SHC, 4, 129, 26, 3);
-    Q(OLC, 6, 24, 22, 106); Q('#e0dccc', 7, 25, 20, 104); Q('rgba(255,255,255,.35)', 7, 25, 6, 104); Q('rgba(0,0,0,.14)', 22, 25, 6, 104);
-    for (let k = 0; k < 4; k++) Q('rgba(0,0,0,.08)', 11 + k * 4, 25, 1, 104);
-    Q(GOLD, 6, 116, 22, 2); Q(GOLD, 6, 34, 22, 2);
-    Q(OLC, 1, 10, 32, 18); Q(GOLD, 2, 11, 30, 6); Q('#e0dccc', 3, 17, 28, 9); Q(GOLD, 3, 24, 28, 2);
-    return { img: c, ox: 17, oy: 144 };
+    /* pilar agung: alas bertingkat berpanel merah-emas, batang beralur dengan cincin permata,
+       kepala bergaya Korintus (daun akantus emas, gulungan voluta, abakus berhias) */
+    const W = 58, H = 190, cx = 29, [c, q] = mkCv(W, H), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    const ST = '#e6e2d2', STL = '#f4f0e2', STD = '#b9b5a8', GL = '#fff0a0', GD = '#a8883a';
+    const slab = (x0, y0, w, h, base, hi, sh) => { Q(OLC, x0 - 1, y0 - 1, w + 2, h + 2); Q(base, x0, y0, w, h); Q(hi, x0, y0, w, 2); Q(hi, x0, y0, 3, h); Q(sh, x0 + w - 5, y0 + 2, 5, h - 2); Q('rgba(0,0,0,.18)', x0, y0 + h - 2, w, 2) };
+
+    /* batang: silinder beralur + bayangan bulat */
+    const sx = cx - 15, sw = 30, sy = 50, sh = 100;
+    Q(OLC, sx - 1, sy, sw + 2, sh); Q(ST, sx, sy, sw, sh);
+    Q('rgba(255,255,255,.45)', sx, sy, 8, sh); Q('rgba(255,255,255,.2)', sx + 8, sy, 4, sh);
+    Q('rgba(0,0,0,.10)', sx + 18, sy, 5, sh); Q('rgba(0,0,0,.24)', sx + 23, sy, 7, sh);
+    for (let k = 0; k < 6; k++) { const fx = sx + 3 + k * 5; Q('rgba(0,0,0,.14)', fx, sy + 2, 1, sh - 4); Q('rgba(255,255,255,.28)', fx + 1, sy + 2, 1, sh - 4) }
+    // cincin emas atas & bawah batang
+    [[sy + 4, 6], [sy + sh - 12, 6]].forEach(([y0, h]) => { Q(OLC, sx - 3, y0 - 1, sw + 6, h + 2); Q(GOLD, sx - 2, y0, sw + 4, h); Q(GL, sx - 2, y0, sw + 4, 1); Q(GD, sx - 2, y0 + h - 2, sw + 4, 2); Q('rgba(0,0,0,.22)', sx + sw - 6, y0, 8, h) });
+    // pita kerajaan di tengah batang: merah tua + bingkai emas + permata
+    const my = sy + 40;
+    Q(OLC, sx - 3, my - 1, sw + 6, 16); Q(CRD, sx - 2, my, sw + 4, 14); Q(CR, sx - 2, my + 1, sw + 4, 4); Q('rgba(0,0,0,.25)', sx + sw - 6, my, 8, 14);
+    Q(GOLD, sx - 2, my, sw + 4, 1); Q(GOLD, sx - 2, my + 13, sw + 4, 1);
+    [-9, 0, 9].forEach((o, i) => { ell(q, OLC, cx + o, my + 7, 4.2, 4.2); ell(q, GOLD, cx + o, my + 7, 3.4, 3.4); ell(q, i === 1 ? '#6ad0ff' : '#ff5a6a', cx + o, my + 7, 2.2, 2.2); Q('#fff', cx + o - 1, my + 5, 1, 1) });
+
+    /* alas: 3 tingkat + panel merah berbingkai emas */
+    slab(cx - 18, 150, 36, 9, '#d8d4c4', '#f0ecde', '#a9a597');                        // torus
+    Q(GOLD, cx - 18, 154, 36, 2); Q(GL, cx - 18, 154, 36, 1);
+    slab(cx - 22, 158, 44, 10, '#c4c0b2', SHC, '#9a968a');                              // tingkat 1
+    slab(cx - 27, 167, 54, 19, '#b0ac9e', '#d4d0c2', '#8a867a');                        // plinth
+    Q(GOLD, cx - 27, 170, 54, 2); Q(GL, cx - 27, 170, 54, 1);
+    Q(OLC, cx - 17, 175, 34, 9); Q(CRD, cx - 16, 176, 32, 7); Q(GOLD, cx - 16, 176, 32, 1); Q(GOLD, cx - 16, 182, 32, 1);
+    Q(GOLD, cx - 1, 177, 2, 5); Q(GL, cx - 3, 179, 6, 1); Q(GL, cx - 18, 178, 2, 2); Q(GL, cx + 16, 178, 2, 2);
+
+    /* kepala pilar */
+    Q(OLC, sx - 4, 41, sw + 8, 11); Q(GOLD, sx - 3, 42, sw + 6, 9); Q(GL, sx - 3, 42, sw + 6, 2); Q(GD, sx - 3, 48, sw + 6, 3);   // leher emas
+    for (let k = 0; k < 7; k++) Q(OLC, sx - 1 + k * 5, 44, 1, 5);
+    for (let j = 0; j < 22; j++) {                                                      // lonceng melebar ke atas
+      const wj = Math.round(36 + (22 - j) * .9), x0 = cx - wj / 2, y0 = 20 + j;
+      Q(OLC, x0 - 1, y0, wj + 2, 1); Q(ST, x0, y0, wj, 1); Q('rgba(255,255,255,.4)', x0, y0, Math.round(wj * .28), 1); Q('rgba(0,0,0,.22)', x0 + Math.round(wj * .72), y0, Math.round(wj * .28), 1)
+    }
+    // daun akantus emas (dua baris) + tulang daun
+    [[-12, 40, 6, 11, GOLD], [0, 38, 6.5, 13, GOLD], [12, 40, 6, 11, GOLD]].forEach(([o, y0, rx, ry, col]) => { ell(q, OLC, cx + o, y0 - 3, rx + 1, ry + 1); ell(q, col, cx + o, y0 - 3, rx, ry); ell(q, GL, cx + o - 2, y0 - 6, rx * .35, ry * .55); Q(GD, cx + o, y0 - 12, 1, 18) });
+    [[-6, 31, 4.5, 8], [6, 31, 4.5, 8]].forEach(([o, y0, rx, ry]) => { ell(q, OLC, cx + o, y0 - 2, rx + 1, ry + 1); ell(q, GD, cx + o, y0 - 2, rx, ry); ell(q, GOLD, cx + o - 1, y0 - 4, rx * .6, ry * .6); Q(GL, cx + o - 1, y0 - 8, 1, 6) });
+    // voluta (gulungan) di sudut
+    [-1, 1].forEach(sd => { const vx = cx + sd * 22; ell(q, OLC, vx, 27, 6.5, 6.5); ell(q, GOLD, vx, 27, 5.5, 5.5); ell(q, GD, vx, 27, 3.4, 3.4); ell(q, GL, vx - sd, 25, 1.6, 1.6); ell(q, OLC, vx, 27, 1.2, 1.2) });
+    // abakus (pelat atas) berhias
+    Q(OLC, cx - 29, 8, 58, 14); Q(ST, cx - 28, 9, 56, 12); Q(STL, cx - 28, 9, 56, 2); Q('rgba(0,0,0,.2)', cx + 18, 11, 10, 10);
+    Q(GOLD, cx - 28, 12, 56, 3); Q(GL, cx - 28, 12, 56, 1); Q(GD, cx - 28, 14, 56, 1); Q(GOLD, cx - 28, 19, 56, 2);
+    for (let k = -24; k <= 24; k += 8) Q(CRD, cx + k - 1, 15, 3, 3);
+    Q(OLC, cx - 5, 3, 10, 7); Q(GOLD, cx - 4, 4, 8, 5); ell(q, '#ff5a6a', cx, 6, 2.2, 2.2); Q(GL, cx - 1, 5, 1, 1);   // permata mahkota
+    return { img: c, ox: cx, oy: 184 };
   }
   function shelfSprite() {
     const [c, q] = mkCv(124, 100), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), BC = ['#a8283e', '#2f5aa8', '#3a8a5a', '#d8b84a', '#7a4a8a', '#c8783a', '#e8e0d0'];
@@ -2098,7 +2138,7 @@
       for (let k = 12; k < (vert ? bh : bw) - 6; k += 36) { const dx = vert ? bx + bw / 2 : bx + k, dy = vert ? by + k : by + bh / 2; R(GOLD, dx - 3, dy - 1, 6, 2); R(GOLD, dx - 1, dy - 3, 2, 6); R('#fff0a0', dx - 1, dy - 1, 2, 2) }
     };
     band(52, 140, 24, PH - 200, 1); band(PW - 76, 140, 24, PH - 200, 1); band(76, PH - 86, 504, 24, 0); band(700, PH - 86, 504, 24, 0);
-    [[330, 300], [330, 440], [330, 580], [330, 720], [950, 300], [950, 440], [950, 580], [950, 720]].forEach(([a, b]) => { for (let k = 0; k < 10; k++) R('rgba(255,255,255,' + (.14 - k * .013) + ')', a - 9, b + 2 + k * 3, 18, 3) });   // pantulan pilar
+    [[330, 300], [330, 440], [330, 580], [330, 720], [950, 300], [950, 440], [950, 580], [950, 720]].forEach(([a, b]) => { R(OLC, a - 35, b - 12, 70, 15); R(CRD, a - 34, b - 11, 68, 13); R(GOLD, a - 34, b - 11, 68, 1); R(GOLD, a - 34, b + 1, 68, 1); for (let k = 0; k < 12; k++) R('rgba(255,255,255,' + (.16 - k * .012) + ')', a - 14, b + 4 + k * 3, 28, 3) });   // alas karpet beremas + pantulan pilar
 
     /* dinding belakang */
     R(OLC, 0, 0, PW, 130); R(SH0, 0, 2, PW, 98); mortarC(x, 0, 2, PW, 98, 20); R(SHL, 0, 2, PW, 3);
@@ -2162,7 +2202,7 @@
 
     /* perabot */
     spr(throneSprite(), MX, 176, [MX - 46, 132, 92, 52], { noSh: 1 });
-    const col = columnSprite();[330, 950].forEach(a => [300, 440, 580, 720].forEach(b => spr(col, a, b, [a - 10, b - 8, 20, 10])));
+    const col = columnSprite();[330, 950].forEach(a => [300, 440, 580, 720].forEach(b => spr(col, a, b, [a - 14, b - 8, 28, 12])));
     const br = brazierSprite();[[490, 252], [790, 252], [538, PH - 70], [742, PH - 70]].forEach(([a, b]) => spr(br, a, b, [a - 9, b - 6, 18, 8], { flame: [a, b - 44], glow: 1, ember: 1 }));
     const cd = candelabraSprite();[[560, 410], [720, 410], [560, 640], [720, 640]].forEach(([a, b]) => spr(cd, a, b, [a - 7, b - 6, 14, 8]));
     const pl = plantSprite();[[290, 300], [990, 300], [290, 720], [990, 720], [90, 790], [1190, 790], [300, 150], [980, 150]].forEach(([a, b]) => spr(pl, a, b, [a - 12, b - 8, 24, 10]));

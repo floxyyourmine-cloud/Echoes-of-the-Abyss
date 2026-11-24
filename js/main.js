@@ -16515,10 +16515,10 @@ upd = function (dt) {
       if (lobby) {
         if (window.ENDM || (typeof BOSS !== 'undefined' && BOSS && BOSS.on))
           return null;
-        // Hutan & Desa Lembah Lentera memakai SATU lagu (assets/audio/ambient.mp3) yang menyambung:
-        // pindah hutan <-> desa tidak me-restart lagu. Jika file-nya tidak ada, jatuh kembali ke lobby.mp3.
+        // Hutan, Desa Lembah Lentera, Kerajaan Aurelia & Istana memakai SATU lagu (assets/audio/ambient.mp3) yang menyambung:
+        // pindah hutan <-> desa <-> kerajaan <-> istana tidak me-restart lagu. Jika file-nya tidak ada, jatuh kembali ke lobby.mp3.
         var A = window.AREA;
-        if ((A === 'forest' || A === 'village') && !(T.ambient.fail && T.ambient.el && T.ambient.el.error))
+        if ((A === 'forest' || A === 'village' || A === 'kingdom' || A === 'palace') && !(T.ambient.fail && T.ambient.el && T.ambient.el.error))
           return 'ambient';
         return 'lobby';
       }
