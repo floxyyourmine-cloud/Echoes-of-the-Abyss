@@ -36,6 +36,7 @@
     return true;
   }
   F.free = free;
+  F.geo = { MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect };   // dipakai modul kedalaman
 
   F.build = function () {
     const rng = mkRng(2024), [bg, x] = mkCv(FW, FH); F.bg = bg;
@@ -307,7 +308,17 @@
   };
 
   function drawObj(o) {
-    if (o.img) { g.drawImage(o.img, o.x - o.ox, o.y - o.oy); if (o.lamp) o.lamp.forEach(([a, b]) => lightL(a, b + 4, 40 + Math.sin(t * 9 + a) * 3, '255,200,110', .3)); return }
+    if (o.img) {
+      const im = o.img, X = o.x - o.ox, Y = o.y - o.oy, C = F.depthCfg || {};
+      if (o.tree && C.fadeCanopy) { const hit = o.y > p.y + 3 && p.x > X + 4 && p.x < X + im.width - 4 && p.y - 10 > Y && p.y - 10 < Y + im.height * .78; o.fa = (o.fa === undefined ? 1 : o.fa) + ((hit ? .4 : 1) - (o.fa === undefined ? 1 : o.fa)) * .18 }
+      const al = o.fa === undefined ? 1 : o.fa; if (al < .995) { g.save(); g.globalAlpha = al }
+      if (o.sway && C.sway) {   // goyang pelan: bagian atas bergeser 1px, bagian tengah setengahnya
+        const w = im.width, h = im.height, s = Math.sin(t * (o.tree ? .7 : 1.5) + o.x * .05 + o.y * .02) * o.sway * (o.tree ? 1.3 : 1.1), a = Math.round(s), b2 = Math.round(s * .5), h1 = Math.round(h * (o.tree ? .45 : .5)), h2 = o.tree ? Math.round(h * .25) : 0;
+        g.drawImage(im, 0, 0, w, h1, X + a, Y, w, h1); if (h2) g.drawImage(im, 0, h1, w, h2, X + b2, Y + h1, w, h2); g.drawImage(im, 0, h1 + h2, w, h - h1 - h2, X, Y + h1 + h2, w, h - h1 - h2)
+      } else g.drawImage(im, X, Y);
+      if (al < .995) g.restore();
+      if (o.lamp) o.lamp.forEach(([a, b]) => lightL(a, b + 4, 40 + Math.sin(t * 9 + a) * 3, '255,200,110', .3)); return
+    }
     if (o.n) { person(o.n, o.i); return }
     if (o.w) { if (F.drawWolf) F.drawWolf(o.w); return }
     if (o.c) {
@@ -364,6 +375,292 @@
   };
 })();
 
+/* ===== KEDALAMAN HUTAN: bayangan terarah, cahaya, pohon raksasa, semak, kabut ===== */
+(function () {
+  'use strict';
+  const F = WORLD.AREAS.forest; if (!F || !F.geo) return;
+  const { clamp, mkRng, mkCv, rc, hash, vnoise, art } = WORLD;
+  const FW = 1800, FH = 720, GEO = F.geo;
+  const CFG = F.depthCfg = {
+    fadeCanopy: true,   // pohon yang menutupi pemain jadi tembus pandang
+    sway: true,         // tajuk pohon, pakis & rumput bergoyang pelan
+    giants: 1,          // jumlah pohon raksasa (1 = normal, 0 = mati)
+    undergrowth: 1,     // kepadatan pakis/rumput tinggi (0 = mati)
+    dapple: .5,         // bintik cahaya matahari di lantai hutan
+    clouds: .13,        // bayangan awan yang melintas
+    mist: 1,            // kabut tipis dekat sungai/kolam/mata air
+    vignette: .34,      // gelap halus di tepi layar
+    leaves: false       // daun gelap di tepi atas layar (dimatikan)
+  };
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const wx = () => WORLD.WX || { night: 0, rain: 0 };
+  const dayK = () => { const w = wx(); return 1 - clamp((w.night || 0) * 1.3 + (w.rain || 0) * .6, 0, 1) };
+
+  /* ---------- sprite pohon/semak/batu: pencahayaan terarah (terang kiri-atas, gelap kanan-bawah) ---------- */
+  let ACTIVE = false;
+  const KINDS = { oak: 'tree', pine: 'tree', bush: 'bush', rock: 'rock', stump: 'rock', log: 'rock' };
+  const LIT = { tree: { lift: .15, dark: .36 }, bush: { lift: .14, dark: .28 }, rock: { lift: .17, dark: .3 } };
+  function litClone(img, kind) {
+    const w = img.width, h = img.height, [c, q] = mkCv(w, h), P = LIT[kind];
+    q.drawImage(img, 0, 0);
+    const id = q.getImageData(0, 0, w, h), d = id.data, A = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : d[(y * w + x) * 4 + 3];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const o = (y * w + x) * 4; if (d[o + 3] < 200) continue;
+      let r = d[o], gg = d[o + 1], b = d[o + 2]; const lum = r * .3 + gg * .59 + b * .11; if (lum < 38) continue;   // jangan sentuh garis tepi
+      const t = y / h, dark = clamp((t - .32) / .68, 0, 1) * P.dark, lift = clamp((.46 - t) / .46, 0, 1) * P.lift;
+      let gain = 1 + lift - dark, ar = 0, ag = 0, ab = 0;
+      if (A(x - 2, y - 2) < 40 || A(x - 3, y) < 40) { ar += 22; ag += 26; ab += 4 }   // cahaya tepi kiri-atas
+      else if (A(x + 2, y + 2) < 40 || A(x + 3, y) < 40) { gain *= .8; ab += 8 }      // sisi gelap kanan-bawah
+      if (kind === 'tree' && t > .88) gain *= .8;                                      // pangkal batang lebih gelap
+      ab += dark * 22; ar -= dark * 12;                                                 // bayangan kebiruan
+      d[o] = clamp(r * gain + ar, 0, 255); d[o + 1] = clamp(gg * gain + ag, 0, 255); d[o + 2] = clamp(b * gain + ab, 0, 255)
+    }
+    q.putImageData(id, 0, 0); return c
+  }
+  Object.keys(KINDS).forEach(k => {
+    const orig = art[k]; if (typeof orig !== 'function') return;
+    art[k] = function () {
+      const s = orig.apply(this, arguments);
+      if (!ACTIVE || !s || !s.img || s.img.__lit) return s;
+      try { const img = litClone(s.img, KINDS[k]); img.__lit = 1; img.__k = k; return Object.assign({}, s, { img }) } catch (e) { return s }
+    };
+  });
+
+  /* ---------- sprite tambahan: pakis, rumput tinggi, jamur hutan, ilalang air ---------- */
+  function fern(seed) {
+    const r = mkRng(seed), W = 28, H = 20, [c, q] = mkCv(W, H), bx = W / 2 | 0, by = H - 2, n = 6 + (r() * 3 | 0), pts = [];
+    for (let f = 0; f < n; f++) {
+      const ang = (f / (n - 1) - .5) * 2.5 + (r() - .5) * .3, len = 9 + r() * 5 - Math.abs(ang) * 2;
+      for (let k = 0; k <= len; k++) { const tt = k / len, x = bx + Math.sin(ang) * k * 1.05, y = by - Math.cos(ang) * k * .72 + tt * tt * (2 + Math.abs(ang) * 3); pts.push([Math.round(x), Math.round(y), tt, ang]) }
+    }
+    pts.forEach(([x, y, tt]) => rc(q, '#0f1a12', x - 3 + (tt > .75 ? 1 : 0), y - 1, 7 - (tt > .75 ? 2 : 0), 3));
+    pts.forEach(([x, y, tt]) => rc(q, '#2c6432', x - 2 + (tt > .75 ? 1 : 0), y, 5 - (tt > .75 ? 2 : 0), 1));
+    pts.forEach(([x, y, tt, ang]) => { rc(q, '#4a9a46', x - 1, y, 3, 1); if (ang < .2 && tt > .25) rc(q, '#82d060', x - 2, y - 1, 2, 1); if (tt > .85) rc(q, '#a8e47a', x, y - 1, 1, 1) });
+    return { img: c, ox: bx, oy: by }
+  }
+  function tallGrass(seed) {
+    const r = mkRng(seed), W = 18, H = 18, [c, q] = mkCv(W, H), n = 5 + (r() * 3 | 0), bl = [];
+    for (let i = 0; i < n; i++) { const x0 = 3 + i * (12 / n) + r() * 2, h = 8 + r() * 8, lean = (r() - .5) * 5; for (let k = 0; k <= h; k++) { const tt = k / h; bl.push([Math.round(x0 + lean * tt * tt), H - 2 - k, tt]) } }
+    bl.forEach(([x, y]) => rc(q, '#0f1a12', x - 1, y, 3, 1));
+    bl.forEach(([x, y, tt]) => rc(q, tt > .8 ? '#9ad868' : tt > .45 ? '#58b04e' : '#2f7438', x, y, 1, 1));
+    bl.forEach(([x, y, tt], i) => { if (i % 3 === 0) rc(q, '#7acc5e', x - 1, y, 1, 1) });
+    return { img: c, ox: 9, oy: 16 }
+  }
+  function shroom(seed) {
+    const r = mkRng(seed), [c, q] = mkCv(16, 12), n = 2 + (r() * 2 | 0);
+    for (let i = 0; i < n; i++) {
+      const x = 3 + i * 4 + (r() * 2 | 0), h = 3 + (r() * 3 | 0), cw = 5 + (r() * 2 | 0), y = 10 - h;
+      rc(q, '#0f1a12', x + 1, y, 3, h + 1); rc(q, '#d8c8a0', x + 2, y + 1, 1, h - 1); rc(q, '#0f1a12', x - 1, y - 3, cw + 2, 4); rc(q, '#8a5a34', x, y - 2, cw, 2); rc(q, '#b88050', x, y - 2, cw - 2, 1)
+    }
+    return { img: c, ox: 8, oy: 10 }
+  }
+  function cattail(seed) {
+    const r = mkRng(seed), W = 16, H = 30, [c, q] = mkCv(W, H), n = 3 + (r() * 2 | 0);
+    for (let i = 0; i < n; i++) {
+      const x = 3 + i * 3 + (r() * 2 | 0), h = 16 + (r() * 11 | 0), lean = (r() - .5) * 3;
+      for (let k = 0; k < h; k++) { const px = Math.round(x + lean * (k / h)), py = H - 2 - k; rc(q, '#0f1a12', px - 1, py, 3, 1); rc(q, k > h * .6 ? '#6aa84a' : '#3a8444', px, py, 1, 1) }
+      const hx = Math.round(x + lean), hy = H - 2 - h; rc(q, '#0f1a12', hx - 1, hy - 5, 4, 7); rc(q, '#6a4228', hx, hy - 4, 2, 5); rc(q, '#9a6a40', hx, hy - 4, 1, 4)
+    }
+    return { img: c, ox: 8, oy: 28 }
+  }
+  function leafCluster(seed) {
+    const r = mkRng(seed), W = 64, H = 40, [c, q] = mkCv(W, H);
+    for (let i = 0; i < 16; i++) {
+      const lx = 6 + r() * (W - 12), ly = 2 + r() * (H - 12), a = (r() - .5) * 1.6, len = 12 + r() * 12;
+      for (let k = 0; k < len; k++) { const wd = Math.sin(k / len * Math.PI) * 4 + 1, px = lx + Math.sin(a) * k, py = ly + Math.cos(a) * k * .7; rc(q, '#07120a', px - wd - 1, py - 1, wd * 2 + 3, 3); }
+    }
+    q.globalCompositeOperation = 'source-atop'; q.fillStyle = '#0b1c10'; q.fillRect(0, 0, W, H);
+    for (let i = 0; i < 26; i++) { const px = r() * W, py = r() * H * .6; q.fillStyle = r() < .5 ? '#16381f' : '#1f4a28'; q.fillRect(Math.round(px), Math.round(py), 3, 1) }
+    return c
+  }
+
+  /* ---------- tekstur bayangan/cahaya bertitik (pixel-art) ---------- */
+  function pixelate(ctx, w, h, levels) {
+    const id = ctx.getImageData(0, 0, w, h), d = id.data;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const o = (y * w + x) * 4, a = d[o + 3] / 255 * levels, lv = Math.floor(a) + ((a - Math.floor(a)) > BAYER[(x & 3) + ((y & 3) << 2)] / 16 ? 1 : 0); d[o + 3] = Math.min(levels, lv) / levels * 255 }
+    ctx.putImageData(id, 0, 0)
+  }
+  function blobTile(size, count, rmin, rmax, rgb, seed) {
+    const r = mkRng(seed), [c, q] = mkCv(size, size);
+    for (let i = 0; i < count; i++) {
+      const bx = r() * size, by = r() * size, rr = rmin + r() * (rmax - rmin);
+      for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
+        const x = bx + ox * size, y = by + oy * size; if (x < -rr || y < -rr || x > size + rr || y > size + rr) continue;
+        const gr = q.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, 'rgba(' + rgb + ',.9)'); gr.addColorStop(1, 'rgba(' + rgb + ',0)'); q.fillStyle = gr; q.fillRect(x - rr, y - rr, rr * 2, rr * 2)
+      }
+    }
+    return [c, q]
+  }
+
+  /* ---------- BUILD: dipasang di atas build asli ---------- */
+  const _build = F.build;
+  F.build = function () {
+    ACTIVE = true; let r;
+    try { r = _build.apply(this, arguments) } finally { ACTIVE = false }
+    try { depthPass() } catch (e) { if (typeof console !== 'undefined') console.warn('[forest depth]', e) }
+    return r
+  };
+
+  function depthPass() {
+    const rng = mkRng(31337), objs = F.objs, walls = F.walls, free = F.free, bgc = F.bg.getContext('2d');
+    const { MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect } = GEO;
+    const addObj = (s, px, py, solid, extra) => { const o = Object.assign({ x: Math.round(px), y: Math.round(py), img: s.img, ox: s.ox, oy: s.oy, oh: s.img.height }, extra || {}); objs.push(o); if (solid) walls.push(solid); return o };
+    const treeObjs = () => objs.filter(o => o.img && (o.img.__k === 'oak' || o.img.__k === 'pine'));
+    const farFromTrees = (a, b, m) => !objs.some(o => o.img && o.img.__k && (o.img.__k === 'oak' || o.img.__k === 'pine') && Math.hypot(o.x - a, o.y - b) < m);
+    const pathClear = (a, b, m) => [MAINd, CAMPd, SHRd].every(P => WORLD.distPoly(a, b, P) > m);
+
+    /* 1) pohon raksasa + anakan: variasi ukuran supaya siluet hutan tidak seragam */
+    ACTIVE = true;
+    if (CFG.giants > 0) {
+      const want = Math.round(14 * CFG.giants), giants = [];
+      for (let n = 0; n < 900 && giants.length < want; n++) {
+        const a = 60 + rng() * (FW - 200), b = 150 + rng() * (FH - 190);
+        if (!free(a, b, 30) || !farFromTrees(a, b, 26) || giants.some(q => Math.hypot(q[0] - a, q[1] - b) < 110)) continue;
+        if (!pathClear(a, b - 50, 40) || !pathClear(a, b - 85, 30) || !pathClear(a, b, 40)) continue;
+        giants.push([a, b]);
+      }
+      giants.forEach(([a, b], i) => { const s = i % 3 === 2 ? art.pine(120 + i, 1.55) : art.oak(100 + i, 1.5 + (i % 3) * .12); addObj(s, a, b + 4, [a - 7, b - 1, 14, 6]) })
+    }
+    for (let n = 0, put = 0; n < 500 && put < 40; n++) {
+      const a = 40 + rng() * (FW - 120), b = 140 + rng() * (FH - 170);
+      if (!free(a, b, 10) || !farFromTrees(a, b, 20) || F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 22)) continue;
+      addObj(rng() < .6 ? art.oak(200 + put, .55 + rng() * .15) : art.pine(220 + put, .55 + rng() * .15), a, b + 3); put++
+    }
+    ACTIVE = false;
+    const T = treeObjs();
+
+    /* 2) peta bayangan (S) dan cahaya (L), bersumber dari kiri-atas */
+    const S = new Float32Array(FW * FH), L = new Float32Array(FW * FH);
+    const stamp = (M, cx, cy, rxx, ryy, a, skew) => {
+      skew = skew || 0; const ex = rxx + Math.abs(skew) * ryy, x0 = Math.max(0, Math.floor(cx - ex)), x1 = Math.min(FW - 1, Math.ceil(cx + ex)), y0 = Math.max(0, Math.floor(cy - ryy)), y1 = Math.min(FH - 1, Math.ceil(cy + ryy));
+      for (let y = y0; y <= y1; y++) { const v = (y - cy) / ryy, v2 = v * v; for (let x = x0; x <= x1; x++) { const u = (x - cx - skew * (y - cy)) / rxx, dd = u * u + v2; if (dd >= 1) continue; const val = a * Math.sqrt(1 - dd), i = y * FW + x; M[i] = 1 - (1 - M[i]) * (1 - val) } }
+    };
+    T.forEach(o => {
+      const w = o.img.width, h = o.img.height, len = h * .5, tall = o.oy;
+      stamp(S, o.x + 2, o.y - 1, 12 + w * .06, 5, .5);                                           // bayangan kontak di pangkal
+      stamp(S, o.x + len * .55 + 4, o.y + 1 + len * .06, len * .62 + 9, clamp(w * .1, 6, 14), .4);      // bayangan jatuh ke kanan-bawah
+      stamp(S, o.x + 3, o.y - tall * .26, w * .46, w * .2, .3)                                   // lantai di bawah tajuk (menumpuk di hutan lebat)
+    });
+    // tanah di kaki tebing, tepi jalan, tepi sungai & kolam: sedikit lebih gelap supaya terasa cekung
+    { const [cx0, , cw] = cliffRect; for (let y = 96; y < 156; y++) for (let x = cx0 - 14; x < cx0 + cw + 14; x++) { const fx = Math.min(1, Math.min(x - (cx0 - 14), cx0 + cw + 14 - x) / 24), v = .5 * Math.pow(1 - (y - 96) / 60, 1.3) * fx; if (v > 0) { const i = y * FW + x; S[i] = 1 - (1 - S[i]) * (1 - v) } } }
+    const ring = (pts, w) => { const R = w / 2 + 8; pts.forEach(([px, py], k) => { if (k % 2) return; for (let y = Math.max(0, Math.floor(py - R)); y <= Math.min(FH - 1, Math.ceil(py + R)); y++) for (let x = Math.max(0, Math.floor(px - R)); x <= Math.min(FW - 1, Math.ceil(px + R)); x++) { const dd = Math.sqrt((x - px) * (x - px) + (y - py) * (y - py)); if (dd > w / 2 + 1 && dd < R) { const v = .26 * (1 - (dd - w / 2) / 8), i = y * FW + x; S[i] = 1 - (1 - S[i]) * (1 - v) } } }) };
+    ring(MAINd, PW); ring(CAMPd, PS); ring(SHRd, PS);
+    for (let y = 0; y < FH; y++) { const c = rx(y), hw = rhw(y); for (let k = 0; k < 11; k++) { const v = .34 * (1 - k / 11);[c - hw - 7 - k, c + hw + 7 + k].forEach(xx => { xx = Math.round(xx); if (xx >= 0 && xx < FW) { const i = y * FW + xx; S[i] = 1 - (1 - S[i]) * (1 - v) } }) } }
+    for (let y = Math.floor(POND.y - POND.ry - 18); y < POND.y + POND.ry + 18; y++) for (let x = Math.floor(POND.x - POND.rx - 18); x < POND.x + POND.rx + 18; x++) { const dd = ((x - POND.x) / (POND.rx + 8)) ** 2 + ((y - POND.y) / (POND.ry + 6)) ** 2; if (dd > 1 && dd < 1.6) { const v = .3 * (1 - (dd - 1) / .6), i = y * FW + x; S[i] = 1 - (1 - S[i]) * (1 - v) } }
+
+    // gundukan tanah: terang di kiri-atas, gelap di kanan-bawah (memberi kesan ketinggian)
+    const mounds = [];
+    for (let n = 0; n < 400 && mounds.length < 26; n++) {
+      const a = 40 + rng() * (FW - 100), b = 150 + rng() * (FH - 190), rr = 26 + rng() * 34, i = (b | 0) * FW + (a | 0);
+      if (!free(a, b, 16) || S[i] > .16 || mounds.some(q => Math.hypot(q[0] - a, q[1] - b) < 90)) continue; mounds.push([a, b, rr]);
+      stamp(L, a - rr * .2, b - rr * .12, rr * .66, rr * .26, .6); stamp(S, a + rr * .28, b + rr * .2, rr * .8, rr * .24, .42)
+    }
+    // sinar matahari: padang bunga, kuil, perkemahan, sepanjang jalan, dan celah tajuk
+    stamp(L, MEAD.x, MEAD.y, MEAD.r * 1.2, MEAD.r * .9, .55); stamp(L, SHRC.x, SHRC.y, 96, 62, .38); stamp(L, CAMPC.x, CAMPC.y, 72, 46, .26);
+    MAINd.forEach(([px, py], k) => { if (k % 3 === 0) stamp(L, px, py, 16, 11, .14) });
+    for (let gy = 150; gy < FH - 30; gy += 38) for (let gx = 40; gx < FW - 60; gx += 38) {
+      const a = gx + (rng() - .5) * 20, b = gy + (rng() - .5) * 20; let sum = 0; for (let k = 0; k < 5; k++) { const sx = Math.min(FW - 1, Math.max(0, (a + (k - 2) * 12) | 0)), sy = Math.min(FH - 1, Math.max(0, (b + ((k * 7) % 5 - 2) * 6) | 0)); sum += S[sy * FW + sx] }
+      if (sum / 5 < .07 && vnoise(a / 90, b / 90, 14) > .45) stamp(L, a, b, 24 + rng() * 14, 11 + rng() * 6, .3)
+    }
+
+    /* 3) satu lintasan piksel: warnai ulang tanah dengan bayangan/cahaya, lumut, serasah, gradasi wilayah */
+    {
+      const id = bgc.getImageData(0, 0, FW, FH), d = id.data;
+      for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
+        const i = y * FW + x, o = i * 4; let r = d[o], g1 = d[o + 1], b = d[o + 2]; const grass = g1 > r + 6 && g1 > b + 6, bay = BAYER[(x & 3) + ((y & 3) << 2)] / 16, s = S[i], l = L[i];
+        if (grass) {
+          const tx = x / FW; if (tx < .35) { const k = (.35 - tx) * .2; r += (22 - r) * k; g1 += (66 - g1) * k; b += (84 - b) * k } else if (tx > .7) { const k = (tx - .7) * .16; r += (255 - r) * k; g1 += (214 - g1) * k; b += (112 - b) * k }
+          if (s > .1) { const m = vnoise(x / 22, y / 22, 61); if (m > .6) { const k = (m - .6) * .9; r += (48 - r) * k; g1 += (98 - g1) * k; b += (52 - b) * k } }
+          if (s > .26) { const h = hash(x, y, 31); if (h > .992) { r = 186; g1 = 110; b = 46 } else if (h > .958) { r += (88 - r) * .55; g1 += (62 - g1) * .55; b += (34 - b) * .55 } }
+        }
+        if (s > 0) { const q = s * 3.3, lv = Math.min(3, Math.floor(q) + ((q - Math.floor(q)) > bay ? 1 : 0)); if (lv) { const k = lv * .13; r += (10 - r) * k; g1 += (34 - g1) * k; b += (46 - b) * k } }
+        if (l > 0) { const q = l * 2.4, lv = Math.min(2, Math.floor(q) + ((q - Math.floor(q)) > bay ? 1 : 0)); if (lv) { const k = lv * .1; r += (255 - r) * k; g1 += (238 - g1) * k; b += (150 - b) * k } }
+        d[o] = r; d[o + 1] = g1; d[o + 2] = b
+      }
+      bgc.putImageData(id, 0, 0)
+    }
+
+    /* 4) detail tanah: akar, serasah daun, rumput lebat di area terang */
+    T.forEach(o => {
+      const big = o.img.width > 60;
+      [-1, 1].forEach(sd => { const n = big ? 3 : 2; for (let k = 0; k < n; k++) { const L0 = 5 + ((rng() * (big ? 9 : 5)) | 0), y0 = o.y - 3 + k * 2; for (let j = 0; j < L0; j++) rc(bgc, '#1b130c', o.x + sd * (3 + j), y0 + (j * .45 | 0) - 1, 1, 3); for (let j = 0; j < L0; j++) { rc(bgc, '#5a3d24', o.x + sd * (3 + j), y0 + (j * .45 | 0), 1, 1); if (j < L0 - 2) rc(bgc, '#7a5636', o.x + sd * (3 + j), y0 + (j * .45 | 0) - 1, 1, 1) } } });
+      for (let k = 0; k < (big ? 14 : 7); k++) { const an = rng() * 6.283, dd = 6 + rng() * (big ? 26 : 16); rc(bgc, ['#b8742a', '#d89a3a', '#8a5a28', '#6a4a24'][(rng() * 4) | 0], o.x + Math.cos(an) * dd, o.y + Math.sin(an) * dd * .4, 2, 1) }
+    });
+    for (let n = 0, put = 0; n < 4000 && put < 420 * CFG.undergrowth; n++) { const a = rng() * FW, b = rng() * FH; if (L[(b | 0) * FW + (a | 0)] > .18 && free(a, b, 2)) { art.grassTuft(bgc, a, b, rng); put++ } }
+
+    /* 5) sprite bawah-tegakan (tertata Y, menutupi kaki pemain): pakis, rumput tinggi, jamur, ilalang */
+    const FERN = [], GRASS = [], SHR = [], CAT = [];
+    for (let i = 0; i < 7; i++) FERN.push(fern(500 + i)); for (let i = 0; i < 6; i++) GRASS.push(tallGrass(600 + i)); for (let i = 0; i < 3; i++) SHR.push(shroom(700 + i)); for (let i = 0; i < 4; i++) CAT.push(cattail(800 + i));
+    if (CFG.undergrowth > 0) {
+      const cell = new Map(), key = (a, b) => ((a / 12) | 0) + ',' + ((b / 12) | 0), okSpot = (a, b) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const l = cell.get(((a / 12 | 0) + i) + ',' + ((b / 12 | 0) + j)); if (l && l.some(q => Math.hypot(q[0] - a, q[1] - b) < 11)) return false } return true };
+      const tgt = Math.round(1100 * CFG.undergrowth);
+      for (let n = 0, put = 0; n < 9000 && put < tgt; n++) {
+        const a = 24 + rng() * (FW - 48), b = 130 + rng() * (FH - 160); if (!free(a, b, 5)) continue;
+        const s = S[(b | 0) * FW + (a | 0)], lit = L[(b | 0) * FW + (a | 0)]; if (!okSpot(a, b) || F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 18)) continue;
+        const k = rng(); let spr;
+        if (s > .34) spr = k < .1 ? SHR[(rng() * 3) | 0] : k < .65 ? FERN[(rng() * 7) | 0] : GRASS[(rng() * 6) | 0];
+        else if (s > .12) spr = k < .45 ? FERN[(rng() * 7) | 0] : GRASS[(rng() * 6) | 0];
+        else { if (k < (lit > .15 ? .55 : .3)) spr = GRASS[(rng() * 6) | 0]; else if (k < .38) spr = FERN[(rng() * 7) | 0]; else continue }
+        addObj(spr, a, b, null, { sway: spr.oy > 12 ? 1 : 0 }); (cell.get(key(a, b)) || cell.set(key(a, b), []).get(key(a, b))).push([a, b]); put++
+      }
+      // ilalang di tepi sungai & kolam
+      for (let i = 0; i < 70; i++) { const y = 20 + rng() * (FH - 40), sd = rng() < .5 ? -1 : 1, a = rx(y) + sd * (rhw(y) + 9 + rng() * 8); if (Math.abs(a - 830) < 70 && y > 240 && y < 360) continue; addObj(CAT[(rng() * 4) | 0], a, y, null, { sway: 1 }) }
+      for (let i = 0; i < 16; i++) { const an = rng() * 6.283, a = POND.x + Math.cos(an) * (POND.rx + 12 + rng() * 6), b = POND.y + Math.sin(an) * (POND.ry + 8 + rng() * 4); addObj(CAT[(rng() * 4) | 0], a, b, null, { sway: 1 }) }
+    }
+
+    /* 6) tandai objek untuk goyangan & tembus pandang, buat peta topeng cahaya bintik */
+    objs.forEach(o => { const k = o.img && o.img.__k; if (k === 'oak' || k === 'pine') { o.tree = 1; o.sway = o.img.width > 60 ? 1.15 : 1 } else if (k === 'bush') o.sway = .5 });
+    objs.sort((a, b) => a.y - b.y);
+    { const [mc, mq] = mkCv(FW, FH), mid = mq.createImageData(FW, FH), md = mid.data; for (let i = 0; i < FW * FH; i++) { md[i * 4] = md[i * 4 + 1] = md[i * 4 + 2] = 255; md[i * 4 + 3] = Math.min(255, S[i] * 2.1 * 255) } mq.putImageData(mid, 0, 0); F._mask = mc }
+  }
+
+  /* ---------- RUNTIME: bintik cahaya di lantai hutan (di bawah objek) ---------- */
+  const dap = blobTile(256, 46, 3, 9, '255,236,150', 91); pixelate(dap[1], 256, 256, 3);
+  const tmp = mkCv(8, 8); let tw = 0, th = 0; const pat = tmp[1].createPattern(dap[0], 'repeat');
+  const _env = F.env;
+  F.env = function () {
+    _env.apply(this, arguments);
+    if (!F._mask || CFG.dapple <= 0) return; const k = dayK(); if (k < .05) return;
+    const vw = W / CAM_Z, vh = H / CAM_Z, cx0 = Math.floor(camX), cy0 = Math.floor(camY), w = Math.ceil(vw) + 2, h = Math.ceil(vh) + 2, tc = tmp[0], tx = tmp[1];
+    if (tw !== w || th !== h) { tc.width = tw = w; tc.height = th = h }
+    tx.setTransform(1, 0, 0, 1, 0, 0); tx.globalCompositeOperation = 'source-over'; tx.clearRect(0, 0, w, h);
+    if (pat.setTransform && typeof DOMMatrix !== 'undefined') pat.setTransform(new DOMMatrix().translate(Math.round(t * 5 + Math.sin(t * .4) * 6), Math.round(t * 2.4)));
+    tx.translate(-cx0, -cy0); tx.fillStyle = pat; tx.fillRect(cx0, cy0, w, h); tx.setTransform(1, 0, 0, 1, 0, 0);
+    tx.globalCompositeOperation = 'destination-in'; tx.drawImage(F._mask, cx0, cy0, w, h, 0, 0, w, h);
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = CFG.dapple * k; g.drawImage(tc, cx0, cy0); g.restore()
+  };
+
+  /* ---------- RUNTIME: bayangan awan, kabut, vignette, daun di tepi layar (di atas objek) ---------- */
+  const cld = blobTile(320, 9, 60, 110, '4,16,22', 77); pixelate(cld[1], 320, 320, 3); const cpat = tmp[1].createPattern(cld[0], 'repeat');
+  const misty = (() => { const [c, q] = mkCv(120, 44), gr = q.createRadialGradient(60, 22, 0, 60, 22, 60); gr.addColorStop(0, 'rgba(210,235,245,.9)'); gr.addColorStop(1, 'rgba(210,235,245,0)'); q.save(); q.translate(0, 22); q.scale(1, .37); q.translate(0, -22); q.fillStyle = gr; q.fillRect(0, 0, 120, 60); q.restore(); return c })();
+  const LEAF = [leafCluster(3), leafCluster(8), leafCluster(14)];
+  const _front = F.drawFront;
+  F.drawFront = function () {
+    _front.apply(this, arguments);
+    const vw = W / CAM_Z, vh = H / CAM_Z, k = dayK(), night = wx().night || 0;
+    // bayangan awan
+    if (CFG.clouds > 0 && k > .1) {
+      if (cpat.setTransform && typeof DOMMatrix !== 'undefined') cpat.setTransform(new DOMMatrix().translate(Math.round(t * 7), Math.round(t * 3)));
+      g.save(); g.globalAlpha = CFG.clouds * k; g.fillStyle = cpat; g.fillRect(camX, camY, vw, vh); g.restore()
+    }
+    // kabut tipis berlapis (melintas di depan objek => kedalaman)
+    if (CFG.mist > 0) {
+      g.save(); g.globalAlpha = (.07 + .06 * night) * CFG.mist;
+      const spots = [[GEO.POND.x, GEO.POND.y, 1.5], [GEO.SHRC.x, GEO.SHRC.y + 30, 1.3], [GEO.CAMPC.x - 60, GEO.CAMPC.y + 60, 1]]; for (let y = 60; y < FH; y += 110) spots.push([GEO.rx(y), y, 1.1]);
+      spots.forEach(([mx, my, sc], i) => { const X = mx + Math.sin(t * .17 + i * 1.9) * 26 - 60 * sc, Y = my - 14 + Math.sin(t * .23 + i) * 3; if (X > camX + vw || X + 120 * sc < camX || Y > camY + vh || Y + 44 * sc < camY) return; g.drawImage(misty, Math.round(X), Math.round(Y), 120 * sc, 44 * sc) });
+      g.restore()
+    }
+    // vignette
+    if (CFG.vignette > 0) { const cx = camX + vw / 2, cy = camY + vh / 2, gr = g.createRadialGradient(cx, cy, Math.min(vw, vh) * .38, cx, cy, Math.hypot(vw, vh) * .56); gr.addColorStop(0, 'rgba(4,16,14,0)'); gr.addColorStop(1, 'rgba(4,16,14,' + (CFG.vignette * (.8 + .5 * night)) + ')'); g.save(); g.fillStyle = gr; g.fillRect(camX, camY, vw, vh); g.restore() }
+    // daun besar di tepi atas layar, bergerak lebih cepat dari tanah (parallax)
+    if (CFG.leaves && k > .05) {
+      g.save(); g.globalAlpha = .92;
+      for (let i = 0; i < 7; i++) { const base = (i * .147 + .03) * (vw + 140), sx = (((base - camX * 1.35) % (vw + 140)) + vw + 140) % (vw + 140) - 70, sy = -22 - (i % 3) * 6 + Math.sin(t * .8 + i * 1.7) * 2; g.drawImage(LEAF[i % 3], Math.round(camX + sx), Math.round(camY + sy)) }
+      g.restore()
+    }
+  };
+})();
+
 /* ===== Pintu tebing hutan -> kembali ke lobby Dungeon ===== */
 (function () {
   WORLD.onDungeonDoor = function () { WORLD.start('toLobby', { x0: p.x, y0: p.y }); msg('Kau kembali masuk ke Dungeon...') };
@@ -396,7 +693,7 @@
     dmgPct: .08,            // damage gigitan = 8% HP maksimum pemain (minimal 3)
     playerDmg: 12,          // damage serangan cadangan ke serigala (lihat attackKey)
     attackKeys: [], // tombol serang ke serigala (kosongkan [] bila serangan game sudah memanggil F.hitWolves)
-    attackClick: true       // klik kiri mouse juga menyerang
+    attackClick: false      // klik cadangan DIMATIKAN: serangan basic & skill game kini mengenai serigala lewat daftar musuh (es). Ubah ke true bila klik biasa berhenti mengenai
   };
   const S = { sh: 0, rip: [], rolled: false, queue: 0, base: 0, spawnCd: 0, fails: 0, told: false, pInv: 0, atk: 0, tk: 0 };
   const wolves = [];
@@ -502,20 +799,61 @@
   }
 
   /* ---------- serangan pemain ke serigala ---------- */
+  function dmgWolf(w, dmg, fx0, fy0, kb) {
+    if (w.dead) return false;
+    w.hp -= dmg; w.hit = .15;
+    const a = Math.atan2(w.y - fy0, w.x - fx0); if (kb > 0) move(w, Math.cos(a) * kb, Math.sin(a) * kb, .07);
+    if (w.st === 'wind' || w.st === 'lunge') { w.st = 'rec'; w.tm = .5; w.cd = 1 }
+    dn(w.x, w.y - 16, '-' + dmg, 0, '#ffd34d');
+    for (let i = 0; i < 5; i++) dp.push({ k: 'p', x: w.x, y: w.y - 6, vx: (Math.random() - .5) * 70, vy: -20 - Math.random() * 30, life: .35, max: .35, s: 1.5, c: '#c8ccd8' });
+    if (w.hp <= 0) { w.dead = 1; w.fade = 0; dn(w.x, w.y - 22, 'Serigala tumbang', 0, '#fff') }
+    return true
+  }
   F.hitWolves = function (x, y, r, dmg) {
     let n = 0;
     for (const w of wolves) {
       if (w.dead || Math.hypot(w.x - x, w.y - y) > r) continue;
-      n++; w.hp -= dmg; w.hit = .15;
-      const a = Math.atan2(w.y - p.y, w.x - p.x); move(w, Math.cos(a) * 160, Math.sin(a) * 160, .07);
-      if (w.st === 'wind' || w.st === 'lunge') { w.st = 'rec'; w.tm = .5; w.cd = 1 }
-      dn(w.x, w.y - 16, '-' + dmg, 0, '#ffd34d');
-      for (let i = 0; i < 5; i++) dp.push({ k: 'p', x: w.x, y: w.y - 6, vx: (Math.random() - .5) * 70, vy: -20 - Math.random() * 30, life: .35, max: .35, s: 1.5, c: '#c8ccd8' });
-      if (w.hp <= 0) { w.dead = 1; w.fade = 0; dn(w.x, w.y - 22, 'Serigala tumbang', 0, '#fff') }
+      n++; dmgWolf(w, dmg, p.x, p.y, 160)
     }
     return n
   };
   WORLD.hitWolves = F.hitWolves;
+
+  /* ---------- sambungkan ke serangan & SKILL game (daftar musuh `es` + fungsi hit) ----------
+     Tiap serigala hidup dibuatkan "musuh bayangan" (k:'dummy', tidak punya AI/gambar) di `es`,
+     sehingga semua skill/ultimate/basic attack yang memindai `es` ikut mengenai serigala.
+     Fungsi hit() dicegat: bila targetnya bayangan serigala, damage diteruskan ke serigala asli. */
+  const prox = new Map();
+  function clearProx() {
+    if (typeof es !== 'undefined' && prox.size) { const set = new Set(prox.values()); es = es.filter(x => !set.has(x)) }
+    prox.clear()
+  }
+  function syncProx() {
+    if (typeof es === 'undefined' || typeof mkDummy !== 'function') return;
+    for (const [w, e] of prox) if (!wolves.includes(w) || w.dead || w.st === 'flee' || !es.includes(e)) { es = es.filter(x => x !== e); prox.delete(w) }
+    for (const w of wolves) {
+      if (w.dead || w.st === 'flee') continue;
+      let e = prox.get(w);
+      if (!e) { e = mkDummy(w.x); e.wolf = w; e.sw = 0; e.r = 12; prox.set(w, e); es.push(e) }
+      e.x = w.x; e.y = w.y; e.hp = w.hp; e.mhp = w.mhp
+    }
+  }
+  if (typeof hit === 'function') {
+    const _hit = hit;
+    hit = function (e, d, sx, sy, kb) {
+      if (!(e && e.wolf)) return _hit.apply(this, arguments);
+      const w = e.wolf; if (w.dead || !wolves.includes(w)) return;
+      const c = Math.random() < .15; d = Math.max(1, Math.round(d * (c ? 2 : 1)));
+      try { ultGain(Math.min(d, Math.max(0, w.hp))); SFX.hit(c) } catch (_) { }
+      try { shake = Math.max(shake, c ? 5 : 2.5); HST = Math.max(HST, c ? .05 : .02) } catch (_) { }
+      dmgWolf(w, d, sx, sy, Math.min((kb == null ? 70 : kb) * 2.3, 400));
+      try { if (wi == 0 || wi == 4) cutMark(e); else if (wi == 1) spearMark(e); else if (wi == 2) arrowMark(e) } catch (_) { }
+    };
+  }
+  if (typeof drawDummy === 'function') { const _dd = drawDummy; drawDummy = function (e) { if (e && e.wolf) return; return _dd.apply(this, arguments) } }
+  if (typeof WORLD.start === 'function' && !WORLD.start.__wolfProx) {   // bersihkan bayangan saat pindah area
+    const _st = WORLD.start; WORLD.start = function () { clearProx(); return _st.apply(this, arguments) }; WORLD.start.__wolfProx = 1
+  }
   // uji coba dari konsol browser: WORLD.spawnWolves(2) memunculkan 2 serigala sekarang juga (abaikan jam & peluang)
   WORLD.spawnWolves = function (n) { S.base = Math.random() * TAU; S.queue = n || 1; S.fails = 0; S.told = false };
   const swing = () => {
@@ -530,7 +868,7 @@
   const _enter = F.enter;
   F.enter = function () {
     const r = _enter && _enter.apply(this, arguments);
-    wolves.length = 0; F.dyn = F.dyn.filter(o => !o.w); S.rolled = false; S.queue = 0; S.pInv = 0; S.sh = night() > .45 ? 1 : 0; S.rip.length = 0;
+    clearProx(); wolves.length = 0; F.dyn = F.dyn.filter(o => !o.w); S.rolled = false; S.queue = 0; S.pInv = 0; S.sh = night() > .45 ? 1 : 0; S.rip.length = 0;
     return r
   };
   const _tick = F.tick;
@@ -561,6 +899,7 @@
       const w = wolves[i];
       if ((w.dead && w.fade > .8) || (w.st === 'flee' && w.fade > 1.4)) { wolves.splice(i, 1); const j = F.dyn.findIndex(o => o.w === w); if (j >= 0) F.dyn.splice(j, 1) }
     }
+    syncProx();
     return r
   };
 

@@ -82,6 +82,7 @@
   }
   const rgbS = a => 'rgb(' + (a[0] | 0) + ',' + (a[1] | 0) + ',' + (a[2] | 0) + ')';
   function house(w, o) { try { return fHouse(w, o) } catch (e) { return houseOld(w, o) } }
+  WORLD.mkHouse = house;   // dipakai area Kerajaan
 
   /* ===== RUMAH FEODAL-FANTASI: half-timbered, lantai bertingkat, atap curam, bendera ===== */
   function fHouse(w, o) {
@@ -548,9 +549,22 @@
       E(X, Y - 49, 11, 4, OLC); E(X, Y - 50, 10, 3.2, '#b4aea0'); E(X, Y - 50, 8, 2.4, '#5ab8e0');
       for (let i = 0; i < 16; i++) { const a = i * 2.4, k = ((t * .75 + i / 16) % 1) * .62, d = 15 + k * 14, px = X + Math.cos(a) * d, py = Y - 33 + Math.sin(a) * 5.2 * (d / 15) + k * k * 70, al = 1 - k * 1.1; if (py > Y - 8) continue; g.fillStyle = 'rgba(205,245,255,' + Math.max(.1, al) + ')'; g.fillRect(Math.round(px), Math.round(py), 2, 2 + (k > .3 ? 2 : 0)) }
       for (let i = 0; i < 12; i++) { const a = i * 2.7 + 1, k = ((t * .9 + i / 12) % 1) * .85, d = 9 + k * 7, px = X + Math.cos(a) * d, py = Y - 50 + Math.sin(a) * 3.2 + k * k * 24; g.fillStyle = 'rgba(205,245,255,' + Math.max(.1, 1 - k) + ')'; g.fillRect(Math.round(px), Math.round(py), 2, 2) }
-      const cy = Y - 66 + Math.sin(t * 2) * 2.5; g.save(); g.globalCompositeOperation = 'lighter'; const gq = g.createRadialGradient(X, cy, 2, X, cy, 46); gq.addColorStop(0, 'rgba(120,230,255,' + (.42 + .1 * Math.sin(t * 3)) + ')'); gq.addColorStop(1, 'rgba(90,170,255,0)'); g.fillStyle = gq; g.fillRect(X - 46, cy - 46, 92, 92); g.restore();
-      g.fillStyle = OLC; g.beginPath(); g.moveTo(X, cy - 11); g.lineTo(X + 7, cy); g.lineTo(X, cy + 11); g.lineTo(X - 7, cy); g.fill(); g.fillStyle = '#7ae0ff'; g.beginPath(); g.moveTo(X, cy - 9); g.lineTo(X + 5, cy); g.lineTo(X, cy + 9); g.lineTo(X - 5, cy); g.fill(); g.fillStyle = '#d8fbff'; g.beginPath(); g.moveTo(X, cy - 9); g.lineTo(X - 5, cy); g.lineTo(X, cy + 2); g.fill();
-      for (let i = 0; i < 6; i++) { const a = t * 1.4 + i * 1.05, r = 12 + 3 * Math.sin(t * 2 + i); g.fillStyle = 'rgba(210,250,255,' + (.5 + .5 * Math.sin(t * 5 + i)) + ')'; g.fillRect(Math.round(X + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r * .5), 1, 1) }
+      const cy = Y - 66 + Math.sin(t * 2) * 2.5, sh = .5 + .5 * Math.sin(t * 3.1), sh2 = .5 + .5 * Math.sin(t * 5.3 + 1);
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const gq = g.createRadialGradient(X, cy, 2, X, cy, 74); gq.addColorStop(0, 'rgba(170,244,255,' + (.62 + .18 * sh) + ')'); gq.addColorStop(.35, 'rgba(100,205,255,' + (.24 + .08 * sh) + ')'); gq.addColorStop(1, 'rgba(90,170,255,0)'); g.fillStyle = gq; g.fillRect(X - 74, cy - 74, 148, 148);
+      const bm = g.createLinearGradient(0, cy, 0, Y - 34); bm.addColorStop(0, 'rgba(150,236,255,' + (.3 + .1 * sh) + ')'); bm.addColorStop(1, 'rgba(150,236,255,0)'); g.fillStyle = bm; g.beginPath(); g.moveTo(X - 5, cy + 6); g.lineTo(X + 5, cy + 6); g.lineTo(X + 16, Y - 34); g.lineTo(X - 16, Y - 34); g.fill();
+      for (let i = 0; i < 8; i++) { const a = t * .5 + i * P2 / 8, L = 30 + (i % 2 ? 0 : 16) + 12 * Math.sin(t * 2 + i * 1.3); g.fillStyle = 'rgba(205,249,255,' + (.15 + .1 * sh2) + ')'; g.beginPath(); g.moveTo(X + Math.cos(a - .07) * 7, cy + Math.sin(a - .07) * 7); g.lineTo(X + Math.cos(a) * L, cy + Math.sin(a) * L); g.lineTo(X + Math.cos(a + .07) * 7, cy + Math.sin(a + .07) * 7); g.fill() }
+      const fl = 11 + 9 * sh; g.fillStyle = 'rgba(238,253,255,' + (.65 + .3 * sh2) + ')'; g.fillRect(Math.round(X - fl), Math.round(cy), Math.round(fl * 2), 1); g.fillRect(Math.round(X), Math.round(cy - fl * 1.25), 1, Math.round(fl * 2.5));
+      g.restore();
+      g.fillStyle = OLC; g.beginPath(); g.moveTo(X, cy - 13); g.lineTo(X + 8, cy); g.lineTo(X, cy + 13); g.lineTo(X - 8, cy); g.fill();
+      g.fillStyle = '#7ae0ff'; g.beginPath(); g.moveTo(X, cy - 11); g.lineTo(X + 6, cy); g.lineTo(X, cy + 11); g.lineTo(X - 6, cy); g.fill();
+      g.fillStyle = '#3ab4e8'; g.beginPath(); g.moveTo(X, cy - 11); g.lineTo(X + 6, cy); g.lineTo(X, cy + 11); g.fill();
+      g.fillStyle = 'rgba(216,251,255,' + (.8 + .2 * sh) + ')'; g.beginPath(); g.moveTo(X, cy - 11); g.lineTo(X - 6, cy); g.lineTo(X, cy + 2); g.fill();
+      g.fillStyle = 'rgba(255,255,255,' + (.35 + .6 * sh2) + ')'; g.fillRect(Math.round(X - 3), Math.round(cy - 6), 2, 4); g.fillRect(Math.round(X + 2 + Math.sin(t * 3) * 1), Math.round(cy + 3), 1, 3);
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 10; i++) { const a = t * 1.4 + i * .63, r = 14 + 4 * Math.sin(t * 2 + i); g.fillStyle = 'rgba(215,251,255,' + (.45 + .55 * Math.sin(t * 5 + i)) + ')'; g.fillRect(Math.round(X + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r * .5), i % 3 ? 1 : 2, i % 3 ? 1 : 2) }
+      for (let i = 0; i < 8; i++) { const k = (t * .5 + i / 8) % 1; g.fillStyle = 'rgba(190,245,255,' + (1 - k) * .8 + ')'; g.fillRect(Math.round(X + Math.sin(i * 2.1 + t) * (5 + k * 10)), Math.round(cy + 12 + k * (Y - 12 - cy)), 1, 2) }
+      g.restore();
       post(X - 46, Y + 2); post(X + 46, Y + 2); return
     }
     if (o.n) { person(o.n, o.i); return }
@@ -958,7 +972,7 @@
         if (o.lamp) o.lamp.forEach(([a, b]) => lightL(a, b + 4, 34, '255,205,120', .5 * n));
         if (o.forge) lightL(o.forge[0], o.forge[1], 52 + Math.sin(t * 11) * 4, '255,120,40', .35 * n)
       }
-      lightL(p.x, p.y - 12, 80, '255,214,150', .26 * n); if (vil) bunting(1); else { lightL(570, 470, 100 + Math.sin(t * 11) * 6, '255,150,60', .5 * n); lightL(1008, 166, 80, '120,220,255', .4 * n) }
+      lightL(p.x, p.y - 12, 80, '255,214,150', .26 * n); if (vil === 2) { } else if (vil) bunting(1); else { lightL(570, 470, 100 + Math.sin(t * 11) * 6, '255,150,60', .5 * n); lightL(1008, 166, 80, '120,220,255', .4 * n) }
       for (let i = 0; A.ff && i < 36; i++) {
         const f = A.ff[i % A.ff.length], X = camX + (((f.bx * vw - t * f.sx * .4 - camX * .12 + i * 7) % vw) + vw) % vw, Y = camY + (((f.by * vh + Math.sin(t * .7 + f.ph + i) * 14) % vh) + vh) % vh, a = n * (1 - r) * (.35 + .6 * Math.max(0, Math.sin(t * 2.4 + f.ph + i)));
         g.fillStyle = 'rgba(190,255,140,' + a + ')'; g.fillRect(Math.round(X), Math.round(Y), 2, 2); g.fillStyle = 'rgba(190,255,140,' + a * .25 + ')'; g.fillRect(Math.round(X) - 1, Math.round(Y) - 1, 4, 4)
@@ -1012,6 +1026,7 @@
   const _db = V.drawBack; V.drawBack = function () { guard(ground); _db.call(this) };
   const _df = V.drawFront; V.drawFront = function () { _df.call(this); guard(sky) };
   WORLD.WX = V;   // cuaca & jam dunia bersama (dipakai Hutan juga)
+  WORLD.wxTick = wxTick; WORLD.atmo = atmo; WORLD.homeTime = (n, h) => isHomeTime(n, h);   // dipakai Kerajaan juga
   const C_ = WORLD.AREAS.corridor;
   if (C_) { const _ct = C_.tick; C_.tick = function (dt) { _ct.call(this, dt); if (!WORLD.TR.on) guard(() => wxTick(dt)) } }
   const F_ = WORLD.AREAS.forest;
@@ -1024,7 +1039,7 @@
   const _dr = draw;
   draw = function () {
     _dr.apply(this, arguments);
-    if ((window.AREA !== 'village' && window.AREA !== 'forest') || !p || typeof W === 'undefined') return;
+    if ((window.AREA !== 'village' && window.AREA !== 'forest' && window.AREA !== 'kingdom') || !p || typeof W === 'undefined') return;
     guard(() => {
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
       const hh = V.clock | 0, mm = (((V.clock % 1) * 6) | 0) * 10, s = (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; g.font = 'bold 9px monospace';
@@ -1046,7 +1061,7 @@
    - Model portal batu: cincin rune + pusaran ungu + kristal kunci + lantai rune,
      dipasang di PLAZA PORTAL (lahan lapang khusus + hiasan: lantai batu berrune, panggung, panji, obelisk kristal, lentera, bangku, bunga).
    - Spawn desa tetap di gerbang desa (tidak diubah).
-   - Interaksi: dekati portal -> [G] (mobile: tombol BICARA) -> lanjutkan dialog -> teleport.
+   - Interaksi: melangkah ke lantai rune portal = langsung teleport (tanpa tombol). [G] tetap bisa dipakai.
    - Transisi 'portalLobby': pahlawan berputar & tersedot ke pusaran -> kilat ungu ->
      muncul di lingkaran rune di Lobby.
    Posisi portal dicari otomatis (bebas tembok/pohon/NPC), lihat console: [portal-lobby].
@@ -1061,7 +1076,7 @@
   const LOBBY_SPAWN = [320, 322];                           // titik muncul di Lobby (sama dengan WORLD.go('lobby'))
   const SW = 1.9;                                           // detik: saat layar tertutup kilat -> pindah ke Lobby
   const PORTAL_ANCHOR = [V.PZ ? V.PZ.x : 482, V.PZ ? V.PZ.y - 8 : 686];   // di tengah-belakang Plaza Portal
-  const PT = V.portal = { x: PORTAL_ANCHOR[0], y: PORTAL_ANCHOR[1], boost: 0, near: 0, done: 0 };
+  const PT = V.portal = { x: PORTAL_ANCHOR[0], y: PORTAL_ANCHOR[1], boost: 0, near: 0, done: 0, cd: 2.5 };
 
   const guard = f => { try { f() } catch (e) { if (!guard.w) { guard.w = 1; console.warn('[portal-lobby]', e) } } };
   const cl = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -1273,12 +1288,65 @@
     }
     g.restore();
   }
+  /* sinar, pilar cahaya & partikel portal (menyala terus; makin dahsyat saat teleport) */
+  function portalFx() {
+    const TR = WORLD.TR, act = TR.on && TR.k === 'portalLobby' && window.AREA === 'village', T = act ? (TR.fxT || 0) : 0;
+    const X = PT.x, Y = PT.y, cy = Y - 38, I = .55 + PT.near * .25 + PT.boost * .75, pulse = .5 + .5 * Math.sin(t * 2.4);
+    const bm = act ? E(cl((T - .45) / .55, 0, 1)) * (1 - E(cl((T - 1.8) / .2, 0, 1))) : 0;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 9; i++) {      // sinar berputar dari pusaran
+      const a = t * (.22 + PT.boost * 1.5) + i * TAU / 9, L = 62 + 22 * Math.sin(t * 1.7 + i * 2.1) + 50 * PT.boost + 40 * bm, hw = .06 + .015 * Math.sin(t * 2 + i), al = .05 + .05 * I;
+      for (let l = 0; l < 2; l++) { const LL = L * (l ? .55 : 1); g.fillStyle = 'rgba(190,150,255,' + (l ? al * 1.6 : al) + ')'; g.beginPath(); g.moveTo(X + Math.cos(a - hw) * 6, cy + Math.sin(a - hw) * 5); g.lineTo(X + Math.cos(a) * LL, cy + Math.sin(a) * LL * .9); g.lineTo(X + Math.cos(a + hw) * 6, cy + Math.sin(a + hw) * 5); g.fill() }
+    }
+    const top = cy - 158 - 80 * bm, w0 = 7 + 4 * pulse + 3 * PT.near, w1 = w0 + 26 * bm;      // pilar sinar
+    const gr = g.createLinearGradient(0, Y + 2, 0, top); gr.addColorStop(0, 'rgba(225,205,255,' + (.2 + .12 * I + .55 * bm) + ')'); gr.addColorStop(.55, 'rgba(180,140,255,' + (.07 + .05 * I + .3 * bm) + ')'); gr.addColorStop(1, 'rgba(180,140,255,0)');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(X - w1 / 2, Y + 2); g.lineTo(X + w1 / 2, Y + 2); g.lineTo(X + w0 / 3, top); g.lineTo(X - w0 / 3, top); g.fill();
+    if (bm > .02) { g.fillStyle = 'rgba(255,255,255,' + .5 * bm + ')'; g.fillRect(Math.round(X - 3 - 3 * bm), Math.round(top + 20), Math.round(6 + 6 * bm), Math.round(Y - top - 18)) }
+    for (let i = 0; i < 18; i++) {      // partikel mengorbit lantai rune
+      const a = t * (.9 + PT.boost * 3) * (i % 2 ? 1 : -1) + i * 2.4, rr = 24 + (i % 4) * 3.5, px = X + Math.cos(a) * rr, py = Y + 1 + Math.sin(a) * rr * .3 - 3 - (1 + Math.sin(t * 2 + i)) * 4;
+      g.fillStyle = 'rgba(' + (i % 3 ? '215,190,255' : '170,230,255') + ',' + (.35 + .4 * I) + ')'; g.fillRect(Math.round(px), Math.round(py), 2, 2);
+    }
+    for (let i = 0; i < 22; i++) {      // partikel naik
+      const k = (t * .4 + i / 22) % 1, px = X + Math.sin(i * 2.1 + t * 1.3) * (10 + 16 * k), py = Y - 2 - k * 110;
+      g.fillStyle = 'rgba(225,205,255,' + ((1 - k) * (.35 + .4 * I)) + ')'; g.fillRect(Math.round(px), Math.round(py), i % 3 ? 2 : 3, 2);
+    }
+    for (let i = 0; i < 4; i++) {      // percikan petir kecil dari tepi cincin
+      const q = (t * .9 + i * .27) % 1; if (q > .16) continue;
+      const a = i * 1.7 + Math.floor(t * .9 + i * .27) * 2.3, sx = X + Math.cos(a) * 27, sy = cy + Math.sin(a) * 35; g.strokeStyle = 'rgba(225,205,255,' + (1 - q / .16) * .9 + ')'; g.lineWidth = 1; g.beginPath(); g.moveTo(sx, sy);
+      for (let j = 1; j <= 4; j++) g.lineTo(sx + Math.cos(a) * j * 6 + (hash(i * 7 + j, Math.floor(t * 12), 3) - .5) * 8, sy + Math.sin(a) * j * 6 + (hash(i * 5 + j, Math.floor(t * 12), 4) - .5) * 8);
+      g.stroke();
+    }
+    if (act) {      // efek khusus saat teleport: gelombang kejut, pusaran partikel, aura pahlawan
+      const hx = p.x, hyy = p.y - 14 - (TR.hy || 0);
+      [.55, 1.1, 1.55].forEach(s0 => { const q = (T - s0) / .9; if (q > 0 && q < 1) { g.lineWidth = 2.4 * (1 - q) + .5; g.strokeStyle = 'rgba(225,205,255,' + (1 - q) * .9 + ')'; g.beginPath(); g.ellipse(X, Y + 1, 18 + 84 * q, 6 + 29 * q, 0, 0, TAU); g.stroke() } });
+      const sT = E(cl((T - .45) / .45, 0, 1));
+      for (let i = 0; i < 40; i++) { const u = (i / 40 + T * .8) % 1, a = i * 2.4 + T * 7 * (1 + u), r = 66 * (1 - u) + 4; g.fillStyle = 'rgba(' + (i % 3 ? '220,195,255' : '170,230,255') + ',' + (u * .95 * sT) + ')'; g.fillRect(Math.round(hx + Math.cos(a) * r), Math.round(hyy + Math.sin(a) * r * .5), 2, 2) }
+      lightL(hx, hyy, 36 + 40 * bm, '225,205,255', .45 * bm);
+      if (T > 1.3) { const f = E(cl((T - 1.3) / .6, 0, 1)) * 40; g.fillStyle = 'rgba(255,255,255,' + .8 * (1 - E(cl((T - 1.85) / .15, 0, 1))) + ')'; g.fillRect(Math.round(hx - f), Math.round(hyy), Math.round(f * 2), 1); g.fillRect(Math.round(hx), Math.round(hyy - f), 1, Math.round(f * 2)) }
+    }
+    g.restore();
+  }
+
+  /* kristal air mancur: cahaya & kilau digambar paling akhir agar tetap bersinar di malam hari */
+  function fountainGlow() {
+    const o = V.objs.find(q => q.fountain); if (!o) return;
+    const vw = W / CAM_Z, vh = H / CAM_Z; if (o.x < camX - 140 || o.x > camX + vw + 140 || o.y < camY - 60 || o.y > camY + vh + 200) return;
+    const X = o.x, cy = o.y - 66 + Math.sin(t * 2) * 2.5, sh = .5 + .5 * Math.sin(t * 3.1), sh2 = .5 + .5 * Math.sin(t * 5.3 + 1), n = V.night || 0;
+    lightL(X, cy, 90 + 10 * sh, '120,225,255', .26 + .22 * n + .08 * sh);
+    lightL(X, o.y - 8, 60, '110,210,255', .1 + .12 * n);
+    g.save(); g.globalCompositeOperation = 'lighter';
+    const fl = (14 + 12 * sh) * (1 + .5 * n); g.fillStyle = 'rgba(235,253,255,' + (.35 + .35 * sh2 + .2 * n) + ')'; g.fillRect(Math.round(X - fl), Math.round(cy), Math.round(fl * 2), 1); g.fillRect(Math.round(X), Math.round(cy - fl), 1, Math.round(fl * 2));
+    for (let i = 0; i < 14; i++) { const k = (t * .45 + i / 14) % 1, ang = i * 2.4 + t * .6, r = 6 + k * 16; g.fillStyle = 'rgba(190,245,255,' + ((1 - k) * (.5 + .4 * n)) + ')'; g.fillRect(Math.round(X + Math.cos(ang) * r), Math.round(cy + 8 + k * (o.y - 14 - cy)), i % 3 ? 1 : 2, 2) }
+    for (let i = 0; i < 6; i++) { const k = (t * .3 + i / 6) % 1; g.fillStyle = 'rgba(215,250,255,' + (1 - k) * .7 + ')'; g.fillRect(Math.round(X + Math.sin(i * 3.3 + t) * (4 + k * 14)), Math.round(cy - 4 - k * 36), 2, 2) }
+    g.restore();
+  }
   const _df = V.drawFront;
   V.drawFront = function () {
     _df.apply(this, arguments);
+    guard(fountainGlow);
     if (PT.done && !(WORLD.TR.on && WORLD.TR.k === 'portalLobby' && window.AREA !== 'village')) {
       const vw = W / CAM_Z, vh = H / CAM_Z;
-      if (PT.x > camX - 200 && PT.x < camX + vw + 200 && PT.y > camY - 140 && PT.y < camY + vh + 200) guard(portalGlow);
+      if (PT.x > camX - 200 && PT.x < camX + vw + 200 && PT.y > camY - 140 && PT.y < camY + vh + 200) { guard(portalGlow); guard(portalFx) }
     }
   };
   const _tk = V.tick;
@@ -1287,6 +1355,9 @@
     if (!PT.done) return;
     const d = Math.hypot(p.x - PT.x, p.y - (PT.y + 10));
     PT.near += ((d < 110 ? 1 : 0) - PT.near) * Math.min(1, dt * 3);
+    const TR = WORLD.TR;      // menginjak lantai rune = langsung teleport (tanpa tombol)
+    if (TR.on) PT.cd = 2; else if (PT.cd > 0) PT.cd -= dt;
+    else if (!(typeof dlg !== 'undefined' && dlg) && p && !(p.dead > 0) && Math.hypot(p.x - PT.x, (p.y - (PT.y + 3)) * 1.7) < 30) startTeleport();
   };
 
   /* ---------- TELEPORT: Desa -> Lobby ---------- */
@@ -1299,17 +1370,19 @@
 
   const walk = (dt, moving) => { p.wb += ((moving ? 1 : 0) - p.wb) * Math.min(1, dt * 12); p.wph += dt * 12 * (.2 + p.wb * .8) * 1.2; p.idt += dt * 3 };
   SEQ.portalLobby = {
-    dur: 4.0,
+    dur: 4.3,
     f(T, dt) {
       const TR = WORLD.TR, ph = (a, b) => cl((T - a) / (b - a), 0, 1);
+      TR.fxT = T;
       if (T < SW) {
-        // di Desa: berjalan ke lantai rune -> berputar, mengecil, tersedot ke pusaran -> kilat ungu
-        const k = E(ph(0, .8)), s = E(ph(.8, 1.8)), mv = k > 0 && k < 1;
-        p.x = TR.x0 + (PT.x - TR.x0) * k; p.y = TR.y0 + ((PT.y - 4) - TR.y0) * k;
+        // di Desa: melangkah ke lantai rune -> portal menyala, gelombang kejut, pahlawan melayang & berputar cepat di pilar sinar -> mengecil -> kilat
+        const k = E(ph(0, .7)), s = ph(.7, 1.85), se = E(s), mv = k > 0 && k < 1;
+        p.x = TR.x0 + (PT.x - TR.x0) * k; p.y = TR.y0 + ((PT.y + 2) - TR.y0) * k;
         p.vx = 0; p.vy = mv ? -60 : 0; p.face = -Math.PI / 2; walk(dt, mv);
-        TR.hs = 1 - s; TR.hy = 30 * s; TR.hr = 9 * s;
-        PT.boost = E(ph(0, .9)); TR.pf = E(ph(1.3, SW));
+        TR.hs = 1 - E(ph(1.1, 1.85)); TR.hy = 54 * se; TR.hr = 20 * s * s;
+        PT.boost = E(ph(0, .9)); TR.vg = E(ph(.4, 1.5)) * (1 - E(ph(1.8, SW))); TR.pf = E(ph(1.5, SW));
         if (!TR.s1) { TR.s1 = 1; try { SFX.focus() } catch (e) { } }
+        if (T > 1.15 && !TR.s2) { TR.s2 = 1; try { SFX.focus() } catch (e) { } }
       } else {
         if (!TR.sw) {
           TR.sw = 1; PT.boost = 0;
@@ -1320,10 +1393,10 @@
           try { SFX.door() } catch (e) { }
           msg('Kau tiba di Lobby \u2014 Zona Aman.');
         }
-        // di Lobby: lingkaran rune terbuka, pahlawan muncul berputar & membesar, lalu lingkaran menutup
-        const s = E(ph(2.3, 3.2));
-        TR.pf = 1 - E(ph(SW, 3.0)); TR.lob = E(ph(SW, 2.5)) * (1 - E(ph(3.3, 3.95)));
-        TR.hs = s; TR.hy = 26 * (1 - s); TR.hr = -9 * (1 - s);
+        // di Lobby: pilar sinar turun, gelombang kejut + ledakan partikel, pahlawan muncul berputar & turun perlahan, lingkaran menutup
+        const s = ph(2.35, 3.4), se = E(s);
+        TR.vg = 0; TR.pf = 1 - E(ph(SW, 2.85)); TR.lob = E(ph(SW, 2.5)) * (1 - E(ph(3.6, 4.25)));
+        TR.hs = E(ph(2.35, 3.0)); TR.hy = 48 * (1 - se); TR.hr = -20 * (1 - s) * (1 - s);
         p.vx = p.vy = 0; p.face = Math.PI / 2; walk(dt, false);
       }
     }
@@ -1345,17 +1418,23 @@
   /* lingkaran rune tempat pahlawan muncul di Lobby (lantai di bawah pahlawan + pilar cahaya di atasnya) */
   const LX = LOBBY_SPAWN[0], LY = LOBBY_SPAWN[1];
   function lobbyRingGround(k) {
+    const T = WORLD.TR.fxT || 0;
     ell(LX, LY + 3, 38 * k, 13 * k, 'rgba(10,4,30,.5)');
     g.lineWidth = 1.5; g.strokeStyle = 'rgba(190,150,255,' + .85 * k + ')'; g.beginPath(); g.ellipse(LX, LY + 3, 32 * k, 11 * k, 0, 0, TAU); g.stroke();
     g.lineWidth = 1; g.strokeStyle = 'rgba(150,200,255,' + .6 * k + ')'; g.beginPath(); g.ellipse(LX, LY + 3, 22 * k, 7.5 * k, 0, 0, TAU); g.stroke();
-    for (let i = 0; i < 10; i++) { const a = i * TAU / 10 + t * 1.2; R('rgba(225,205,255,' + .9 * k + ')', LX + Math.cos(a) * 27 * k, LY + 3 + Math.sin(a) * 9.2 * k, 2, 2) }
+    for (let i = 0; i < 14; i++) { const a = i * TAU / 14 + t * 1.2; R('rgba(225,205,255,' + .9 * k + ')', LX + Math.cos(a) * 27 * k, LY + 3 + Math.sin(a) * 9.2 * k, 2, 2) }
+    [2.3, 2.75].forEach(s0 => { const q = (T - s0) / .85; if (q > 0 && q < 1) { g.lineWidth = 2.2 * (1 - q) + .5; g.strokeStyle = 'rgba(225,205,255,' + (1 - q) * .9 + ')'; g.beginPath(); g.ellipse(LX, LY + 3, 16 + 92 * q, 5 + 31 * q, 0, 0, TAU); g.stroke() } });
   }
   function lobbyRingLight(k) {
-    lightL(LX, LY - 10, 60 * k + 4, '170,120,255', .45 * k);
+    const T = WORLD.TR.fxT || 0, burst = E(cl((T - 2.2) / .5, 0, 1));
+    lightL(LX, LY - 10, 70 * k + 6 + 40 * burst * (1 - E(cl((T - 3.6) / .65, 0, 1))), '170,120,255', .5 * k);
     g.save(); g.globalCompositeOperation = 'lighter';
-    const gr = g.createLinearGradient(0, LY + 3, 0, LY - 90); gr.addColorStop(0, 'rgba(190,150,255,' + .5 * k + ')'); gr.addColorStop(1, 'rgba(190,150,255,0)');
-    g.fillStyle = gr; g.fillRect(LX - 16 * k, LY - 90, 32 * k, 93);
-    for (let i = 0; i < 14; i++) { const q = (t * .9 + i / 14) % 1; g.fillStyle = 'rgba(225,205,255,' + (1 - q) * .8 * k + ')'; g.fillRect(Math.round(LX + Math.sin(i * 3.1 + t * 2) * 14 * (1 - q * .4)), Math.round(LY + 2 - q * 80), 2, 2) }
+    const bw = (10 + 22 * burst) * k, gr = g.createLinearGradient(0, LY + 3, 0, LY - 170); gr.addColorStop(0, 'rgba(235,220,255,' + .7 * k + ')'); gr.addColorStop(.5, 'rgba(190,150,255,' + .38 * k + ')'); gr.addColorStop(1, 'rgba(190,150,255,0)');
+    g.fillStyle = gr; g.fillRect(LX - bw / 2, LY - 170, bw, 173); g.fillStyle = 'rgba(255,255,255,' + .35 * k * burst + ')'; g.fillRect(Math.round(LX - bw * .17), LY - 140, Math.max(1, Math.round(bw * .34)), 143);
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i - 4.5) * .22 + Math.sin(t * .7 + i) * .05, L = (70 + 40 * Math.sin(t * 1.9 + i * 2)) * k * (.4 + .6 * burst), hw = .05; g.fillStyle = 'rgba(215,190,255,' + .11 * k * burst + ')'; g.beginPath(); g.moveTo(LX + Math.cos(a - hw) * 4, LY - 6); g.lineTo(LX + Math.cos(a) * L, LY - 6 + Math.sin(a) * L); g.lineTo(LX + Math.cos(a + hw) * 4, LY - 6); g.fill() }
+    const q0 = cl((T - 2.3) / 1.3, 0, 1);
+    for (let i = 0; i < 34; i++) { const a = i * 2.39996, sp = 30 + (i * 37) % 50, r = E(q0) * sp; g.fillStyle = 'rgba(' + (i % 3 ? '225,205,255' : '170,230,255') + ',' + (1 - q0) * .95 + ')'; g.fillRect(Math.round(LX + Math.cos(a) * r), Math.round(LY - 18 + Math.sin(a) * r * .55 - q0 * 30 + q0 * q0 * 26), 2, 2) }
+    for (let i = 0; i < 22; i++) { const q = (t * .9 + i / 22) % 1; g.fillStyle = 'rgba(225,205,255,' + (1 - q) * .8 * k + ')'; g.fillRect(Math.round(LX + Math.sin(i * 3.1 + t * 2) * 14 * (1 - q * .4)), Math.round(LY + 2 - q * 80), 2, 2) }
     g.restore();
   }
   const inLobbyFx = () => { const TR = WORLD.TR; return TR.on && TR.k === 'portalLobby' && TR.lob > .01 && window.AREA === 'lobby' };
@@ -1369,8 +1448,819 @@
   draw = function () {
     _dr.apply(this, arguments);
     guard(() => {
-      const TR = WORLD.TR; if (!(TR.on && TR.k === 'portalLobby' && TR.pf > .003)) return;
-      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = 'rgba(232,218,255,' + cl(TR.pf, 0, 1) + ')'; g.fillRect(0, 0, W, H); g.restore();
+      const TR = WORLD.TR; if (!(TR.on && TR.k === 'portalLobby')) return;
+      if (TR.vg > .01) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); const vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .2, W / 2, H / 2, Math.max(W, H) * .75); vg.addColorStop(0, 'rgba(120,70,220,0)'); vg.addColorStop(1, 'rgba(90,40,190,' + .55 * TR.vg + ')'); g.fillStyle = vg; g.fillRect(0, 0, W, H); g.restore() }
+      if (TR.pf > .003) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = 'rgba(232,218,255,' + cl(TR.pf, 0, 1) + ')'; g.fillRect(0, 0, W, H); g.restore() }
     });
+  };
+})();
+
+/* =====================================================================
+   TAMBAHAN: GERBANG UTARA DESA -> KERAJAAN AURELIA
+   ---------------------------------------------------------------------
+   DESA
+   - Tembok utara & pagar tanaman dibuka di ujung Jalan Utara (x=640).
+   - Gerbang batu + panji mahkota + lentera + dua prajurit kerajaan.
+   - Berjalan ke utara melewati gerbang -> area 'kingdom'.
+   KERAJAAN (dibuat hanya bila game belum punya WORLD.AREAS.kingdom)
+   - Istana besar (menara, panji berkibar, jendela menyala di malam hari).
+   - Tembok kota + gerbang selatan, jalan raya, plaza & monumen raja,
+     taman istana, rumah-rumah kota, pohon, lentera.
+   - NPC: prajurit (model sama seperti penjaga desa), pengawal istana,
+     warga yang berjalan, pulang ke rumah saat malam, penyala lentera.
+   - JAM, CUACA, HUJAN, PETIR, MALAM memakai satu timeline yang sama dengan
+     Desa & Hutan (WORLD.WX), jadi waktu terus berlanjut saat pindah area.
+   ===================================================================== */
+(function () {
+  'use strict';
+  const V = WORLD.AREAS.village;
+  if (!V) return;
+  const { TAU, mkCv, rc, ell, hash, vnoise, mkRng, mixc, h2r, lightL, art } = WORLD;
+  const OLC = '#14100c';
+  const guard = f => { try { f() } catch (e) { if (!guard.w) { guard.w = 1; console.warn('[kerajaan]', e) } } };
+  const cl = (x, a, b) => Math.max(a, Math.min(b, x));
+  const rgb = a => 'rgb(' + (a[0] | 0) + ',' + (a[1] | 0) + ',' + (a[2] | 0) + ')';
+  const Rr = (c, x, y, w, h) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h) };
+  const Qc = (q, c, a, b, w, h) => rc(q, c, Math.round(a), Math.round(b), Math.round(w), Math.round(h));
+  const SH0 = '#9a968a', SHL = '#b9b5a8', SHD = '#7e7a70', SHM = '#aaa69a', SHC = '#cfcbbd', BAK = '#4e4a42', MO = 'rgba(60,56,48,.32)';
+  const GOLD = '#d8b84a', CR = '#a8283e', CRD = '#7a1a2a', BLU = '#2f5aa8';
+  const PZC = ['#a29e92', '#9a9488', '#8e897d', '#b0aa9c'];
+
+  /* ---------------- helper gambar umum ---------------- */
+  const mortarC = (q, x0, y0, w, h, per) => { for (let j = 0; j * 6 < h; j++) { Qc(q, MO, x0, y0 + j * 6 + 5, w, 1); for (let k = (j % 2) * per / 2; k < w; k += per) Qc(q, MO, x0 + k, y0 + j * 6, 1, Math.min(6, h - j * 6)) } };
+  const coneC = (q, ccx, yTop, yBot, wb, col) => {      // atap kerucut bersisik + tiang puncak emas
+    const r0 = h2r(col), L = rgb(mixc(r0, [255, 220, 170], .25)), D = rgb(mixc(r0, [20, 10, 20], .35)), hh = yBot - yTop;
+    for (let j = 0; j < hh; j++) { const wj = Math.round(4 + (wb - 4) * (j / hh)); Qc(q, OLC, ccx - wj / 2 - 1, yTop + j, wj + 2, 1) }
+    for (let j = 0; j < hh; j++) {
+      const wj = Math.round(4 + (wb - 4) * (j / hh)), x0 = ccx - wj / 2, band = Math.floor(j / 5);
+      Qc(q, col, x0, yTop + j, wj, 1); Qc(q, L, x0, yTop + j, wj / 2, 1); Qc(q, D, ccx, yTop + j, wj / 2, 1);
+      if (j % 5 === 4) Qc(q, D, x0, yTop + j, wj, 1); else if (j % 5 === 0) Qc(q, 'rgba(255,255,255,.1)', x0, yTop + j, wj, 1);
+      for (let k = (band % 2) * 4; k < wj; k += 8) Qc(q, D, x0 + k, yTop + j, 1, 4)
+    }
+    Qc(q, OLC, ccx - wb / 2 - 3, yBot - 1, wb + 6, 5); Qc(q, D, ccx - wb / 2 - 2, yBot, wb + 4, 3); Qc(q, 'rgba(0,0,0,.3)', ccx - wb / 2 - 2, yBot + 3, wb + 4, 2);
+    Qc(q, OLC, ccx - 1, yTop - 16, 3, 18); Qc(q, '#6a5a3a', ccx, yTop - 15, 1, 17); Qc(q, OLC, ccx - 3, yTop - 5, 7, 6); Qc(q, GOLD, ccx - 2, yTop - 4, 5, 4); Qc(q, '#fff0a0', ccx - 2, yTop - 4, 2, 2)
+  };
+  const crenelC = (q, x0, y0, w) => { for (let k = 0; k + 10 <= w; k += 14) { Qc(q, OLC, x0 + k - 1, y0 - 10, 12, 11); Qc(q, SHL, x0 + k, y0 - 9, 10, 10); Qc(q, SHC, x0 + k, y0 - 9, 10, 2); Qc(q, SHD, x0 + k + 7, y0 - 7, 3, 8) } };
+  const blockC = (q, x0, y0, w, h) => { Qc(q, OLC, x0 - 1, y0 - 1, w + 2, h + 2); Qc(q, SH0, x0, y0, w, h); mortarC(q, x0, y0, w, h, 14); Qc(q, SHL, x0, y0, 3, h); Qc(q, SHD, x0 + w - 6, y0, 6, h); Qc(q, 'rgba(255,255,255,.10)', x0, y0, w, 2) };
+  const crownC = (q, cx, y, col) => { Qc(q, col, cx - 5, y + 6, 10, 3); Qc(q, col, cx - 5, y, 2, 8); Qc(q, col, cx - 1, y - 2, 2, 10); Qc(q, col, cx + 3, y, 2, 8) };
+
+  /* =================================================================
+     BAGIAN 1 - GERBANG UTARA DI DESA
+     ================================================================= */
+  const GX = 640, GW = 116, GL = GX - GW / 2, GR = GX + GW / 2;
+
+  function carve() {
+    const W = V.walls; if (!W) return;
+    for (let i = W.length - 1; i >= 0; i--) { const r = W[i]; if (r[1] <= 50 && r[1] + r[3] <= 64 && r[2] > 400) W.splice(i, 1) }   // tembok utara & pagar utara
+    W.push([-20, -20, GL + 20, 44], [GR, -20, V.w - GR + 20, 44]);        // tembok kiri & kanan gerbang
+    W.push([28, 50, GL - 28, 10], [GR, 50, V.w - 28 - GR, 10]);            // pagar tanaman kiri & kanan
+    W.push([GL - 14, -20, 14, 60], [GR, -20, 14, 60]);                     // tiang gerbang
+  }
+
+  function paintGate() {
+    const c = V.bg.getContext('2d'), R = (col, a, b, w, h) => rc(c, col, Math.round(a), Math.round(b), Math.round(w), Math.round(h));
+    R('#6f5f42', GL, 0, GW, 64);
+    for (let yy = 0; yy < 64; yy += 4) for (let xx = 0; xx < GW; xx += 6) if (hash(GL + xx, yy, 71) > .55) R('#7d6d4c', GL + xx, yy, 4, 2);
+    for (let yy = 4; yy < 44; yy += 8) for (let xx = 0; xx < GW; xx += 12) R((xx / 12 + yy / 8) % 2 ? '#8e897d' : '#a29e92', GL + xx + ((yy / 8) % 2 ? 6 : 0), yy, 11, 7);
+    R('#7d6d4c', GX - 28, 60, 56, 40);                                      // sambungan ke Jalan Utara
+    for (let yy = 60; yy < 100; yy += 4) for (let xx = -28; xx < 28; xx += 6) if (hash(GX + xx, yy, 72) > .6) R('#8d7d5c', GX + xx, yy, 4, 2);
+    [GL - 14, GR].forEach(px => {
+      R(OLC, px - 1, 0, 16, 50); R(SH0, px, 0, 14, 49); R(SHL, px, 0, 4, 49); R(SHD, px + 10, 0, 4, 49);
+      for (let j = 0; j < 8; j++) R(MO, px, 6 + j * 6, 14, 1);
+      R(OLC, px - 3, 44, 20, 8); R(SHM, px - 2, 45, 18, 6); R(SHC, px - 2, 45, 18, 2);
+      R(OLC, px - 3, 0, 20, 7); R(SHC, px - 2, 1, 18, 4);
+    });
+    R(OLC, GL - 14, 0, GW + 28, 20); R(SH0, GL - 13, 1, GW + 26, 18); R(SHC, GL - 13, 1, GW + 26, 2); R(SHD, GL - 13, 15, GW + 26, 4);
+    for (let k = GL - 8; k < GR + 8; k += 12) { R(SHL, k, 3, 10, 6); R(SHD, k + 7, 4, 3, 5) }
+    R(OLC, GX - 13, 2, 26, 30); R(CR, GX - 12, 3, 24, 26); R(GOLD, GX - 12, 3, 24, 2); R(GOLD, GX - 12, 27, 24, 2);
+    R(GOLD, GX - 6, 16, 12, 3); R(GOLD, GX - 6, 10, 3, 9); R(GOLD, GX - 1, 8, 3, 11); R(GOLD, GX + 3, 10, 3, 9);          // lambang mahkota
+    R(CR, GX - 12, 29, 8, 5); R(CR, GX + 4, 29, 8, 5);
+    R('rgba(0,0,0,.25)', GL, 44, GW, 6);
+    [[GL - 20, 58], [GR + 20, 58]].forEach(([a, b]) => { const s = art.lantern(); V.objs.push({ x: a, y: b, img: s.img, ox: s.ox, oy: s.oy, oh: s.img.height, glow: 1 }) });
+  }
+
+  function addGatePeople() {
+    const N = V.npcs;
+    const gd = (n, x, y, fc, lines) => ({ n, x, y, fc, sk: '#d9a07a', hair: '#3a2a1a', hat: 'helm', armor: 1, c1: CR, c2: GOLD, c3: '#3a3d48', prop: 'spear', lines });
+    [gd('Prajurit Kerajaan, Darto', GL - 4, 74, 1, ['Jalan ini menuju Kerajaan Aurelia. Raja menerima siapa pun yang datang dengan niat baik.', 'Di balik tembok kota ada ibu kota, kastil, dan plaza para bangsawan. Jaga sikapmu, pahlawan.']),
+    gd('Prajurit Kerajaan, Wira', GR + 4, 74, -1, ['Kami berjaga siang dan malam. Sejak pahlawan keluar dari Aula Kuno, para pejabat istana sering menanyakan kabarmu.', 'Silakan lewat. Jalan utara aman sampai gerbang ibu kota.'])].forEach(q => {
+      N.push(q); const e = { n: q, i: V.dyn.length, get y() { return q.y } }; V.dyn.push(e); if (V._all) V._all.push(e)      // _all: agar tidak hilang saat jadwal warga berjalan
+    });
+    N.push({ n: 'Papan Jalan', x: GX + 52, y: 100, sign: 1, rng: 40, verb: 'Baca', _bn: Infinity, lines: ['\u2191 KERAJAAN AURELIA \u2014 Ibu Kota', '\u2193 Desa Lembah Lentera'] });
+  }
+
+  const _vb = V.build;
+  V.build = function () { _vb.apply(this, arguments); guard(carve); guard(paintGate); guard(addGatePeople); guard(() => { V.objs.sort((a, b) => a.y - b.y) }) };
+  if (V.ready) { guard(carve); guard(paintGate); guard(addGatePeople) }
+
+  const _vt = V.tick;
+  V.tick = function (dt) {
+    _vt.call(this, dt);
+    const T = WORLD.TR; if (T.on || !p) return;
+    if (T.cool <= 0 && p.y < 30 && Math.abs(p.x - GX) < GW / 2 && p.vy < -8) {
+      const K = WORLD.AREAS.kingdom;
+      WORLD.start('gate', { to: 'kingdom', dx: 0, dy: -1, spawn: K ? K.spawn.slice() : [900, 1040] });
+      msg('Menuju Kerajaan Aurelia...');
+    }
+  };
+
+  /* =================================================================
+     BAGIAN 2 - AREA KERAJAAN AURELIA
+     ================================================================= */
+  if (WORLD.AREAS.kingdom) return;          // game sudah punya area kerajaan sendiri -> jangan ditimpa
+  const KW = 1800, KH = 1160, AX = 900, PY = 420, G0 = 840, G1 = 960;
+  const K = WORLD.AREAS.kingdom = { name: 'KERAJAAN AURELIA', sub: 'Kingdom of Aurelia', w: KW, h: KH, spawn: [AX, KH - 120], ready: 0, objs: [], dyn: [], npcs: [], walls: [], bg: null, _L: [], ff: [] };
+
+  /* ---------- sprite: istana ---------- */
+  function palaceSprite() {
+    const Wd = 720, H = 394, [c, q] = mkCv(Wd, H), cx = 360, GY = 364, lamps = [], flags = [], Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    const win = (wx, wy) => {
+      Q(OLC, wx - 2, wy - 2, 18, 33); Q('#5a4630', wx - 1, wy - 1, 16, 31); Q('#ffd870', wx, wy + 2, 14, 27); Q('#ffe9a0', wx, wy + 2, 14, 4);
+      Q(SH0, wx - 1, wy - 1, 3, 3); Q(SH0, wx + 12, wy - 1, 3, 3); Q('#6a4a2c', wx + 6, wy + 2, 2, 27); Q('#6a4a2c', wx, wy + 13, 14, 2); Q('#fff3b8', wx + 1, wy + 3, 4, 5);
+      Q(OLC, wx - 4, wy + 29, 22, 4); Q(SHC, wx - 3, wy + 29, 20, 3); lamps.push([wx + 7, wy + 16]);
+    };
+    const banner = (bx, by) => {
+      Q(OLC, bx - 1, by, 22, 52); Q(CR, bx, by + 1, 20, 46); Q('rgba(255,255,255,.18)', bx, by + 1, 5, 46); Q(GOLD, bx, by + 1, 20, 2); Q(GOLD, bx, by + 44, 20, 2);
+      crownC(q, bx + 10, by + 14, GOLD); Q(CR, bx, by + 47, 8, 5); Q(CR, bx + 12, by + 47, 8, 5);
+    };
+    const tower = (x0, roofCol) => {
+      const w = 96, tc = x0 + w / 2;
+      blockC(q, x0, 92, w, GY - 92); Q('rgba(255,255,255,.14)', x0 + 2, 92, 8, GY - 92); Q('rgba(0,0,0,.22)', x0 + w - 14, 92, 14, GY - 92);
+      [128, 196, 262].forEach(yy => { Q(OLC, tc - 3, yy, 7, 17); Q('#ffd870', tc - 2, yy + 1, 5, 15); lamps.push([tc, yy + 9]) });
+      win(tc - 7, 300);
+      Q(OLC, x0 - 6, 86, w + 12, 10); Q(SHL, x0 - 5, 87, w + 10, 5); Q(GOLD, x0 - 5, 92, w + 10, 2);
+      coneC(q, tc, 22, 90, w + 28, roofCol); flags.push([tc + 1, 7, CR, 24]);
+    };
+    /* aula utama */
+    blockC(q, 120, 186, 480, GY - 186); Q(OLC, 112, 180, 496, 10); Q(SHC, 113, 181, 494, 6); Q(GOLD, 113, 187, 494, 2); crenelC(q, 120, 180, 480);
+    Q(OLC, 114, GY - 10, 492, 12); Q(SHD, 115, GY - 9, 490, 10); Q(SH0, 115, GY - 9, 490, 1);
+    [206, 280].forEach(wy => [150, 196, 242, 464, 510, 556].forEach(wx => win(wx, wy)));
+    banner(168, 198); banner(532, 198);
+    /* menara samping */
+    tower(36, BLU); tower(588, BLU);
+    /* menara utama (keep) */
+    blockC(q, 280, 90, 160, GY - 90); Q(OLC, 274, 84, 172, 10); Q(SHL, 275, 85, 170, 5); Q(GOLD, 275, 90, 170, 2);
+    coneC(q, cx, 22, 94, 196, CR); flags.push([cx + 1, 5, GOLD, 28]);
+    q.fillStyle = OLC; q.beginPath(); q.arc(cx, 138, 23, 0, TAU); q.fill(); q.fillStyle = SHC; q.beginPath(); q.arc(cx, 138, 21, 0, TAU); q.fill();
+    q.fillStyle = GOLD; q.beginPath(); q.arc(cx, 138, 17, 0, TAU); q.fill(); q.fillStyle = '#ffd870'; q.beginPath(); q.arc(cx, 138, 13, 0, TAU); q.fill();
+    q.strokeStyle = '#6a4a2c'; q.lineWidth = 1; q.beginPath(); for (let i = 0; i < 8; i++) { q.moveTo(cx, 138); q.lineTo(cx + Math.cos(i * TAU / 8) * 13, 138 + Math.sin(i * TAU / 8) * 13) } q.stroke();
+    q.fillStyle = '#fff3b8'; q.beginPath(); q.arc(cx, 138, 3, 0, TAU); q.fill(); lamps.push([cx, 138]);
+    win(308, 176); win(398, 176);
+    Q(OLC, 294, 232, 132, 11); Q(SHC, 295, 233, 130, 6); Q(GOLD, 296, 226, 128, 2); for (let k = 0; k < 12; k++) Q('#8a7a4a', 298 + k * 10, 227, 2, 7);
+    Q(OLC, cx - 10, 246, 20, 25); Q(CR, cx - 9, 247, 18, 20); Q(GOLD, cx - 6, 252, 12, 3); Q(GOLD, cx - 1, 252, 2, 11); Q(CR, cx - 5, 267, 10, 3);
+    /* pintu agung */
+    Q(OLC, cx - 34, 282, 68, GY - 282 + 2); Q(SHC, cx - 32, 284, 64, GY - 284);
+    const dx0 = cx - 26; Q('#4a2e1a', dx0, 294, 52, GY - 294); Q('#6a4220', dx0, 294, 26, GY - 294); Q('#5a3418', cx, 294, 26, GY - 294);
+    for (let j = 0; j < 5; j++) Q('rgba(255,255,255,.08)', dx0, 296 + j * 14, 52, 1);
+    Q(GOLD, cx - 1, 294, 2, GY - 294); Q(GOLD, dx0, 320, 52, 2); Q(GOLD, dx0, 344, 52, 2);
+    for (let j = 0; j < 3; j++) { Q('#fff0a0', dx0 + 5, 326 + j * 8, 2, 2); Q('#fff0a0', dx0 + 45, 326 + j * 8, 2, 2) }
+    Q(SHC, dx0, 294, 5, 5); Q(SHC, dx0 + 47, 294, 5, 5);
+    [-50, 50].forEach(o => { Q(OLC, cx + o - 5, 302, 10, 16); Q('#ffd870', cx + o - 4, 303, 8, 14); Q('#fff3b8', cx + o - 4, 303, 3, 3); Q(OLC, cx + o - 6, 300, 12, 3); lamps.push([cx + o, 311]) });
+    /* tangga + karpet merah */
+    for (let i = 0; i < 3; i++) { Q(OLC, cx - 72 - i * 10, GY + i * 7, 144 + i * 20, 9); Q('#a29e92', cx - 71 - i * 10, GY + 1 + i * 7, 142 + i * 20, 7); Q('#c4bfb0', cx - 71 - i * 10, GY + 1 + i * 7, 142 + i * 20, 1) }
+    Q(CR, cx - 22, GY, 44, 23); Q(GOLD, cx - 22, GY, 2, 23); Q(GOLD, cx + 20, GY, 2, 23);
+    return { img: c, ox: cx, oy: 370, lamps, flags };
+  }
+
+  function towerSprite(w, h, roofCol) {
+    const rh = Math.round(w * .95), pad = 20, Wd = w + 16, Ht = pad + rh + h + 6, [c, q] = mkCv(Wd, Ht), cx = Wd / 2, x0 = 8, y0 = pad + rh, Q = (col, a, b, ww, hh) => Qc(q, col, a, b, ww, hh), lamps = [];
+    Q(OLC, x0 - 1, y0 - 1, w + 2, h + 2); Q(SH0, x0, y0, w, h); mortarC(q, x0, y0, w, h, 12); Q('rgba(255,255,255,.14)', x0, y0, 7, h); Q('rgba(0,0,0,.22)', x0 + w - 12, y0, 12, h); Q(SHL, x0, y0, w, 2);
+    for (let yy = y0 + 22; yy < y0 + h - 24; yy += 44) { Q(OLC, cx - 3, yy, 6, 16); Q('#ffd870', cx - 2, yy + 1, 4, 14); lamps.push([cx, yy + 8]) }
+    Q(OLC, x0 - 5, y0 - 5, w + 10, 9); Q(SHL, x0 - 4, y0 - 4, w + 8, 5); Q(GOLD, x0 - 4, y0, w + 8, 2); Q('#6e6a60', x0 - 1, y0 + h - 8, w + 2, 8);
+    coneC(q, cx, pad, y0 - 2, w + 22, roofCol);
+    return { img: c, ox: cx, oy: Ht - 3, tip: [cx + 1, pad - 15], lamps };
+  }
+
+  function archSprite() {
+    const Wd = 150, H = 76, [c, q] = mkCv(Wd, H), cx = 75, Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    blockC(q, 8, 30, 134, 30); Q(GOLD, 8, 57, 134, 2); crenelC(q, 8, 30, 134); Q('rgba(0,0,0,.35)', 8, 60, 134, 6);
+    Q(OLC, cx - 14, 34, 28, 40); Q(CR, cx - 13, 35, 26, 34); Q('rgba(255,255,255,.16)', cx - 13, 35, 6, 34); Q(GOLD, cx - 13, 35, 26, 2); crownC(q, cx, 46, GOLD); Q(CR, cx - 13, 69, 9, 5); Q(CR, cx + 4, 69, 9, 5);
+    return { img: c, ox: cx, oy: 72 };
+  }
+
+  function knightSprite() {
+    const [c, q] = mkCv(26, 54), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q(OLC, 2, 42, 22, 12); Q('#a29e92', 3, 43, 20, 10); Q(SHC, 3, 43, 20, 2); Q(SHD, 17, 43, 6, 10);
+    Q(OLC, 7, 14, 12, 30); Q('#aab0c0', 8, 15, 10, 28); Q('#cfd6e4', 8, 15, 3, 28); Q('#7a8090', 15, 15, 3, 28); Q(GOLD, 8, 26, 10, 2);
+    Q(OLC, 8, 6, 10, 10); Q('#aab0c0', 9, 7, 8, 8); Q('#3a3d48', 10, 10, 6, 2); Q(CR, 12, 1, 2, 6);
+    Q(OLC, 20, 4, 3, 40); Q('#6a5a3a', 21, 6, 1, 38); Q('#cfd6e4', 20, 0, 3, 7);
+    return { img: c, ox: 13, oy: 52 };
+  }
+
+  function monumentSprite() {
+    const [c, q] = mkCv(128, 142), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = 64;
+    ell(q, 'rgba(0,0,0,.28)', cx, 126, 58, 18); ell(q, OLC, cx, 108, 54, 20); ell(q, '#8a867a', cx, 107, 52, 18.5); ell(q, '#b4aea0', cx, 105, 50, 17);
+    ell(q, '#7e7a70', cx, 105, 45, 14.5); ell(q, '#2a78a0', cx, 104, 43, 13.5); ell(q, '#3a9ac8', cx, 103, 39, 11.5); ell(q, '#6ac8f0', cx - 6, 102, 20, 4.5);
+    Q(OLC, 42, 74, 44, 34); Q('#a29e92', 43, 75, 42, 32); Q(SHC, 43, 75, 12, 32); Q(SHD, 74, 75, 11, 32); Q(OLC, 38, 66, 52, 11); Q('#b9b5a8', 39, 67, 50, 8); Q(SHC, 39, 67, 50, 2);
+    Q(GOLD, 44, 84, 40, 2); crownC(q, cx, 90, GOLD);
+    Q(OLC, 54, 40, 20, 28); Q('#a8883a', 55, 41, 18, 26); Q(GOLD, 55, 41, 8, 26); Q('#fff0a0', 55, 41, 3, 26);              // kaki & jubah emas
+    Q(OLC, 52, 22, 24, 24); Q('#a8883a', 53, 23, 22, 22); Q(GOLD, 53, 23, 12, 22); Q('#fff0a0', 53, 23, 3, 22); Q(CR, 53, 33, 22, 3);
+    Q(OLC, 56, 8, 16, 16); Q('#e8c860', 57, 9, 14, 14); Q('#fff0a0', 57, 9, 5, 14);
+    Q(OLC, 55, 3, 18, 7); Q(GOLD, 56, 4, 16, 5); Q(GOLD, 56, 0, 3, 5); Q(GOLD, 62, -1, 4, 6); Q(GOLD, 69, 0, 3, 5);
+    Q(OLC, 76, 4, 5, 38); Q('#e8e4d4', 77, 5, 3, 36); Q(OLC, 72, 40, 13, 5); Q(GOLD, 73, 41, 11, 3);
+    return { img: c, ox: cx, oy: 120 };
+  }
+
+  /* ---------- gambar objek ---------- */
+  function flag(fx, fy, col, len) {
+    const w = 1 + V.rain * 1.2 + V.storm * 2;
+    for (let i = 0; i < len; i++) {
+      const u = i / len, yy = fy + Math.sin(t * 5 - u * 6 + fx * .1) * (.8 + u * 2.4) * w, hh = 11 - Math.round(u * 4);
+      Rr(OLC, fx + i, yy - 1, 1, 1); Rr(col, fx + i, yy, 1, hh); Rr('rgba(255,255,255,.18)', fx + i, yy, 1, 2); if (col !== GOLD) Rr(GOLD, fx + i, yy + 4, 1, 2); Rr(OLC, fx + i, yy + hh, 1, 1)
+    }
+  }
+  function drawObj(o) {
+    if (o.n) { person(o.n, o.i); if (o.n.crown) crown(o.n); return }
+    if (!o.img) return;
+    g.drawImage(o.img, o.x - o.ox, o.y - o.oy);
+    if (o.flags) for (const f of o.flags) flag(f[0], f[1], f[2], f[3]);
+    if (o.fount) {
+      const fy = o.y - 17; g.strokeStyle = 'rgba(220,250,255,.75)';
+      for (let i = 0; i < 3; i++) { const k = (t * .5 + i / 3) % 1; g.globalAlpha = (1 - k) * .8; g.beginPath(); g.ellipse(o.x, fy, 6 + k * 30, 2.4 + k * 10, 0, 0, 7); g.stroke() } g.globalAlpha = 1;
+      for (let i = 0; i < 5; i++) if (Math.sin(t * 2 + i * 1.9) > .82) Rr('#fff0a0', o.x - 28 + i * 14, fy - 4 + Math.sin(i) * 4, 2, 2);
+    }
+  }
+  const person = (...a) => WORLD.person(...a);
+
+  function renderList(A) {
+    const x0 = camX - 90, x1 = camX + W / CAM_Z + 90, y0 = camY - 10, y1 = camY + H / CAM_Z + 100, L = [];
+    for (const o of A.objs) { if (o.x < x0 - 200 || o.x > x1 + 200 || o.y < y0 || o.y - (o.oh || 40) > y1) continue; L.push(o) }
+    for (const o of A.dyn) { const s = o.n; if (s.x < x0 || s.x > x1 || s.y < y0 || s.y > y1) continue; L.push({ y: s.y, n: s, i: o.i }) }
+    L.sort((a, b) => a.y - b.y); return L;
+  }
+
+  /* ---------- NPC: dialog percakapan & obrolan ---------- */
+  const RAINL = ['Hujan lagi...', 'Cepat berteduh!', 'Jubahku basah.'], STORML = ['Petir itu keras sekali!', 'Masuk, masuk!', 'Semoga istana aman.'];
+  const SAYS = n => { if (V.storm > .5 && Math.random() < .6) return RAINL[0] && STORML[(Math.random() * 3) | 0]; if (V.rain > .4 && Math.random() < .6) return RAINL[(Math.random() * 3) | 0]; const a = n.chat || ['...']; return a[(Math.random() * a.length) | 0] };
+
+  /* ---------- gerak warga, obrolan, label, gelembung (dipakai kota & istana) ---------- */
+  function walkAll(list, dt) {
+    for (const n of list) {
+      if (!n.path) continue;
+      if (n._base === undefined) { n._base = (n.kid ? 52 : 32) + Math.random() * 12; n.vx = n.vy = 0; n.spd = 0; n.wait = Math.random() * 1.5; n._ph = Math.random() * 6.28; n.pi = n.pi || 0; n.mv = 0 }
+      const ddt = Math.min(dt, .05), talk = dlg && dlg.n === n, tg = n.path[n.pi % n.path.length], dx = tg[0] - n.x, dy = tg[1] - n.y, d = Math.hypot(dx, dy);
+      let want = 0;
+      if (talk) want = 0;
+      else if (n.wait > 0) n.wait -= ddt;
+      else if (d < 5) { n.pi = (n.pi + 1) % n.path.length; if (Math.random() < (n.kid ? .25 : .35)) n.wait = n.kid ? .2 + Math.random() * .8 : 1 + Math.random() * 2.6 }
+      else want = n._base * Math.min(1, .45 + d / 70);
+      const k = Math.min(1, ddt * (talk ? 10 : want > 0 ? 4.5 : 7)), ux = d > .001 ? dx / d * want : 0, uy = d > .001 ? dy / d * want : 0;
+      n.vx += (ux - n.vx) * k; n.vy += (uy - n.vy) * k; n.x += n.vx * ddt; n.y += n.vy * ddt;
+      n.spd = Math.hypot(n.vx, n.vy); n.mv = n.spd > 3 ? 1 : 0; n._ph += n.spd * ddt * .34; if (Math.abs(n.vx) > 7) n.fc = n.vx > 0 ? 1 : -1;
+    }
+  }
+  function chatTick(list, dt) {
+    for (const n of list) {
+      if (n._b && (n._b.t -= dt) <= 0) n._b = null; if (n._b || dlg || t < (n._bn || 0) || NP.indexOf(n) < 0 || n.sign) continue;
+      n._bn = t + 5 + Math.random() * 8; if (Math.hypot(n.x - p.x, n.y - p.y) < 190 && Math.random() < .6) n._b = { s: SAYS(n), t: 3.4 }
+    }
+  }
+  function drawLabels() {
+    g.font = '8px monospace'; for (const n of NP) { const d = dist(n, p); if (d < 90) { txt(n.n.split(',')[0], n.x, n.y - (n.kid ? 24 : 28), '#ffe9a8', 'center'); if (d < (n.rng || 36) && !dlg) txt('[G] ' + (n.verb || (n.shop ? 'Dagang' : 'Bicara')), n.x, n.y - (n.kid ? 34 : 38), '#fff', 'center') } if (n.fresh && !dlg) { g.fillStyle = '#ffd34d'; const by = Math.sin(t * 4); g.fillRect(Math.round(n.x) - 1, Math.round(n.y - 38 + by), 3, 6); g.fillRect(Math.round(n.x) - 1, Math.round(n.y - 30 + by), 3, 2) } }
+  }
+  function drawBubbles(list) {
+    return () => {
+      g.save(); g.font = '7px monospace'; g.textAlign = 'center';
+      for (const q of list) {
+        const b = q._b; if (!b || NP.indexOf(q) < 0) continue; const al = cl(Math.min(b.t / .35, (3.4 - b.t) / .2), 0, 1), w = Math.round(g.measureText(b.s).width + 10), xx = Math.round(q.x - w / 2), yy = Math.round(q.y - (q.kid ? 62 : 70) - (1 - al) * 4);
+        g.globalAlpha = al; Rr('#2a1a10', xx - 1, yy - 1, w + 2, 14); Rr('#fff8e6', xx, yy, w, 12); g.fillStyle = '#2a1a10'; g.beginPath(); g.moveTo(q.x - 3, yy + 13); g.lineTo(q.x + 3, yy + 13); g.lineTo(q.x, yy + 18); g.fill();
+        g.fillStyle = '#fff8e6'; g.beginPath(); g.moveTo(q.x - 2, yy + 12); g.lineTo(q.x + 2, yy + 12); g.lineTo(q.x, yy + 16); g.fill(); g.fillStyle = '#3a2210'; g.fillText(b.s, q.x, yy + 9)
+      }
+      g.restore();
+    };
+  }
+
+  /* ---------- BUILD ---------- */
+  K.build = function () {
+    const rng = mkRng(9153), [bg, x] = mkCv(KW, KH); K.bg = bg;
+    const walls = K.walls = [], objs = K.objs = [], N = K.npcs = [], occ = [];
+    const spr = (s, a, b, solid, extra) => { objs.push({ x: Math.round(a), y: Math.round(b), img: s.img, ox: s.ox, oy: s.oy, oh: s.img.height, ...extra }); if (solid) walls.push(solid) };
+    const R = (c, a, b, w, h) => rc(x, c, Math.round(a), Math.round(b), Math.round(w), Math.round(h));
+    const noGo = (a, b, w, h) => occ.push([a, b, w, h]);
+
+    /* rumput */
+    const GD = h2r('#4a7a34'), GL2 = h2r('#7aa848'), GWm = h2r('#9aa040'), id = x.createImageData(KW, KH), d = id.data;
+    for (let yy = 0; yy < KH; yy++) for (let xx = 0; xx < KW; xx++) {
+      const v = vnoise(xx / 70, yy / 70, 14) * .6 + vnoise(xx / 14, yy / 14, 15) * .4, wm = vnoise(xx / 160, yy / 160, 16);
+      let cc = mixc(GD, GL2, v); cc = mixc(cc, GWm, wm * .25); const sh = (hash(xx, yy, 20) - .5) * 12, o = (yy * KW + xx) * 4;
+      d[o] = cc[0] + sh; d[o + 1] = cc[1] + sh; d[o + 2] = cc[2] + sh; d[o + 3] = 255;
+    }
+    x.putImageData(id, 0, 0);
+    for (let i = 0; i < 3200; i++) art.grassTuft(x, rng() * KW, rng() * KH, rng);
+    const fc = ['#ffffff', '#ffd34d', '#ff9ac0', '#b48cff', '#7ab8ff'];
+    for (let i = 0; i < 420; i++) art.flower(x, rng() * KW, rng() * KH, fc[(rng() * 5) | 0]);
+
+    /* jalan batu */
+    const cobble = (x0, y0, w, h) => {
+      R('rgba(0,0,0,.18)', x0 - 4, y0 - 3, w + 8, h + 8); R('#4a463e', x0 - 3, y0 - 3, w + 6, h + 6); R('#7a7468', x0, y0, w, h);
+      for (let yy = 0; yy < h; yy += 6) for (let xx = 0; xx < w; xx += 9) {
+        const tx = xx + (((yy / 6) | 0) & 1) * 4, tw = Math.min(8, w - tx); if (tw <= 0) continue;
+        const hv = hash((x0 + tx) | 0, (y0 + yy) | 0, 31); R(PZC[(hv * 4) | 0], x0 + tx, y0 + yy, tw, Math.min(5, h - yy)); if (hv > .8) R('rgba(255,255,255,.14)', x0 + tx, y0 + yy, tw, 1)
+      }
+      R('#b4aea0', x0 - 1, y0 - 1, w + 2, 1);
+    };
+    cobble(G0, PY + 14, G1 - G0, KH - PY - 14);                 // jalan raya kerajaan
+    cobble(28, 800, KW - 56, 66);                                // jalan melintang
+    cobble(28, 1036, KW - 56, 44);                               // jalan selatan
+    cobble(258, 460, 44, 620); cobble(KW - 302, 460, 44, 620);   // lorong barat & timur
+    [[G0 - 4, PY, G1 - G0 + 8, KH - PY], [28, 796, KW - 56, 74], [28, 1032, KW - 56, 52], [254, 456, 52, 628], [KW - 306, 456, 52, 628]].forEach(r => noGo(...r));
+    R(CR, AX - 28, PY + 14, 56, 340); R(GOLD, AX - 28, PY + 14, 2, 340); R(GOLD, AX + 26, PY + 14, 2, 340);      // karpet merah ke tangga istana
+    for (let yy = PY + 22; yy < PY + 340; yy += 20) { R('rgba(255,255,255,.08)', AX - 26, yy, 52, 1); R(GOLD, AX - 3, yy, 6, 2) }
+
+    /* plaza + monumen */
+    const P = { x: AX, y: 722, rx: 200, ry: 74 };
+    ell(x, 'rgba(0,0,0,.2)', P.x, P.y + 4, P.rx + 9, P.ry + 8); ell(x, '#4a463e', P.x, P.y, P.rx + 3, P.ry + 3); ell(x, '#7a7468', P.x, P.y, P.rx, P.ry);
+    for (let yy = -P.ry; yy < P.ry; yy += 6) for (let xx = -P.rx; xx < P.rx; xx += 9) {
+      const tx = xx + (Math.round(yy / 6) & 1) * 4; if ((tx / (P.rx - 3)) ** 2 + ((yy + 2) / (P.ry - 2)) ** 2 > 1) continue;
+      const hv = hash((tx + 999) | 0, (yy + 999) | 0, 33); R(PZC[(hv * 4) | 0], P.x + tx, P.y + yy, 8, 5); if (hv > .8) R('rgba(255,255,255,.14)', P.x + tx, P.y + yy, 8, 1)
+    }
+    const ring = (rx, ry, col, w) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.ellipse(P.x, P.y, rx, ry, 0, 0, TAU); x.stroke() };
+    ring(P.rx - 18, P.ry - 11, '#3a0e18', 6); ring(P.rx - 18, P.ry - 11, CR, 4); ring(P.rx - 18, P.ry - 11, GOLD, 1); ring(110, 40, '#3a0e18', 4); ring(110, 40, '#8a3a4a', 2);
+    x.strokeStyle = 'rgba(216,184,74,.7)'; x.lineWidth = 1; x.beginPath(); for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + TAU / 16; x.moveTo(P.x + Math.cos(a) * 110, P.y + Math.sin(a) * 40); x.lineTo(P.x + Math.cos(a) * (P.rx - 18), P.y + Math.sin(a) * (P.ry - 11)) } x.stroke();
+    for (let i = 0; i < 56; i++) { const a = i * TAU / 56, sx = P.x + Math.cos(a) * (P.rx - 1), sy = P.y + Math.sin(a) * (P.ry - 1); R(i % 2 ? '#b4aea0' : '#8a867a', sx - 3, sy - 2, 6, 4); R('rgba(0,0,0,.25)', sx - 3, sy + 1, 6, 1) }
+    noGo(P.x - P.rx - 20, P.y - P.ry - 20, P.rx * 2 + 40, P.ry * 2 + 40);
+    spr(monumentSprite(), AX, 718, [AX - 52, 690, 104, 30], { fount: 1 });
+    N.push({ n: 'Monumen Raja Aurelius', x: AX, y: 752, sign: 1, rng: 56, verb: 'Baca', _bn: Infinity, lines: ['Raja Aurelius I, Pemersatu Lembah-Lembah. Ia membangun jalan, jembatan, dan menara lentera agar tak seorang pun tersesat dalam gelap.', 'Di dasar patung terukir: "Terang yang dijaga bersama tak akan padam."'] });
+
+    /* tembok kota (gaya sama dengan benteng desa, warna kerajaan) */
+    const BAN = [CR, BLU, CR, GOLD];
+    const wallH = (y0, shadow) => {
+      if (shadow) R('rgba(0,0,0,.26)', 0, y0 + 42, KW, 6);
+      R(OLC, 0, y0, KW, 42); R(BAK, 0, y0 + 1, KW, 11);
+      for (let k = 5; k < KW; k += 20) { R(OLC, k - 1, y0, 12, 13); R(SHL, k, y0 + 1, 10, 11); R(SHC, k, y0 + 1, 10, 2); R(SHD, k + 7, y0 + 3, 3, 9) }
+      R(SH0, 0, y0 + 13, KW, 20); mortarC(x, 0, y0 + 14, KW, 19, 12);
+      R(SHC, 0, y0 + 13, KW, 1); R(SHL, 0, y0 + 14, KW, 1); R('rgba(0,0,0,.18)', 0, y0 + 15, KW, 2); R(SHD, 0, y0 + 33, KW, 6); R('#6a665c', 0, y0 + 33, KW, 1);
+      for (let k = 120; k < KW; k += 120) { R(OLC, k - 6, y0 + 3, 12, 38); R(SHM, k - 5, y0 + 4, 10, 36); R(SHL, k - 5, y0 + 4, 3, 36); R(SHD, k + 2, y0 + 4, 3, 36); R(SHC, k - 5, y0 + 4, 10, 2); R('#6e6a60', k - 6, y0 + 34, 12, 6) }
+      for (let k = 60, n = 0; k < KW; k += 120, n++) { const cc = BAN[n % 4]; R(OLC, k - 6, y0 + 15, 12, 19); R(cc, k - 5, y0 + 16, 10, 14); R('rgba(255,255,255,.18)', k - 5, y0 + 16, 3, 14); R(GOLD, k - 5, y0 + 16, 10, 1); R(GOLD, k - 2, y0 + 21, 4, 5); R(cc, k - 5, y0 + 30, 4, 3); R(cc, k + 1, y0 + 30, 4, 3) }
+      R(OLC, 0, y0 + 39, KW, 3);
+    };
+    const wallV = (x0, ya, yb, dir) => {
+      const h = yb - ya; R('rgba(0,0,0,.24)', dir > 0 ? x0 + 28 : x0 - 7, ya, 7, h);
+      R(OLC, x0, ya, 28, h); R(SH0, x0 + 1, ya, 26, h); R(SHD, x0 + 8, ya, 12, h); R(SHM, x0 + 9, ya, 10, h); mortarC(x, x0 + 9, ya, 10, h, 10);
+      for (let k = 3 + 20 * Math.ceil((ya - 1) / 20); k + 14 <= yb; k += 20) [x0, x0 + 19].forEach(mx => { R(OLC, mx, k, 9, 14); R(SHL, mx + 1, k + 1, 7, 12); R(SHC, mx + 1, k + 1, 7, 2); R(SHD, mx + 1, k + 9, 7, 3) })
+    };
+    wallH(0, 1); wallH(KH - 42, 0); wallV(0, 40, KH - 80, 1); wallV(KW - 28, 40, KH - 80, -1);
+    cobble(G0, KH - 60, G1 - G0, 60);                                         // gerbang selatan terbuka
+    walls.push([-20, -20, KW + 40, 46], [-20, -20, 48, KH + 40], [KW - 28, -20, 48, KH + 40], [-20, KH - 42, G0 + 20, 60], [G1, KH - 42, KW - G1 + 20, 60]);
+    noGo(0, 0, KW, 66); noGo(0, KH - 66, KW, 66); noGo(0, 0, 66, KH); noGo(KW - 66, 0, 66, KH);
+
+    /* menara gerbang & sudut kota + lengkung gerbang */
+    const flagsOf = (s, a, b, col) => [[a + (s.tip[0] - s.ox), b + (s.tip[1] - s.oy), col, 22]];
+    const lampsOf = (s, a, b) => s.lamps.map(l => [a + l[0] - s.ox, b + l[1] - s.oy]);
+    const gt = towerSprite(56, 128, BLU);
+    [G0 - 28, G1 + 28].forEach(a => { const b = KH - 24; spr(gt, a, b, [a - 28, KH - 76, 56, 36], { lamp: lampsOf(gt, a, b), flags: flagsOf(gt, a, b, CR) }) });
+    const ct = towerSprite(64, 110, CR);
+    [48, KW - 48].forEach(a => { const b = KH - 20; spr(ct, a, b, null, { lamp: lampsOf(ct, a, b), flags: flagsOf(ct, a, b, GOLD) }) });
+    spr(archSprite(), AX, KH - 38, null, {});
+
+    /* istana */
+    const pal = palaceSprite();
+    spr(pal, AX, PY, null, { lamp: pal.lamps.map(l => [AX + l[0] - pal.ox, PY + l[1] - pal.oy]), flags: pal.flags.map(f => [AX + f[0] - pal.ox, PY + f[1] - pal.oy, f[2], f[3]]) });
+    walls.push([AX - 324, PY - 64, 294, 64], [AX + 30, PY - 64, 294, 64], [AX - 30, PY - 86, 60, 12]);     // pintu istana tetap terbuka di tengah
+    noGo(AX - 340, 40, 680, PY - 30);
+
+    /* taman halaman istana: pagar tanaman rapi + petak bunga + pohon */
+    const hedge = (hx, hy, hw, hh) => {
+      R('rgba(0,0,0,.22)', hx + 1, hy + hh, hw, 3); R('#18301a', hx, hy, hw, hh); R('#2f6a2c', hx + 1, hy + 1, hw - 2, hh - 2); R('#4a8a3c', hx + 1, hy + 1, hw - 2, 3);
+      for (let a = 0; a < hw; a += 3) for (let b = 0; b < hh; b += 3) if (((hx + a) * 7 + (hy + b) * 13) % 9 < 2) R('#5aa04a', hx + a, hy + b, 2, 1);
+      walls.push([hx, hy, hw, hh]);
+    };
+    const OAK = [], PINE = []; for (let i = 0; i < 5; i++) OAK.push(art.oak(i + 40, .85 + (i % 3) * .12)); for (let i = 0; i < 3; i++) PINE.push(art.pine(i + 40, .9));
+    [[596, 484], [984, 484]].forEach(([gx, gy], gi) => {
+      hedge(gx, gy, 220, 12); hedge(gx, gy + 158, 220, 12); hedge(gx, gy, 12, 170); hedge(gx + 208, gy, 12, 170); noGo(gx - 6, gy - 6, 232, 192);
+      [[gx + 60, gy + 60], [gx + 160, gy + 60], [gx + 60, gy + 126], [gx + 160, gy + 126]].forEach(([a, b], i) => spr(art.flowerbed(80 + gi * 4 + i, 54, 26), a, b, null, {}));
+      const s = OAK[(gi * 2) % 5]; ell(x, 'rgba(0,12,4,.22)', gx + 114, gy + 90, 18, 8); spr(s, gx + 110, gy + 96, [gx + 106, gy + 92, 8, 5]);
+    });
+    const ks = knightSprite();[[826, 462], [974, 462]].forEach(([a, b]) => spr(ks, a, b, [a - 9, b - 6, 18, 8]));
+
+    /* rumah kota */
+    const mkH = WORLD.mkHouse;
+    if (mkH) {
+      const WALLC = ['#d8c8a8', '#e0d4b8', '#c8c0a8', '#d8b898', '#e0d0b0', '#c8a888', '#d8c8a0', '#e4d8c0'], TRIMC = ['#6a4a2c', '#5a4a30', '#7a5a38', '#5a3a28'];
+      const ROOFC = ['#a8483a', '#3a7a5a', '#7a4a8a', '#b87a38', '#3a6a8a', '#8a3a3a', '#5a7a3a', '#4a5060'], SHUTC = ['#3a5a7a', '#3a6a4a', '#7a3a3a', '#5a3a7a'], WINS = [[-1, 1], [-1, 1], [1], [-1]];
+      const HS = [[170, 520, 96], [390, 530, 92], [150, 770, 92, 'store'], [390, 775, 96, 'inn'], [540, 770, 88], [150, 1020, 100], [390, 1025, 92, 'smith'], [540, 1020, 96]];
+      const all = HS.concat(HS.map(([a, b, w, s], i) => [KW - a, b + (i % 2 ? -6 : 6), w + (i % 3 === 0 ? -4 : 4), (i === 2 ? 'potion' : null)]));
+      all.forEach(([a, b, w, sg], i) => {
+        const o = { wall: WALLC[(i * 3) % 8], trim: TRIMC[i % 4], roof: ROOFC[(i * 5 + 1) % 8], shut: SHUTC[i % 4], chimney: i % 3 ? 1 : 0, wins: WINS[i % 4] }; if (sg) { o.sign = sg; o.sx = 100; o.dx = 60 }
+        const s = mkH(w, o); spr(s, a, b, [a - w / 2 + 2, b - 30, w - 4, 30], { lamp: s.lamp.map(l => [a + l[0], b + l[1]]), chim: s.chim ? [a + s.chim[0], b + s.chim[1]] : null }); noGo(a - w / 2 - 12, b - 150, w + 24, 170)
+      });
+    }
+
+    /* lentera sepanjang jalan, tong & peti */
+    [[826, 520], [974, 520], [826, 640], [974, 640], [826, 780], [974, 780], [826, 920], [974, 920], [826, 1010], [974, 1010], [700, 800], [1100, 800], [470, 850], [1330, 850], [250, 850], [1550, 850], [250, 1090], [1550, 1090]].forEach(([a, b]) => spr(art.lantern(), a, b, [a - 3, b - 5, 6, 5], { glow: 1 }));
+    [[236, 802], [1560, 802], [470, 1034], [1330, 1034]].forEach(([a, b], i) => spr(i % 2 ? art.crate() : art.barrel(), a, b, [a - 6, b - 4, 12, 5]));
+
+    /* pohon: tersebar rapi, menghindari jalan/rumah/istana/plaza */
+    const free = (a, b, m) => { if (a < 56 || a > KW - 56 || b < 70 || b > KH - 70) return false; if (((a - P.x) / (P.rx + 30 + m)) ** 2 + ((b - P.y) / (P.ry + 30 + m)) ** 2 < 1) return false; return !occ.some(r => a > r[0] - m && a < r[0] + r[2] + m && b > r[1] - m && b < r[1] + r[3] + m) };
+    K.free = free; const used = [];
+    for (let gy = 80; gy < KH - 80; gy += 30) for (let gx = 70; gx < KW - 70; gx += 30) {
+      const a = gx + rng() * 26, b = gy + rng() * 26; if (rng() > .1 || !free(a, b, 10) || used.some(q => Math.hypot(q[0] - a, q[1] - b) < 34)) continue;
+      used.push([a, b]); const k = rng(), s = k < .65 ? OAK[(k * 100 | 0) % 5] : PINE[(k * 100 | 0) % 3]; ell(x, 'rgba(0,12,4,.22)', a + 4, b - 2, 16, 7); spr(s, a, b + 4, [a - 4, b - 1, 8, 5])
+    }
+    for (let yy = 120; yy < KH - 120; yy += 64) [74, KW - 74].forEach((a, i) => { if (!free(a, yy, 4) || used.some(q => Math.hypot(q[0] - a, q[1] - yy) < 34)) return; used.push([a, yy]); ell(x, 'rgba(0,12,4,.22)', a + 4, yy - 2, 16, 7); spr(i ? PINE[yy % 3] : OAK[yy % 5], a, yy + 4, [a - 4, yy - 1, 8, 5]) });
+    objs.sort((a, b) => a.y - b.y);
+
+    /* ---------- NPC ---------- */
+    const mkN = o => { N.push(o); return o };
+    const guardN = (n, ax, ay, fc, lines, chat, extra) => mkN({ n, x: ax, y: ay, fc, sk: '#d9a07a', hair: '#3a2a1a', hat: 'helm', armor: 1, c1: CR, c2: GOLD, c3: '#3a3d48', prop: 'spear', lines, chat, ...extra });
+    guardN('Prajurit Gerbang, Hasan', G0 - 14, KH - 112, 1, ['Selamat datang di Aurelia, pahlawan! Aku Hasan, penjaga gerbang selatan.', 'Dari gerbang ini jalan raya lurus ke utara sampai istana. Tiap senja lenteranya dinyalakan satu per satu.', 'Mau kembali ke Lembah Lentera? Lewat gerbang ini, lalu jalan selatan menuju desa.'], ['Gerbang aman.', 'Ada musafir lewat...']);
+    guardN('Prajurit Gerbang, Bram', G1 + 14, KH - 112, -1, ['Setiap pendatang kami catat, tapi pahlawan dari Aula Kuno disambut tanpa banyak tanya.', 'Dengar-dengar ada bisikan aneh dari bawah tanah. Raja ingin menanyakannya padamu.'], ['Tetap waspada.', 'Gerbang ditutup saat badai.'], { sk: '#c9946e' });
+    guardN('Pengawal Istana, Arga', AX - 40, PY + 40, 1, ['Silakan masuk, pahlawan. Raja Aurelius menunggu di aula singgasana.', 'Naiki tangga, lewati karpet merah, lalu masuk lewat pintu agung.'], ['Berdiri tegap.', 'Demi mahkota.'], { c1: '#7a1a2a' });
+    guardN('Pengawal Istana, Surya', AX + 40, PY + 40, -1, ['Aku bersumpah menjaga pintu ini sampai napas terakhir.', 'Hormatlah di hadapan raja, dan jangan memotong ucapan baginda.'], ['Diam dan siaga.', 'Pintu terkunci.'], { c1: '#7a1a2a', sk: '#c0845c' });
+    guardN('Kapten Pengawal, Leon', AX, PY + 96, 1, ['Aku Leon, kapten pengawal raja. Kau pasti pahlawan yang diceritakan Kael dan Darto di perbatasan.', 'Kerajaan ini berdiri di atas empat lentera abadi. Selama apinya menyala, bisikan Abyss tak sanggup menembus tembok.', 'Raja menunggumu di aula singgasana. Masuk saja lewat pintu agung di belakangku, pahlawan.'], ['Disiplin adalah perisai.', 'Kota ini aman selama kami berjaga.'], { c1: '#7a1a2a', c2: '#e8e4d8', hair: '#2a2a3a' });
+    guardN('Prajurit Patroli, Ganesh', 120, 834, 1, ['Patroliku dari tembok barat sampai timur, bolak-balik sampai matahari terbit.', 'Kalau kau lihat sesuatu mencurigakan di gelap, teriak saja.'], ['Patroli malam...', 'Semua aman.'], { path: [[120, 834], [560, 834], [900, 840], [1340, 834], [1680, 834], [1340, 834], [900, 840], [560, 834]], pi: 1 });
+    guardN('Prajurit Patroli, Dimas', 1680, 1058, -1, ['Jalan selatan sepi, tapi aku tak pernah lengah.', 'Dulu aku petani. Sekarang aku menjaga petani lain tidur nyenyak.'], ['Sepi...', 'Angin dingin.'], { path: [[1680, 1058], [1200, 1058], [900, 1066], [560, 1058], [120, 1058], [560, 1058], [900, 1066], [1200, 1058]], pi: 1 });
+
+    const cit = (o, extra) => mkN({ fc: 1, ...o, ...extra });
+    const shopN = (o, shop, intro, short) => mkN({ ...o, fresh: 1, shop, rng: 44, get lines() { return this.seen ? short : intro }, act() { this.seen = 1; this.fresh = 0; WORLD.openShop(shop) } });
+    shopN({ n: 'Hamid, Saudagar Istana', x: 690, y: 846, fc: 1, sk: '#c9946e', hair: '#3a2a1a', stache: '#3a2a1a', hat: 'feather', hc: CR, c1: '#5a3a7a', c2: GOLD, c3: '#2a2a40', vest: '#c8a040', prop: 'scroll', chat: ['Barang istana, harga rakyat!', 'Kain, ramuan, apa saja!'] }, 'general', ['Selamat datang, pahlawan! Hamid, pemasok istana. Apa pun yang kau bawa dari dungeon, aku beli dengan harga adil.'], ['Ada yang bisa kubantu lagi?']);
+    cit({ n: 'Edric, Bangsawan', x: 740, y: 746, sk: '#e0b898', hair: '#8a5a2a', hs: 'short', hat: 'feather', hc: BLU, c1: '#3a3a8a', c2: GOLD, c3: '#2a2a40', vest: '#c8a040', prop: 'scroll', lines: ['Aku Edric, kemenakan menteri istana. Plaza ini tempat terbaik melihat siapa datang dan pergi.', 'Konon pahlawan dari bawah tanah dapat menenangkan bisikan Abyss. Kuharap itu benar.'], chat: ['Hm, menarik.', 'Cuaca yang indah, bukan?'], path: [[740, 746], [800, 790], [900, 800], [1000, 790], [1060, 746], [1000, 676], [900, 662], [800, 676]], pi: 1 });
+    cit({ n: 'Lila, Pelayan Istana', x: 868, y: 540, sk: '#e8c0a0', hair: '#8a5a2a', hs: 'bun', hat: 'bonnet', c1: CR, c2: '#e8d8a0', c3: '#4a2a1a', apron: '#f0e8dc', prop: 'basket', lines: ['Aku membawa bunga segar untuk ruang singgasana. Raja suka mawar kuning.', 'Jangan injak karpet merahnya, ya, pahlawan. Baru dicuci kemarin!'], chat: ['Bunga untuk raja~', 'Banyak tugas hari ini!'], path: [[868, 540], [868, 640], [932, 640], [932, 540]], pi: 1 });
+    cit({ n: 'Orlan, Penyair Istana', x: 1010, y: 770, sit: 1, fc: -1, sk: '#e0b090', hair: '#a8622c', hs: 'short', hat: 'feather', hc: '#3a6a8a', c1: '#3a6a8a', c2: '#e8d890', c3: '#2a2a40', prop: 'lute', lines: ['Dengarlah, dengarlah! Kisah Raja Aurelius dan empat lentera abadi!', 'Hendra di Lembah Lentera itu muridku dulu. Ia memetik dawai dengan hati, tapi kurang latihan.'], chat: ['\u266a la la la ~', 'Bait baru untuk raja...'] });
+    cit({ n: 'Tobias, Juru Warta', x: 1020, y: 640, sk: '#d0986c', hair: '#2a1a14', hs: 'short', hat: 'cap', hc: CR, c1: CR, c2: GOLD, c3: '#2a2a40', prop: 'scroll', lines: ['Dengar, dengar! Titah raja: penjaga gerbang diperkuat sampai musim hujan berakhir!', 'Kabar baru: seorang pahlawan keluar dari Aula Kuno. Jangan-jangan itu kau?'], chat: ['Dengar, dengar!', 'Titah raja hari ini!'] });
+    cit({ n: 'Sari, Penjual Bunga', x: 1240, y: 846, fc: -1, sk: '#e8c0a8', hair: '#d8d8e0', hs: 'bun', hat: 'bonnet', c1: '#6a5aa0', c2: '#e8d8a0', c3: '#3a2a4a', apron: '#e8e0d0', prop: 'basket', lines: ['Bunga dari taman istana, nak. Kuperoleh dari tukang kebun raja yang baik hati.', 'Kalau kau sedang sedih, bunga kuning bisa membantu.'], chat: ['Bunga segar~', 'Mawar kuning, mawar merah!'] });
+    cit({ n: 'Dewi, Anak Kota', x: 300, y: 880, kid: 1, hs: 'short', sk: '#e8c0a0', hair: '#c8483a', c1: '#e08aa0', c2: '#fff', c3: '#4a3a5a', lines: ['Kakak pahlawan! Aku pernah melihat raja dari jauh, mahkotanya berkilau!', 'Prajurit-prajurit itu keren, tapi mereka tak mau main.'], chat: ['Kejar aku!', 'Hehe!'], path: [[300, 880], [420, 900], [600, 880], [420, 860]], pi: 1 });
+    cit({ n: 'Kiki, Anak Kota', x: 1500, y: 880, kid: 1, hs: 'short', sk: '#d9a07a', hair: '#2a1a14', c1: '#4a8aa8', c2: '#fff', c3: '#5a4a2a', lines: ['Aku mau jadi pengawal raja! Atau penyair, atau pahlawan!', 'Dewi curang! Dia lari duluan lagi.'], chat: ['Tunggu aku!', 'Haha!'], path: [[1500, 880], [1380, 900], [1200, 880], [1380, 860]], pi: 1 });
+    mkN({ n: 'Rangga, Penyala Lentera', x: 838, y: 1000, fc: 1, sk: '#d0986c', hair: '#2a1a14', hs: 'short', hat: 'cap', hc: '#3a3a4a', c1: '#2a3a5a', c2: '#c9a95a', c3: '#1a1a28', prop: 'staff', pc: '#ffd34d', nightOnly: 1, lines: ['Aku Rangga. Tiap malam kunyalakan lentera jalan raya, dari gerbang sampai tangga istana.', 'Lentera di kerajaan bersaudara dengan lentera desa. Cahaya yang satu menjaga yang lain.'], chat: ['Satu lentera lagi...', 'Terang, terang~'], path: [[838, 1000], [838, 520], [962, 520], [962, 1000]], pi: 1 });
+
+    N.forEach(n => { if (!n.nightOnly && !n.sign && !/Prajurit|Pengawal|Kapten/.test(n.n)) { n.sleeps = 1; n._hx = n.x; n._hy = n.y; n._orig = n.path || null; n._lv = Math.random() * 2; n._wk = Math.random() } });
+    K.dyn = N.filter(n => !n.sign).map((n, i) => ({ n, i, get y() { return n.y } })); K._all = K.dyn.slice();
+    for (let i = 0; i < 30; i++) K.ff.push({ bx: rng(), by: rng(), sx: 3 + rng() * 6, ph: rng() * 6 });
+  };
+
+  /* ---------- jadwal warga (pulang saat malam, keluar saat pagi) ---------- */
+  function shift(force) {
+    if (!K._all) return; const h = V.clock, nt = !!V._nt;
+    K.npcs.forEach(n => {
+      if (dlg && dlg.n === n) return; const k = NP.indexOf(n), shown = k >= 0, d = Math.hypot(n.x - p.x, n.y - p.y);
+      if (n.nightOnly) { if (nt === shown) return; if (!force && d < 240 && (nt ? V.night < .95 : V.night > .05)) return; if (nt) NP.push(n); else NP.splice(k, 1); return }
+      if (!n.sleeps || n._hx === undefined) return;
+      const hide = () => { NP.splice(NP.indexOf(n), 1); n.x = n._hx; n.y = n._hy; n.vx = n.vy = 0; n.spd = 0; n.mv = 0; n._b = null };
+      if (WORLD.homeTime(n, h)) {
+        if (!shown) return;
+        if (!n._going) { n._going = 1; if (n.path) { n.path = [[n._hx, n._hy]]; n.pi = 0; n.wait = 0 } }
+        const dh = Math.hypot(n.x - n._hx, n.y - n._hy);
+        if (n.path ? (dh < 22 || (force && d > 260)) : (d > 200 || V.night > .95)) hide()
+      } else {
+        if (n._going) { n._going = 0; if (n._orig) { let bi = 0, bd = 1e9; n._orig.forEach((q, i) => { const dd = Math.hypot(q[0] - n._hx, q[1] - n._hy); if (dd < bd) { bd = dd; bi = i } }); n.path = n._orig; n.pi = bi; n.wait = Math.random() * 2 } }
+        if (!shown) { n.x = n._hx; n.y = n._hy; NP.push(n) }
+      }
+    });
+    K.dyn = K._all.filter(o => { const s = o.n; return !s || NP.indexOf(s) >= 0 });
+  }
+  const _en = K.enter; K.enter = function () { if (_en) _en.apply(this, arguments); K._sc = 0; guard(() => shift(1)) };
+
+  /* ---------- TICK: jam & cuaca bersama + gerak warga + obrolan + pintu keluar ---------- */
+  K.tick = function (dt) {
+    const T = WORLD.TR; if (T.on) return;
+    guard(() => WORLD.wxTick(dt));
+    K._sc = (K._sc || 0) - dt; if (K._sc <= 0) { K._sc = .25; guard(() => shift()) }
+    walkAll(K.npcs, dt); guard(() => chatTick(K.npcs, dt));
+    if (T.cool <= 0 && p.y < PY - 44 && Math.abs(p.x - AX) < 28 && p.vy < -8) { WORLD.start('gate', { to: 'palace', dx: 0, dy: -1, spawn: WORLD.AREAS.palace.spawn.slice() }); msg('Memasuki Istana Aurelia...'); return }
+    if (T.cool <= 0 && p.y > KH - 28 && Math.abs(p.x - AX) < 60 && p.vy > 8) {
+      WORLD.start('gate', { to: 'village', dx: 0, dy: 1, spawn: [GX, 120] }); msg('Kembali ke Desa Lembah Lentera...');
+    }
+  };
+
+  /* ---------- GAMBAR ---------- */
+  K.env = function () { };
+  K.drawBack = function () { K._L = renderList(K); const py = p.y + 3; for (const o of K._L) if (o.y <= py) drawObj(o) };
+  K.drawFront = function () {
+    const py = p.y + 3; for (const o of K._L) if (o.y > py) drawObj(o);
+    const vw = W / CAM_Z, vh = H / CAM_Z;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (const o of K.objs) { if (o.x < camX - 300 || o.x > camX + vw + 300 || o.y < camY - 60 || o.y > camY + vh + 340) continue; if (o.glow) lightL(o.x, o.y - 32, 52 + Math.sin(t * 7 + o.x) * 2, '255,200,110', .36); if (o.lamp) o.lamp.forEach(([a, b]) => lightL(a, b + 4, 26, '255,200,110', .2)) }
+    g.restore();
+    for (const o of K.objs) { if (!o.chim || o.x < camX - 100 || o.x > camX + vw + 100 || o.y < camY - 60 || o.y > camY + vh + 140) continue; const sm = o.chim; for (let i = 0; i < 4; i++) { const k = (t * .3 + i / 4 + (o.x % 7) * .1) % 1; g.globalAlpha = (1 - k) * .45; g.fillStyle = '#d8d4dc'; const s = 3 + k * 5; g.fillRect(Math.round(sm[0] + Math.sin(k * 5 + i) * 4 + k * 10), Math.round(sm[1] - k * 34), s, s) } g.globalAlpha = 1 }
+    drawLabels();
+    g.save(); g.globalCompositeOperation = 'lighter'; for (const f of K.ff) { const X = camX + (((f.bx * vw - t * f.sx * .5 - camX * .15) % vw) + vw) % vw, Y = camY + (((f.by * vh + Math.sin(t * .8 + f.ph) * 12) % vh) + vh) % vh, a = (.3 + .5 * Math.max(0, Math.sin(t * 2 + f.ph))) * V.night; g.fillStyle = 'rgba(255,225,140,' + a + ')'; g.fillRect(Math.round(X), Math.round(Y), 2, 2) } g.restore();
+    g.fillStyle = 'rgba(120,50,110,.10)'; g.fillRect(camX, camY, vw, vh); g.fillStyle = 'rgba(255,150,60,.05)'; g.fillRect(camX, camY, vw, vh * .5);
+    guard(() => {      // bayangan awan + atmosfer (malam, senja, kabut, hujan, badai, petir) = sama persis dengan desa
+      const n = V.night, r = V.rain; g.save();
+      const ca = .075 * (1 - n) * (1 - r * .4);
+      if (ca > .005) for (let i = 0; i < 5; i++) { const X = ((t * 7 + i * 470) % 2300) - 250, Y = 120 + i * 190 + Math.sin(i * 2.3) * 50, rx = 150 + (i % 3) * 40, ry = 55 + (i % 2) * 20; g.fillStyle = 'rgba(8,24,40,' + ca + ')'; g.beginPath(); g.ellipse(X, Y, rx, ry, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(X + 12, Y - 4, rx * .62, ry * .6, 0, 0, 7); g.fill() }
+      WORLD.atmo(K, 2); g.restore();
+    });
+    guard(drawBubbles(K.npcs));
+  };
+
+  /* =================================================================
+     BAGIAN 3 - ISTANA AURELIA (INTERIOR): aula singgasana, raja, menteri, interior kerajaan
+     Versi diperkaya: lantai marmer berurat + inlay emas, tirai & mimbar singgasana, lampu gantung
+     bertingkat berkristal, kandil, obor dinding, tanaman, globe, meja bundar berbunga, kaca patri
+     (sinar siang & cahaya bulan), debu berkilau, bara anglo, bayangan & pantulan lantai.
+     ================================================================= */
+  const PW = 1280, PH = 860, MX = 640;
+  const IN = WORLD.AREAS.palace = { name: 'ISTANA AURELIA', sub: 'Aula Singgasana', w: PW, h: PH, spawn: [MX, PH - 120], ready: 0, objs: [], dyn: [], npcs: [], walls: [], bg: null, _L: [] };
+  const WOOD = '#6a4220', WOODD = '#4a2e1a', WOODL = '#8a5a30';
+  const WINX = [150, 310, 970, 1130], CHAN = [[MX, 340], [MX, 600], [190, 330], [1090, 330]];
+
+  function throneSprite() {
+    const [c, q] = mkCv(120, 150), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q(OLC, 26, 14, 68, 100); Q(GOLD, 27, 15, 66, 98); Q(CR, 33, 22, 54, 88); Q('rgba(255,255,255,.15)', 33, 22, 10, 88); Q(CRD, 77, 22, 10, 88);
+    Q(OLC, 40, 6, 40, 12); Q(GOLD, 41, 7, 38, 10); Q(OLC, 52, 0, 16, 10); Q(GOLD, 53, 1, 14, 8); Q('#fff0a0', 53, 1, 5, 3);
+    for (let j = 0; j < 4; j++) for (let k = 0; k < 4; k++) Q('#fff0a0', 38 + k * 14, 30 + j * 20, 3, 3);
+    crownC(q, 60, 44, GOLD);
+    Q(OLC, 24, 104, 72, 26); Q(GOLD, 25, 105, 70, 24); Q(CRD, 30, 108, 60, 16); Q(CR, 30, 108, 60, 5);
+    Q(OLC, 18, 92, 14, 38); Q(GOLD, 19, 93, 12, 36); Q(OLC, 88, 92, 14, 38); Q(GOLD, 89, 93, 12, 36); Q('#fff0a0', 19, 93, 4, 36);
+    Q(OLC, 22, 128, 76, 12); Q('#a8883a', 23, 129, 74, 10);
+    return { img: c, ox: 60, oy: 138 };
+  }
+  function columnSprite() {
+    const [c, q] = mkCv(34, 150), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q(OLC, 3, 128, 28, 18); Q('#b9b5a8', 4, 129, 26, 16); Q(SHC, 4, 129, 26, 3);
+    Q(OLC, 6, 24, 22, 106); Q('#e0dccc', 7, 25, 20, 104); Q('rgba(255,255,255,.35)', 7, 25, 6, 104); Q('rgba(0,0,0,.14)', 22, 25, 6, 104);
+    for (let k = 0; k < 4; k++) Q('rgba(0,0,0,.08)', 11 + k * 4, 25, 1, 104);
+    Q(GOLD, 6, 116, 22, 2); Q(GOLD, 6, 34, 22, 2);
+    Q(OLC, 1, 10, 32, 18); Q(GOLD, 2, 11, 30, 6); Q('#e0dccc', 3, 17, 28, 9); Q(GOLD, 3, 24, 28, 2);
+    return { img: c, ox: 17, oy: 144 };
+  }
+  function shelfSprite() {
+    const [c, q] = mkCv(124, 100), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), BC = ['#a8283e', '#2f5aa8', '#3a8a5a', '#d8b84a', '#7a4a8a', '#c8783a', '#e8e0d0'];
+    Q(OLC, 0, 0, 124, 98); Q(WOODD, 1, 1, 122, 96); Q(WOOD, 1, 1, 122, 4); Q(GOLD, 1, 5, 122, 1);
+    for (let r = 0; r < 3; r++) {
+      const y0 = 6 + r * 30; Q('#2a1a10', 5, y0, 114, 26);
+      for (let x0 = 6, i = 0; x0 < 114; i++) { const w = 4 + ((hash(x0, y0, 5) * 5) | 0), h = 18 + ((hash(x0, y0, 6) * 7) | 0); Q(BC[(i + r * 3) % 7], x0, y0 + 26 - h, w, h); Q('rgba(255,255,255,.2)', x0, y0 + 26 - h, 1, h); Q(GOLD, x0, y0 + 26 - h + 3, w, 1); x0 += w + 1 }
+      Q(WOODL, 3, y0 + 26, 118, 4);
+    }
+    Q(OLC, 0, 96, 124, 4); return { img: c, ox: 62, oy: 98 };
+  }
+  function tableSprite() {
+    const [c, q] = mkCv(224, 84), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q('rgba(0,0,0,.22)', 8, 70, 210, 10); Q(OLC, 8, 50, 14, 28); Q(WOODD, 9, 51, 12, 26); Q(OLC, 202, 50, 14, 28); Q(WOODD, 203, 51, 12, 26);
+    Q(OLC, 2, 12, 220, 44); Q(WOOD, 3, 13, 218, 42); Q(WOODL, 3, 13, 218, 4); Q(WOODD, 3, 50, 218, 5); Q(GOLD, 3, 17, 218, 1);
+    Q('#e8d8a8', 62, 18, 100, 30); Q('#c8b078', 62, 18, 100, 2); Q('#a8283e', 80, 28, 4, 4); Q('#2f5aa8', 120, 24, 4, 4); Q('#3a8a5a', 140, 34, 4, 4); Q('#d8b84a', 100, 38, 3, 3);
+    Q('rgba(60,40,20,.5)', 70, 32, 80, 1); Q('rgba(60,40,20,.5)', 110, 20, 1, 26);
+    [24, 188].forEach(cx2 => { Q(OLC, cx2 - 3, 0, 7, 16); Q('#f4efe6', cx2 - 2, 4, 5, 11); Q(GOLD, cx2 - 4, 14, 9, 3) });
+    return { img: c, ox: 112, oy: 74, fl: [[24, 0], [188, 0]] };
+  }
+  function chairSprite() {
+    const [c, q] = mkCv(26, 42), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q(OLC, 3, 2, 20, 22); Q(WOOD, 4, 3, 18, 20); Q(CR, 6, 5, 14, 14); Q(GOLD, 6, 5, 14, 1); Q(OLC, 2, 22, 22, 12); Q(WOODL, 3, 23, 20, 8); Q(OLC, 4, 32, 4, 8); Q(OLC, 18, 32, 4, 8);
+    return { img: c, ox: 13, oy: 38 };
+  }
+  function deskSprite() {
+    const [c, q] = mkCv(92, 62), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q('rgba(0,0,0,.22)', 6, 52, 82, 8); Q(OLC, 4, 40, 10, 18); Q(OLC, 78, 40, 10, 18); Q(OLC, 0, 10, 92, 34); Q(WOOD, 1, 11, 90, 32); Q(WOODL, 1, 11, 90, 3);
+    Q('#e8d8a8', 10, 14, 30, 20); Q('#cbb27a', 10, 14, 30, 2); Q('#2a1a10', 52, 18, 14, 8); Q('#fff', 70, 8, 3, 18); Q('#d0b090', 69, 5, 5, 4);
+    return { img: c, ox: 46, oy: 54 };
+  }
+  function chestSprite() {
+    const [c, q] = mkCv(34, 28), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q(OLC, 1, 6, 32, 22); Q(WOOD, 2, 7, 30, 20); Q(WOODL, 2, 7, 30, 6); Q(GOLD, 2, 13, 30, 2); Q(GOLD, 15, 11, 4, 8); Q('#fff0a0', 16, 12, 2, 3); Q(GOLD, 6, 7, 2, 20); Q(GOLD, 26, 7, 2, 20);
+    Q('#fff0a0', 8, 4, 4, 3); Q(GOLD, 16, 3, 5, 4); Q('#fff0a0', 22, 5, 3, 3);
+    return { img: c, ox: 17, oy: 26 };
+  }
+  function brazierSprite() {
+    const [c, q] = mkCv(30, 44), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h);
+    Q(OLC, 12, 24, 6, 18); Q('#6a5a3a', 13, 25, 4, 16); Q(OLC, 5, 38, 20, 6); Q('#6a5a3a', 6, 39, 18, 4);
+    Q(OLC, 2, 14, 26, 14); Q('#8a7a4a', 3, 15, 24, 12); Q(GOLD, 3, 15, 24, 3); Q('#3a1a10', 5, 13, 20, 4); Q('#ff7a1a', 8, 13, 14, 2);
+    return { img: c, ox: 15, oy: 42 };
+  }
+  function candelabraSprite() {
+    const [c, q] = mkCv(34, 72), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = 17;
+    Q(OLC, cx - 9, 63, 18, 8); Q('#a8883a', cx - 8, 64, 16, 6); Q(GOLD, cx - 8, 64, 16, 2);
+    Q(OLC, cx - 4, 54, 8, 11); Q('#a8883a', cx - 3, 55, 6, 9); Q(OLC, cx - 3, 28, 6, 28); Q(GOLD, cx - 2, 29, 4, 26); Q('#fff0a0', cx - 2, 29, 1, 26);
+    Q(OLC, cx - 14, 26, 29, 5); Q(GOLD, cx - 13, 27, 27, 3);
+    [[-12, 12], [0, 6], [12, 12]].forEach(([o, top]) => { Q(OLC, cx + o - 4, 22, 8, 7); Q(GOLD, cx + o - 3, 23, 6, 4); Q(OLC, cx + o - 3, top, 6, 14); Q('#f4efe6', cx + o - 2, top + 1, 4, 13); Q('#ffd870', cx + o - 2, top + 1, 4, 2) });
+    return { img: c, ox: cx, oy: 70, fl: [[cx - 12, 9], [cx, 3], [cx + 12, 9]] };
+  }
+  function plantSprite() {
+    const [c, q] = mkCv(44, 64), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = 22;
+    Q(OLC, cx - 12, 46, 24, 17); Q('#8a3a2a', cx - 11, 47, 22, 15); Q('#b85a3a', cx - 11, 47, 8, 15); Q('rgba(0,0,0,.25)', cx + 4, 47, 7, 15); Q(GOLD, cx - 12, 48, 24, 3);
+    Q(OLC, cx - 2, 28, 5, 20); Q('#5a3a1a', cx - 1, 29, 3, 18);
+    ell(q, OLC, cx, 20, 19, 17); ell(q, '#1f4a22', cx, 20, 17.5, 15.5); ell(q, '#2f6a2c', cx - 2, 18, 15, 13); ell(q, '#4a8a3c', cx - 5, 14, 10, 8.5);
+    for (let i = 0; i < 16; i++) Q('#7ac05a', cx + (((hash(i, 1, 3) - .5) * 26) | 0), 6 + ((hash(i, 2, 3) * 24) | 0), 2, 1);
+    ell(q, '#ffd34d', cx + 8, 12, 2.2, 2.2); ell(q, '#ff9ac0', cx - 9, 22, 2.2, 2.2); ell(q, '#fff', cx + 3, 26, 1.8, 1.8);
+    return { img: c, ox: cx, oy: 62 };
+  }
+  function roundTableSprite() {
+    const [c, q] = mkCv(72, 76), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = 36;
+    ell(q, 'rgba(0,0,0,.22)', cx, 70, 28, 6); Q(OLC, cx - 4, 46, 9, 24); Q(WOODD, cx - 3, 47, 7, 22); Q(OLC, cx - 13, 66, 26, 6); Q(WOOD, cx - 12, 67, 24, 4);
+    ell(q, OLC, cx, 44, 31, 13.5); ell(q, CRD, cx, 43, 30, 12.5); ell(q, GOLD, cx, 42, 28, 11); ell(q, CR, cx, 42, 26.5, 10);
+    Q(OLC, cx - 6, 28, 12, 15); Q('#3a6aa8', cx - 5, 29, 10, 13); Q(GOLD, cx - 5, 31, 10, 2); Q('rgba(255,255,255,.3)', cx - 5, 29, 3, 13);
+    [[-5, 14], [0, 11], [5, 15], [-2, 18]].forEach(([dx, dy], i) => { Q('#2f7a3a', cx + dx, dy + 4, 1, 26 - dy); ell(q, i % 2 ? '#ffd34d' : '#ffe680', cx + dx, dy, 3.2, 3.2); ell(q, '#fff3b8', cx + dx - 1, dy - 1, 1.2, 1.2) });
+    return { img: c, ox: cx, oy: 68 };
+  }
+  function globeSprite() {
+    const [c, q] = mkCv(44, 64), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = 22;
+    Q(OLC, cx - 13, 55, 26, 8); Q(WOODD, cx - 12, 56, 24, 6); Q(OLC, cx - 3, 40, 6, 17); Q(WOOD, cx - 2, 41, 4, 15);
+    ell(q, OLC, cx, 24, 17, 17); ell(q, '#2a78a0', cx, 24, 16, 16); ell(q, '#3a8a4a', cx - 6, 20, 6.5, 5); ell(q, '#3a8a4a', cx + 5, 29, 5, 6); ell(q, '#c8b078', cx + 7, 18, 3.2, 3.2); ell(q, '#e8e4d4', cx, 10, 6, 2);
+    ell(q, 'rgba(255,255,255,.3)', cx - 6, 16, 5, 4); q.strokeStyle = GOLD; q.lineWidth = 2; q.beginPath(); q.ellipse(cx, 24, 18, 18, .45, 0, TAU); q.stroke();
+    return { img: c, ox: cx, oy: 62 };
+  }
+  function torchSprite() {
+    const [c, q] = mkCv(18, 38), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = 9;
+    Q(OLC, cx - 5, 24, 10, 12); Q('#5a4a3a', cx - 4, 25, 8, 10); Q('#8a7a5a', cx - 4, 25, 8, 2);
+    Q(OLC, cx - 3, 10, 6, 16); Q(WOOD, cx - 2, 11, 4, 14); Q(OLC, cx - 5, 8, 10, 5); Q('#3a2a1a', cx - 4, 9, 8, 3);
+    return { img: c, ox: cx, oy: 36, fl: [[cx, 5]] };
+  }
+  const crown = n => { const dy = n.sit ? 27 : 32, X = Math.round(n.x), Y = Math.round(n.y - dy); Rr(OLC, X - 6, Y - 1, 12, 5); Rr(GOLD, X - 5, Y, 10, 3); Rr(GOLD, X - 5, Y - 3, 2, 3); Rr(GOLD, X - 1, Y - 4, 2, 4); Rr(GOLD, X + 3, Y - 3, 2, 3); Rr('#fff0a0', X - 5, Y, 3, 1); Rr(CR, X - 1, Y + 1, 2, 1) };
+  /* api animasi: dipakai obor, kandil, lilin, anglo */
+  function flameAt(fx, fy, big) {
+    const s = big ? 1.5 : 1, fk = Math.sin(t * 14 + fx * .7) * 1.4, fh = 1 + .25 * Math.sin(t * 11 + fx);
+    g.save(); g.globalCompositeOperation = 'lighter';
+    lightL(fx, fy + 4, (big ? 62 : 26) + Math.sin(t * 12 + fx) * 3, '255,170,70', big ? .42 : .26);
+    Rr('#ff6a10', fx - 3 * s + fk * .5, fy + 1, 6 * s, Math.round(5 * s * fh)); Rr('#ffb030', fx - 2 * s + fk * .7, fy - 2 * s, 4 * s, Math.round(6 * s * fh)); Rr('#ffec90', fx - 1 + fk, fy - 4 * s, 2 * s, Math.round(5 * s * fh));
+    g.restore();
+  }
+  function chandelier(a, b) {
+    const sw = Math.sin(t * .8 + a * .01) * 1.5, X = a + sw;
+    Rr(OLC, X, b - 240, 2, 240); Rr('#6a5a3a', X, b - 240, 1, 240);
+    [[34, 8, 0], [22, 6, -9], [11, 4, -16]].forEach(([rx, ry, dy], k) => { g.fillStyle = OLC; g.beginPath(); g.ellipse(X, b + dy, rx + 2, ry + 2, 0, 0, 7); g.fill(); g.fillStyle = k ? '#a8883a' : GOLD; g.beginPath(); g.ellipse(X, b + dy - 1, rx, ry, 0, 0, 7); g.fill(); g.fillStyle = '#fff0a0'; g.beginPath(); g.ellipse(X - rx * .3, b + dy - 2, rx * .5, ry * .35, 0, 0, 7); g.fill() });
+    Rr(OLC, X - 2, b - 16, 5, 16); Rr(GOLD, X - 1, b - 16, 3, 16);
+    for (let i = 0; i < 10; i++) { const ang = i * Math.PI / 5, cx2 = X + Math.cos(ang) * 31, cy2 = b + Math.sin(ang) * 7; if (Math.sin(ang) < -.1) { } Rr(OLC, cx2 - 2, cy2 - 8, 5, 9); Rr('#f4efe6', cx2 - 1, cy2 - 7, 3, 8); flameAt(cx2, cy2 - 11, 0) }
+    for (let i = 0; i < 12; i++) { const ang = i * Math.PI / 6 + .2, px = X + Math.cos(ang) * 26, py = b + 6 + Math.sin(ang) * 6, tw = Math.max(0, Math.sin(t * 4 + i * 1.9)); Rr('rgba(' + (i % 2 ? '190,240,255' : '255,255,255') + ',' + (.55 + .45 * tw) + ')', px - 1, py, 2, 5 + (i % 3)); if (tw > .8) Rr('#fff', px - 1, py + 7, 3, 1) }
+    g.save(); g.globalCompositeOperation = 'lighter'; lightL(X, b + 18, 150 + Math.sin(t * 5 + a) * 5, '255,210,140', .26); g.restore();
+  }
+
+  IN.build = function () {
+    const [bg, x] = mkCv(PW, PH); IN.bg = bg;
+    const walls = IN.walls = [], objs = IN.objs = [], N = IN.npcs = [];
+    const R = (c, a, b, w, h) => rc(x, c, Math.round(a), Math.round(b), Math.round(w), Math.round(h));
+    const spr = (s, a, b, solid, extra) => {
+      const swd = Math.max(8, (s.img.width * .36) | 0); if (!(extra && extra.noSh)) ell(x, 'rgba(0,0,0,.22)', a, b - 2, swd, Math.max(3, swd * .24));
+      const o = { x: Math.round(a), y: Math.round(b), img: s.img, ox: s.ox, oy: s.oy, oh: s.img.height, ...extra };
+      if (s.fl) o.fl = s.fl.map(f => [Math.round(a + f[0] - s.ox), Math.round(b + f[1] - s.oy)]);
+      objs.push(o); if (solid) walls.push(solid);
+    };
+
+    /* lantai marmer: ubin catur, urat batu, inlay emas, pantulan */
+    for (let yy = 120; yy < PH; yy += 40) for (let xx = 0; xx < PW; xx += 40) {
+      const ck = ((xx / 40 + yy / 40) & 1), hv = hash(xx, yy, 41);
+      R(ck ? '#d8d0c0' : '#b9b0a0', xx, yy, 40, 40); R(ck ? '#e4dccc' : '#c4bbab', xx, yy, 40, 2); R('rgba(0,0,0,.10)', xx, yy + 38, 40, 2); R('rgba(0,0,0,.08)', xx + 38, yy, 2, 40);
+      R('rgba(255,255,255,' + (.05 + hv * .08) + ')', xx + 2, yy + 2, 18, 18);
+      if (hv > .45) { x.strokeStyle = ck ? 'rgba(120,108,96,.22)' : 'rgba(80,70,60,.22)'; x.lineWidth = 1; x.beginPath(); const ax = xx + hash(xx, yy, 7) * 40, bx = xx + hash(xx, yy, 8) * 40; x.moveTo(ax, yy); x.quadraticCurveTo(xx + 20 + (hv - .5) * 24, yy + 20, bx, yy + 40); x.stroke() }
+    }
+    R('rgba(0,0,0,.25)', 0, 128, PW, 14);
+    const band = (bx, by, bw, bh, vert) => {
+      R(OLC, bx - 1, by - 1, bw + 2, bh + 2); R('#34283e', bx, by, bw, bh); R(GOLD, vert ? bx + 3 : bx, vert ? by : by + 3, vert ? 1 : bw, vert ? bh : 1); R(GOLD, vert ? bx + bw - 4 : bx, vert ? by : by + bh - 4, vert ? 1 : bw, vert ? bh : 1);
+      for (let k = 12; k < (vert ? bh : bw) - 6; k += 36) { const dx = vert ? bx + bw / 2 : bx + k, dy = vert ? by + k : by + bh / 2; R(GOLD, dx - 3, dy - 1, 6, 2); R(GOLD, dx - 1, dy - 3, 2, 6); R('#fff0a0', dx - 1, dy - 1, 2, 2) }
+    };
+    band(52, 140, 24, PH - 200, 1); band(PW - 76, 140, 24, PH - 200, 1); band(76, PH - 86, 504, 24, 0); band(700, PH - 86, 504, 24, 0);
+    [[330, 300], [330, 440], [330, 580], [330, 720], [950, 300], [950, 440], [950, 580], [950, 720]].forEach(([a, b]) => { for (let k = 0; k < 10; k++) R('rgba(255,255,255,' + (.14 - k * .013) + ')', a - 9, b + 2 + k * 3, 18, 3) });   // pantulan pilar
+
+    /* dinding belakang */
+    R(OLC, 0, 0, PW, 130); R(SH0, 0, 2, PW, 98); mortarC(x, 0, 2, PW, 98, 20); R(SHL, 0, 2, PW, 3);
+    R(OLC, 0, 98, PW, 32); R(WOODD, 0, 100, PW, 28); for (let k = 0; k < PW; k += 64) { R(WOOD, k + 2, 103, 60, 22); R(WOODL, k + 2, 103, 60, 2); R('rgba(0,0,0,.25)', k + 2, 120, 60, 5); R(GOLD, k + 30, 112, 3, 3) }
+    R(GOLD, 0, 98, PW, 3); R('rgba(0,0,0,.3)', 0, 128, PW, 2);
+    for (let k = 0; k < PW; k += 100) R('rgba(0,0,0,' + (.1 + .08 * hash(k, 3, 9)) + ')', k, 2, 100, 96);           // variasi batu dinding
+    const g1 = x.createLinearGradient(0, 0, 0, 100); g1.addColorStop(0, 'rgba(10,4,16,.5)'); g1.addColorStop(1, 'rgba(10,4,16,0)'); x.fillStyle = g1; x.fillRect(0, 0, PW, 100);
+    const WINC = ['#3a6aa8', '#a8283e', '#d8b84a', '#3a8a5a', '#7a4a8a'];
+    const win = wx => {
+      R(OLC, wx - 31, 12, 62, 88); R(SHC, wx - 29, 14, 58, 84);
+      for (let j = 0; j < 7; j++) for (let k = 0; k < 4; k++) R(WINC[(j * 2 + k + (wx >> 5)) % 5], wx - 26 + k * 13, 24 + j * 10, 12, 9);
+      R(SHC, wx - 29, 14, 58, 12); R(OLC, wx - 27, 22, 54, 2); R('#2a2018', wx - 1, 24, 2, 72); for (let j = 0; j < 7; j++) R('#2a2018', wx - 26, 33 + j * 10, 52, 1);
+      R(OLC, wx - 33, 96, 66, 6); R(SHC, wx - 32, 97, 64, 3); R('rgba(255,255,255,.18)', wx - 26, 24, 8, 72); R(GOLD, wx - 29, 13, 58, 1)
+    };
+    WINX.forEach(win);
+    x.fillStyle = OLC; x.beginPath(); x.arc(MX, 62, 50, 0, TAU); x.fill(); x.fillStyle = SHC; x.beginPath(); x.arc(MX, 62, 47, 0, TAU); x.fill();
+    for (let i = 0; i < 12; i++) { x.fillStyle = WINC[i % 5]; x.beginPath(); x.moveTo(MX, 62); x.arc(MX, 62, 42, i * TAU / 12, (i + 1) * TAU / 12); x.closePath(); x.fill() }
+    x.strokeStyle = '#2a2018'; x.lineWidth = 2; x.beginPath(); for (let i = 0; i < 12; i++) { x.moveTo(MX, 62); x.lineTo(MX + Math.cos(i * TAU / 12) * 42, 62 + Math.sin(i * TAU / 12) * 42) } x.stroke();
+    x.beginPath(); x.arc(MX, 62, 28, 0, TAU); x.stroke(); x.fillStyle = GOLD; x.beginPath(); x.arc(MX, 62, 12, 0, TAU); x.fill(); x.fillStyle = '#fff0a0'; x.beginPath(); x.arc(MX, 62, 6, 0, TAU); x.fill();
+    const tap = (tx, kind) => {
+      R(OLC, tx - 21, 8, 42, 90); R(CR, tx - 20, 9, 40, 84); R('rgba(255,255,255,.14)', tx - 20, 9, 8, 84); R(GOLD, tx - 20, 9, 40, 3); R(GOLD, tx - 20, 86, 40, 3); R('rgba(0,0,0,.2)', tx + 10, 12, 10, 74);
+      if (kind === 0) crownC(x, tx, 36, GOLD);
+      else if (kind === 1) { R(OLC, tx - 3, 22, 6, 44); R('#e8e4d4', tx - 2, 23, 4, 42); R(GOLD, tx - 12, 56, 24, 4); R(GOLD, tx - 3, 60, 6, 12) }
+      else if (kind === 2) { x.fillStyle = GOLD; x.beginPath(); x.arc(tx, 44, 11, 0, TAU); x.fill(); x.fillStyle = '#fff0a0'; x.beginPath(); x.arc(tx, 44, 6, 0, TAU); x.fill(); for (let i = 0; i < 8; i++) { const a = i * TAU / 8; R(GOLD, tx + Math.cos(a) * 16 - 1, 44 + Math.sin(a) * 16 - 1, 3, 3) } }
+      else { x.fillStyle = GOLD; x.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 6 : 14; x.lineTo(tx + Math.cos(a) * r, 44 + Math.sin(a) * r) } x.closePath(); x.fill() }
+      R(GOLD, tx - 8, 72, 16, 2); R(CR, tx - 20, 93, 14, 6); R(CR, tx + 6, 93, 14, 6); R('#6a5a3a', tx - 24, 6, 48, 3); for (let k = -18; k <= 18; k += 6) R(GOLD, tx + k, 99, 2, 4);
+    };
+    [[230, 0], [470, 1], [810, 2], [1050, 3]].forEach(([a, k]) => tap(a, k));
+    /* tirai beludru di sisi singgasana */
+    const curtain = cx0 => {
+      R('#6a5a3a', cx0 - 34, 5, 68, 4); R(GOLD, cx0 - 36, 4, 4, 6); R(GOLD, cx0 + 32, 4, 4, 6);
+      for (let yy = 9; yy < 128; yy++) {
+        const w = yy < 70 ? 30 : yy < 90 ? 30 - (yy - 70) * .8 : 14 + (yy - 90) * .3;
+        for (let k = -w; k < w; k += 5) { const sh = Math.sin((k + yy * .05) * .5); R(sh > .2 ? CR : (sh > -.4 ? '#8a1e34' : CRD), cx0 + k, yy, 5, 1) }
+      }
+      R(OLC, cx0 - 16, 80, 32, 4); R(GOLD, cx0 - 15, 81, 30, 2); R(GOLD, cx0 - 2, 84, 4, 12); R('#fff0a0', cx0 - 1, 96, 2, 6);
+    };
+    curtain(535); curtain(745);
+    /* dinding samping + pintu bawah */
+    [[0, 1], [PW - 44, -1]].forEach(([wx, dr]) => { R(OLC, wx, 0, 44, PH); R(SH0, wx + (dr > 0 ? 0 : 3), 0, 41, PH); mortarC(x, wx + (dr > 0 ? 0 : 3), 0, 41, PH, 14); R(SHD, wx + (dr > 0 ? 28 : 3), 0, 13, PH); R(GOLD, wx + (dr > 0 ? 40 : 3), 130, 1, PH - 130) });
+    R(OLC, 0, PH - 50, PW, 50); R(SH0, 0, PH - 48, PW, 44); mortarC(x, 0, PH - 48, PW, 44, 20); R(SHD, 0, PH - 14, PW, 14); R(GOLD, 0, PH - 50, PW, 3);
+    for (let k = 120; k < PW; k += 160) if (Math.abs(k - MX) > 160) { crownC(x, k, PH - 34, GOLD); R(GOLD, k - 12, PH - 24, 24, 2) }
+    const GA = 580, GB = 700; R('#e8e0c8', GA, PH - 50, GB - GA, 50); R('#fff6d8', GA + 6, PH - 50, GB - GA - 12, 50);
+    [[GA - 34, 1], [GB, -1]].forEach(([dx, dr]) => { R(OLC, dx, PH - 108, 36, 62); R(WOODD, dx + 1, PH - 107, 34, 60); R(WOOD, dx + 1, PH - 107, 17, 60); R(GOLD, dx + 17, PH - 107, 2, 60); R(GOLD, dx + 1, PH - 80, 34, 2); R(GOLD, dx + 1, PH - 60, 34, 2) });
+    R(OLC, GA - 36, PH - 114, GB - GA + 72, 10); R(SHC, GA - 35, PH - 113, GB - GA + 70, 6); R(GOLD, GA - 35, PH - 108, GB - GA + 70, 2);
+    walls.push([-20, -20, PW + 40, 140], [-20, -20, 44, PH + 40], [PW - 44, -20, 64, PH + 40], [-20, PH - 50, GA + 20, 70], [GB, PH - 50, PW - GB + 20, 70]);
+
+    /* karpet merah panjang bermotif + permadani lambang */
+    R(OLC, 580, 130, 120, PH - 180); R(CR, 584, 130, 112, PH - 180); R(GOLD, 584, 130, 4, PH - 180); R(GOLD, 692, 130, 4, PH - 180); R(CRD, 592, 130, 2, PH - 180); R(CRD, 686, 130, 2, PH - 180);
+    for (let yy = 150; yy < PH - 60; yy += 56) { R(GOLD, 636, yy, 8, 2); R(GOLD, 638, yy - 4, 4, 10); R(GOLD, 604, yy + 4, 2, 2); R(GOLD, 674, yy + 4, 2, 2); R('rgba(255,255,255,.07)', 596, yy, 88, 1) }
+    for (let yy = PH - 60; yy < PH - 50; yy += 3) R(GOLD, 586 + (yy % 6), yy, 2, 2);
+    ell(x, 'rgba(0,0,0,.2)', MX, 504, 98, 54); ell(x, OLC, MX, 500, 96, 52); ell(x, CRD, MX, 500, 93, 49); ell(x, CR, MX, 500, 86, 44); ell(x, GOLD, MX, 500, 74, 36); ell(x, CR, MX, 500, 70, 33);
+    x.strokeStyle = 'rgba(216,184,74,.7)'; x.lineWidth = 1; x.beginPath(); for (let i = 0; i < 12; i++) { const a = i * TAU / 12; x.moveTo(MX + Math.cos(a) * 40, 500 + Math.sin(a) * 19); x.lineTo(MX + Math.cos(a) * 68, 500 + Math.sin(a) * 32) } x.stroke();
+    crownC(x, MX, 492, GOLD); R(GOLD, MX - 22, 504, 44, 3); R(GOLD, MX - 14, 510, 28, 2);
+    /* panggung singgasana + pagar emas */
+    R('rgba(0,0,0,.3)', 438, 252, 404, 10);
+    [[440, 232, 400, 22, '#a89e8a'], [460, 210, 360, 22, '#b9b0a0'], [480, 128, 320, 82, '#cfc6b4']].forEach(([a, b, w, h, col]) => { R(OLC, a - 2, b - 1, w + 4, h + 2); R(col, a, b, w, h); R('rgba(255,255,255,.22)', a, b, w, 3); R('rgba(0,0,0,.18)', a, b + h - 4, w, 4) });
+    R(CRD, 480, 130, 320, 78); R(CR, 484, 130, 312, 78); R(GOLD, 484, 130, 3, 78); R(GOLD, 793, 130, 3, 78);
+    for (let k = 490; k < 800; k += 20) { if (k > 560 && k < 704) continue; R(OLC, k - 1, 200, 5, 12); R(GOLD, k, 201, 3, 10); R('#fff0a0', k, 200, 3, 2) }
+    R(CR, 584, 130, 112, 124); R(GOLD, 584, 210, 4, 44); R(GOLD, 692, 210, 4, 44);
+
+    /* perabot */
+    spr(throneSprite(), MX, 176, [MX - 46, 132, 92, 52], { noSh: 1 });
+    const col = columnSprite();[330, 950].forEach(a => [300, 440, 580, 720].forEach(b => spr(col, a, b, [a - 10, b - 8, 20, 10])));
+    const br = brazierSprite();[[490, 252], [790, 252], [538, PH - 70], [742, PH - 70]].forEach(([a, b]) => spr(br, a, b, [a - 9, b - 6, 18, 8], { flame: [a, b - 44], glow: 1, ember: 1 }));
+    const cd = candelabraSprite();[[560, 410], [720, 410], [560, 640], [720, 640]].forEach(([a, b]) => spr(cd, a, b, [a - 7, b - 6, 14, 8]));
+    const pl = plantSprite();[[290, 300], [990, 300], [290, 720], [990, 720], [90, 790], [1190, 790], [300, 150], [980, 150]].forEach(([a, b]) => spr(pl, a, b, [a - 12, b - 8, 24, 10]));
+    const rt = roundTableSprite();[[200, 640], [1100, 660], [190, 250]].forEach(([a, b]) => spr(rt, a, b, [a - 22, b - 10, 44, 12]));
+    spr(globeSprite(), 128, 366, [114, 356, 28, 10]);
+    spr(tableSprite(), 190, 480, [96, 456, 188, 26]); const ch = chairSprite();[[124, 444], [190, 444], [256, 444], [124, 526], [190, 526], [256, 526]].forEach(([a, b]) => spr(ch, a, b, [a - 8, b - 6, 16, 8]));
+    spr(shelfSprite(), 1110, 332, [1052, 296, 120, 38]); spr(shelfSprite(), 1110, 590, [1052, 554, 120, 38]);
+    spr(deskSprite(), 1120, 470, [1076, 446, 88, 26]);
+    const cs = chestSprite();[[1196, 720], [1160, 726], [96, 720]].forEach(([a, b]) => spr(cs, a, b, [a - 14, b - 8, 28, 10]));
+    const ks = knightSprite();[[90, 640], [1190, 640], [90, 330], [1190, 330]].forEach(([a, b]) => spr(ks, a, b, [a - 9, b - 6, 18, 8]));
+    const tc = torchSprite();[230, 380, 530, 680, 790].forEach(b => [58, PW - 58].forEach(a => spr(tc, a, b, null, { noSh: 1, glow: 0 })));
+    objs.sort((a, b) => a.y - b.y);
+
+    /* ---------- NPC & papan info ---------- */
+    const mkN = o => { N.push(o); return o };
+    const sign = (n, a, b, lines) => mkN({ n, x: a, y: b, sign: 1, rng: 56, verb: 'Lihat', _bn: Infinity, lines });
+    const gd = (n, ax, ay, fc, lines, chat, extra) => mkN({ n, x: ax, y: ay, fc, sk: '#d9a07a', hair: '#3a2a1a', hat: 'helm', armor: 1, c1: '#7a1a2a', c2: GOLD, c3: '#3a3d48', prop: 'spear', lines, chat, ...extra });
+    mkN({
+      n: 'Raja Aurelius I', x: MX, y: 181, sit: 1, fc: 1, crown: 1, rng: 70, verb: 'Menghadap', sk: '#e0b898', hair: '#c8c8d0', hs: 'short', beard: '#c8c8d0', c1: CR, c2: GOLD, c3: '#3a0e18', vest: GOLD, prop: 'staff', pc: GOLD, chat: ['Hmm...', 'Negeriku, tanggung jawabku.'],
+      lines: ['Selamat datang di Istana Aurelia, wahai pahlawan dari Aula Kuno. Akulah Aurelius, raja negeri ini.', 'Para tetua Lembah Lentera mengirim kabar: lentera mereka berkedip tak wajar sejak bisikan dari Abyss makin keras.', 'Kau telah melangkah lebih dalam dari siapa pun yang pernah kami kenal. Kerajaan ini berutang budi padamu.', 'Pintu istanaku selalu terbuka bagimu. Pergilah dengan restuku, dan ingatlah: terang yang dijaga bersama tak akan padam.']
+    });
+    mkN({ n: 'Putri Seraphine', x: 540, y: 262, fc: 1, crown: 1, sk: '#e8c0a0', hair: '#e8c860', hs: 'long', c1: '#d878a8', c2: '#fff', c3: '#6a3a5a', chat: ['Ayah sibuk lagi...', 'Aku ingin keluar tembok!'], lines: ['Kau pahlawan itu? Aku Seraphine, putri raja. Aku selalu ingin keluar tembok dan melihat desa-desa kecil.', 'Ayah bilang di luar berbahaya. Tapi cerita Hendra si penyair membuatku penasaran.'] });
+    mkN({ n: 'Menteri Halim', x: 748, y: 266, fc: -1, sk: '#c9946e', hair: '#d8d8e0', hs: 'bald', beard: '#d8d8e0', hat: 'cap', hc: '#2a3a6a', c1: '#2a3a6a', c2: GOLD, c3: '#1a1a30', vest: '#c8a040', prop: 'scroll', chat: ['Anggaran lagi...', 'Hmm, laporan ini.'], lines: ['Halim, menteri besar. Aku mengurus pajak, jalan, dan lentera kerajaan, semuanya lebih mahal dari kelihatannya.', 'Raja jarang tidur belakangan ini. Bisikan itu mengusiknya, pahlawan.'] });
+    gd('Jenderal Brata', 400, 350, 1, ['Brata, jenderal pasukan Aurelia. Pasukanku siap, tapi pedang tak berguna melawan bisikan.', 'Kalau kau butuh senjata atau baju zirah, bengkel Borin di desa tempat terbaik. Dia tukang besi andalanku.'], ['Disiplin adalah segalanya.', 'Pasukan siap.'], { c1: '#4a1a2a', hair: '#8a8a90', c2: '#e8e4d8' });
+    mkN({
+      n: 'Elara, Penyihir Istana', x: 270, y: 380, fc: 1, sk: '#e8c0a8', hair: '#7a3a9a', hs: 'long', hat: 'feather', hc: '#5a2a8a', c1: '#5a2a8a', c2: '#e8d890', c3: '#2a1a3a', prop: 'staff', pc: '#b48cff', chat: ['Aura aneh...', 'Kristal-kristal bergetar.'], path: [[270, 380], [270, 600], [270, 790], [270, 600]], pi: 1,
+      lines: ['Elara, penyihir istana. Kristal ramalan di menara bergetar sejak kau keluar dari Aula Kuno.', 'Bisikan Abyss berbicara lewat lentera. Itu sebabnya raja menjaga lentera-lentera tetap menyala.']
+    });
+    mkN({ n: 'Bima, Juru Tulis', x: 1120, y: 500, fc: -1, sk: '#d0986c', hair: '#2a1a14', hs: 'short', c1: '#4a3a2a', c2: '#e8d890', c3: '#2a2a20', prop: 'scroll', chat: ['Menyalin titah...', 'Tinta habis lagi.'], lines: ['Bima, juru tulis istana. Setiap titah raja kucatat, setiap tamu kuregistrasi. Namamu sudah kutulis, pahlawan.', 'Perpustakaan di sebelah sana menyimpan catatan tentang Aula Kuno. Silakan lihat, tapi jangan menumpahkan tinta.'] });
+    gd('Pengawal Singgasana, Aryo', 548, 312, 1, ['Aku berdiri di sini sejak fajar demi raja.', 'Hormatlah di hadapan baginda.'], ['Siaga.', 'Demi mahkota.'], { c2: '#e8e4d8' });
+    gd('Pengawal Singgasana, Bayu', 732, 312, -1, ['Tidak ada yang melewati karpet ini tanpa izin raja.', 'Kau tamu istimewa, tentu boleh mendekat.'], ['Diam dan tegap.', 'Aman.'], { sk: '#c0845c' });
+    gd('Pengawal Pintu, Cakra', 556, PH - 96, 1, ['Selamat datang, pahlawan. Hati-hati menghadap raja, jangan memotong ucapannya.', 'Jalan keluar ada di belakangmu, kembali ke jalan raya.'], ['Pintu aman.', 'Hmm.'], {});
+    gd('Pengawal Pintu, Danu', 724, PH - 96, -1, ['Aula ini dibangun tiga generasi lalu. Lihat jendela kacanya, hanya itu yang tersisa dari raja pertama.'], ['Tetap siaga.', 'Sepi hari ini.'], { sk: '#c9946e' });
+    mkN({
+      n: 'Rina, Pelayan Istana', x: 400, y: 620, fc: 1, sk: '#e8c0a0', hair: '#8a5a2a', hs: 'bun', hat: 'bonnet', c1: CR, c2: '#e8d8a0', c3: '#4a2a1a', apron: '#f0e8dc', prop: 'basket', chat: ['Teh untuk raja~', 'Banyak tugas!'], path: [[400, 620], [400, 780], [840, 780], [870, 620], [870, 400], [870, 620]], pi: 1,
+      lines: ['Aku Rina, pelayan istana. Aku membawa teh dan kue untuk para menteri.', 'Karpet ini disikat tiap pagi. Tolong jangan bawa lumpur dari hutan, pahlawan!']
+    });
+    mkN({ n: 'Mbok Tari, Juru Masak', x: 1140, y: 700, fc: -1, fresh: 1, shop: 'food', rng: 44, sk: '#d9a07a', hair: '#d8d8e0', hs: 'bun', hat: 'bonnet', c1: '#e8e0d0', c2: '#c8b080', c3: '#4a3a2a', apron: '#f0e8dc', prop: 'basket', chat: ['Sup panas, sup panas!', 'Sedap~'], get lines() { return this.seen ? ['Mau tambah lagi, nak?'] : ['Mbok Tari, juru masak istana. Pahlawan harus makan yang cukup. Ini, silakan pilih!'] }, act() { this.seen = 1; this.fresh = 0; WORLD.openShop('food') } });
+    mkN({
+      n: 'Pipo, Badut Istana', x: 470, y: 440, fc: 1, kid: 0, sk: '#e8c0a0', hair: '#c8483a', hs: 'short', hat: 'feather', hc: '#3a8a5a', c1: '#a8283e', c2: '#2f5aa8', c3: '#d8b84a', vest: '#d8b84a', chat: ['Hehehe!', 'Tahu kenapa ayam menyeberang?', 'Ayo tertawa, nak!'], path: [[470, 440], [470, 650], [820, 650], [820, 440]], pi: 1,
+      lines: ['Aku Pipo, badut istana! Raja tertawa sekali setahun, dan akulah penyebabnya!', 'Tahu kenapa ksatria tak pernah takut gelap? Karena lenterany... ah, lupa lanjutannya. Hehe.']
+    });
+    mkN({ n: 'Lady Marissa', x: 1040, y: 420, fc: -1, sk: '#e8c0a8', hair: '#3a1a2a', hs: 'bun', c1: '#2f6a8a', c2: '#e8d890', c3: '#1a2a3a', vest: '#d8b84a', prop: 'scroll', chat: ['Gosip terbaru...', 'Sungguh membosankan.'], lines: ['Marissa, bangsawan Aurelia. Pesta musim gugur istana bulan depan, aku harap kau hadir, pahlawan.', 'Konon pahlawan datang dari Aula Kuno. Romantis sekali!'] });
+    mkN({ n: 'Lord Cedric', x: 300, y: 560, fc: 1, sk: '#d9a07a', hair: '#8a5a2a', hs: 'short', beard: '#8a5a2a', hat: 'feather', hc: '#7a1a2a', c1: '#5a3a7a', c2: GOLD, c3: '#2a2a40', vest: '#c8a040', chat: ['Hmph.', 'Anggur yang bagus...'], lines: ['Cedric, penasihat pertanian raja. Panen tahun ini bagus, berkat lentera yang terjaga.', 'Para petani Lembah Lentera mengirim hasil bumi tiap bulan. Ada yang bilang itu lebih bernilai dari emas.'] });
+    sign('Peta Kerajaan', 190, 500, ['Peta besar Kerajaan Aurelia terbentang di meja: ibu kota di tengah, Lembah Lentera di selatan, hutan di sisi barat.', 'Ada tanda lingkaran ungu di bawah Aula Kuno, ditulis tangan: "Sumber bisikan?"']);
+    sign('Globe Dunia', 128, 392, ['Globe tua berlapis emas. Sebagian besar benua belum digambar; para pelaut hanya menandai "Di sini, ada naga."']);
+    sign('Rak Arsip Kerajaan', 1110, 358, ['Gulungan dan buku titah raja sepanjang tiga generasi. Tertulis di punggung buku: "Pajak Lentera", "Perjanjian Hutan", "Kronik Aula Kuno".']);
+    sign('Rak Sejarah', 1110, 616, ['Kronik tentang empat lentera abadi: Aurelius pertama menyalakannya dengan api dari dasar jurang, dan bersumpah menjaganya agar bisikan Abyss tak keluar.']);
+    sign('Lambang Kerajaan', MX, 560, ['Mahkota di atas dua lentera bersilang. Mahkota berarti kewajiban, lentera berarti cahaya yang dijaga bersama. Para raja bersumpah di atas lambang ini.']);
+    N.forEach(n => { n.sleeps = 0 });
+    IN.dyn = N.filter(n => !n.sign).map((n, i) => ({ n, i, get y() { return n.y } }));
+    IN.dust = []; for (let i = 0; i < 44; i++) IN.dust.push({ w: i % 4, u: hash(i, 5, 11), s: .02 + hash(i, 6, 11) * .04, ph: hash(i, 7, 11) * 6 });
+  };
+
+  IN.tick = function (dt) {
+    const T = WORLD.TR; if (T.on) return;
+    guard(() => WORLD.wxTick(dt)); walkAll(IN.npcs, dt); guard(() => chatTick(IN.npcs, dt));
+    if (T.cool <= 0 && p.y > PH - 34 && Math.abs(p.x - MX) < 52 && p.vy > 8) { WORLD.start('gate', { to: 'kingdom', dx: 0, dy: 1, spawn: [AX, PY + 76] }); msg('Keluar dari istana...') }
+  };
+
+  IN.env = function () { };
+  IN.drawBack = function () { IN._L = renderList(IN); const py = p.y + 3; for (const o of IN._L) if (o.y <= py) drawObj(o) };
+  IN.drawFront = function () {
+    const py = p.y + 3; for (const o of IN._L) if (o.y > py) drawObj(o);
+    const vw = W / CAM_Z, vh = H / CAM_Z, night = V.night || 0, day = (1 - night) * (1 - V.rain * .55);
+    g.save(); g.globalCompositeOperation = 'lighter';
+    /* sinar kaca patri (siang) / cahaya bulan (malam) + bercak di lantai */
+    const shaft = (wx, c, a) => { g.fillStyle = 'rgba(' + c + ',' + a + ')'; g.beginPath(); g.moveTo(wx - 28, 130); g.lineTo(wx + 28, 130); g.lineTo(wx + 150, 470); g.lineTo(wx + 60, 470); g.closePath(); g.fill(); g.beginPath(); g.ellipse(wx + 105, 474, 62, 20, 0, 0, 7); g.fill() };
+    if (day > .02) { [[150, '255,200,120'], [310, '255,170,140'], [970, '170,200,255'], [1130, '170,255,190']].forEach(([wx, c]) => shaft(wx, c, .08 * day)); g.fillStyle = 'rgba(255,230,170,' + .06 * day + ')'; g.beginPath(); g.moveTo(MX - 40, 110); g.lineTo(MX + 40, 110); g.lineTo(MX + 120, 420); g.lineTo(MX - 120, 420); g.closePath(); g.fill() }
+    if (night > .05) { const mo = night * (1 - V.rain * .6) * .05; WINX.forEach(wx => shaft(wx, '130,160,255', mo)) }
+    g.restore();
+    g.save(); g.globalCompositeOperation = 'lighter';
+    if (day > .02 || night > .05) for (const d of IN.dust) {       // debu berkilau dalam sinar
+      const u = (t * d.s + d.u) % 1, wx = WINX[d.w], X = wx - 12 + u * 124 + Math.sin(t * .7 + d.ph) * 8, Y = 136 + u * 330 + Math.cos(t * .9 + d.ph) * 4, a = (.25 + .35 * Math.max(0, Math.sin(t * 2 + d.ph))) * (day > .02 ? day : night * .6);
+      g.fillStyle = (day > .02 ? 'rgba(255,240,200,' : 'rgba(170,200,255,') + a + ')'; g.fillRect(Math.round(X), Math.round(Y), 1, 1)
+    }
+    g.restore();
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (const o of IN.objs) {
+      if (o.x < camX - 120 || o.x > camX + vw + 120 || o.y < camY - 60 || o.y > camY + vh + 160) continue;
+      if (o.glow) lightL(o.x, o.y - 32, 56 + Math.sin(t * 7 + o.x) * 3, '255,200,110', .4);
+      if (o.ember) for (let i = 0; i < 6; i++) { const k = (t * .5 + i / 6 + o.x * .01) % 1; g.fillStyle = 'rgba(255,' + (140 + i * 15) + ',60,' + (1 - k) * .9 + ')'; g.fillRect(Math.round(o.x + Math.sin(i * 2.7 + t * 2) * (4 + k * 8)), Math.round(o.y - 48 - k * 38), 1 + (i % 2), 1 + (i % 2)) }
+    }
+    g.restore();
+    for (const o of IN.objs) {
+      if (o.x < camX - 120 || o.x > camX + vw + 120 || o.y < camY - 60 || o.y > camY + vh + 160) continue;
+      if (o.flame) flameAt(o.flame[0], o.flame[1] + 4, 1);
+      if (o.fl) for (const f of o.fl) flameAt(f[0], f[1], 0);
+    }
+    CHAN.forEach(([a, b]) => { if (a < camX - 80 || a > camX + vw + 80 || b < camY - 260 || b > camY + vh + 80) return; chandelier(a, b) });
+    g.save(); g.globalCompositeOperation = 'lighter';
+    lightL(MX, 176, 170, '255,225,160', .2 + .06 * Math.sin(t * 2));
+    for (let i = 0; i < 12; i++) { const a = t * .5 + i * .52, r = 56 + 6 * Math.sin(t + i), px = MX + Math.cos(a) * r, py = 170 + Math.sin(a) * r * .38 - ((t * 8 + i * 9) % 40); g.fillStyle = 'rgba(255,230,140,' + (.3 + .4 * Math.sin(t * 3 + i)) + ')'; g.fillRect(Math.round(px), Math.round(py), 1, 1) }
+    g.restore();
+    drawLabels();
+    g.fillStyle = 'rgba(60,20,40,.08)'; g.fillRect(camX, camY, vw, vh);
+    if (night > .02) { g.fillStyle = 'rgba(8,10,40,' + .22 * night + ')'; g.fillRect(camX, camY, vw, vh) }
+    const vg = g.createRadialGradient(camX + vw / 2, camY + vh / 2, Math.min(vw, vh) * .35, camX + vw / 2, camY + vh / 2, Math.max(vw, vh) * .72); vg.addColorStop(0, 'rgba(20,6,10,0)'); vg.addColorStop(1, 'rgba(20,6,10,.3)'); g.fillStyle = vg; g.fillRect(camX, camY, vw, vh);
+    guard(drawBubbles(IN.npcs));
   };
 })();

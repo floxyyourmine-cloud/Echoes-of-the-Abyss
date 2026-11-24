@@ -279,7 +279,7 @@
     }
   };
   // set ulang area lobby (setLobby hanya memulihkan NPC) â†’ pakai fungsi asli toLobby tanpa pesan
-  function _toLobbyArea() { const m = msgS, mt = msgT; _toLobby(); msgS = m; msgT = mt; fade = 0; walls = WL }
+  function _toLobbyArea() { const m = msgS, mt = msgT; _toLobby(); spawn(); msgS = m; msgT = mt; fade = 0; walls = WL }   // spawn() = pulihkan manekin di camp pelatih (setArea mengosongkan es)
   WORLD.SEQ = SEQ; WORLD._toLobbyArea = _toLobbyArea; // dipakai modul Portal Lobby (akhir file)
   WORLD.start = function (kind, o) {
     if (TR.on || !p || p.dead > 0) return; lockInput(); TR.on = 1; TR.t = 0; TR.k = kind; TR.s1 = TR.s2 = TR.sw = 0; TR.hide = 0; TR.fade = 0; TR.lo = -1; TR.y0 = p.y; Object.assign(TR, o || {}); try { dlg = null } catch (e) { }

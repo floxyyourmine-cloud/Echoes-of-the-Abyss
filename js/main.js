@@ -15536,19 +15536,122 @@ const DF = [
     ])
   ];
   const LV = [
-    ['1', 'Ancient Halls', 'Aula kuno dan Torch Dungeon, lalu bos Morvath.', 'castle'], ['2', 'Lava Depths', 'Kolam lava melukai yang berdiri di atasnya. Musuh +15% HP.', 'flame'], ['3', 'Frost Crypt', 'Ruang es beku. Serangan musuh membuatmu membeku (melambat). Musuh +20% HP.', 'snow']
+    ['1', 'Ancient Halls', 'Aula kuno dan Torch Dungeon, lalu bos Morvath.', 'castle', ['BOS MORVATH', 'COCOK PEMULA']],
+    ['2', 'Lava Depths', 'Kolam lava melukai yang berdiri di atasnya. Musuh +15% HP.', 'flame', ['LAVA MELUKAI', 'HP MUSUH +15%']],
+    ['3', 'Frost Crypt', 'Ruang es beku. Serangan musuh membuatmu membeku (melambat). Musuh +20% HP.', 'snow', ['EFEK BEKU', 'HP MUSUH +20%']]
   ];
+  /* ===== Gaya menu pilih dungeon (disisipkan dari JS agar menu tetap mandiri) ===== */
+  const dcss = document.createElement('style');
+  dcss.textContent = `
+    #dsel{position:fixed;inset:0;z-index:250;display:none;align-items:center;justify-content:center;padding:10px;box-sizing:border-box;overflow:auto;
+      font-family:ui-monospace,'Courier New',monospace;color:#e9ecf5;--th:#8fe8a0;--th2:rgba(143,232,160,.22);
+      background:radial-gradient(ellipse at 50% 38%,var(--th2),rgba(4,6,12,.94) 68%),#05070c;transition:background .45s}
+    #dsel[data-th="1"]{--th:#8fe8a0;--th2:rgba(80,200,120,.26)}
+    #dsel[data-th="2"]{--th:#ff8a3a;--th2:rgba(255,90,20,.30)}
+    #dsel[data-th="3"]{--th:#8fe0ff;--th2:rgba(80,170,255,.28)}
+    #dsel[data-th="e"]{--th:#ffd98a;--th2:rgba(255,200,80,.24)}
+    #dsel.on{display:flex}
+    #dsel::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.55;
+      background:radial-gradient(circle at 15% 85%,var(--th) 0 1px,transparent 2px),radial-gradient(circle at 70% 90%,var(--th) 0 1px,transparent 2px),
+      radial-gradient(circle at 40% 95%,var(--th) 0 1.5px,transparent 2.5px),radial-gradient(circle at 88% 80%,var(--th) 0 1px,transparent 2px);
+      background-size:260px 260px,340px 340px,420px 420px,300px 300px;animation:dsRise 14s linear infinite}
+    @keyframes dsRise{from{background-position:0 0,0 0,0 0,0 0}to{background-position:0 -520px,0 -680px,0 -840px,0 -600px}}
+    #dsel .bx{position:relative;width:min(940px,100%);margin:auto;padding:20px 22px 14px;box-sizing:border-box;border-radius:6px;
+      background:linear-gradient(180deg,rgba(18,22,36,.96),rgba(9,11,20,.97));
+      box-shadow:0 0 0 2px var(--th),0 0 0 5px #0a0d18,0 0 0 6px rgba(255,255,255,.12),0 20px 70px #000,0 0 60px var(--th2);
+      animation:dsIn .38s cubic-bezier(.2,.9,.25,1.05)}
+    @keyframes dsIn{from{transform:translateY(18px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+    #dsel .bx::before,#dsel .bx::after{content:'\u25C6';position:absolute;color:var(--th);font-size:14px;text-shadow:0 0 8px var(--th)}
+    #dsel .bx::before{left:8px;top:6px}#dsel .bx::after{right:8px;bottom:6px}
+    #dsel h2{margin:0 0 4px;text-align:center;font-size:26px;letter-spacing:8px;color:#fff;text-shadow:0 0 14px var(--th),0 2px 0 #000;display:flex;align-items:center;gap:14px}
+    #dsel h2::before,#dsel h2::after{content:'';flex:1;height:2px;background:linear-gradient(90deg,transparent,var(--th))}
+    #dsel h2::after{transform:scaleX(-1)}
+    #dsel .sub{display:flex;align-items:center;gap:10px;margin:14px 0 8px;font-size:11px;letter-spacing:4px;color:#9aa4c0}
+    #dsel .sub::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.25),transparent)}
+    #dsel .sub.sl{margin-top:8px}
+    #dsel .row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    #dsel .cd{position:relative;cursor:pointer;border-radius:6px;overflow:hidden;box-sizing:border-box;--c:#8fe8a0;
+      background:linear-gradient(180deg,#141a2c,#0c101d);border:2px solid rgba(255,255,255,.12);
+      transition:transform .16s,border-color .16s,box-shadow .16s,filter .16s;-webkit-tap-highlight-color:transparent;user-select:none}
+    #dsel .cd:hover{transform:translateY(-3px);border-color:var(--c);filter:none}
+    #dsel .cd:active{transform:translateY(0) scale(.985)}
+    #dsel .row:has(.sel) .cd:not(.sel){filter:saturate(.55) brightness(.78)}
+    #dsel .cd.sel{border-color:var(--c);transform:translateY(-4px);filter:none;
+      box-shadow:0 0 0 1px var(--c),0 0 22px color-mix(in srgb,var(--c) 55%,transparent),0 10px 26px rgba(0,0,0,.6)}
+    #dsel .lv.l1{--c:#8fe8a0}#dsel .lv.l2{--c:#ff8a3a}#dsel .lv.l3{--c:#8fe0ff}
+    /* kartu level */
+    #dsel .lv .bn{position:relative;height:118px;overflow:hidden;border-bottom:2px solid color-mix(in srgb,var(--c) 70%,#000)}
+    #dsel .lv .bn svg{display:block;width:100%;height:100%;image-rendering:pixelated;transform:scale(1);transition:transform .6s ease}
+    #dsel .lv.sel .bn svg{transform:scale(1.12)}
+    #dsel .lv .bn::after{content:'';position:absolute;inset:0;pointer-events:none;
+      background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px),linear-gradient(180deg,transparent 45%,rgba(8,10,18,.85))}
+    #dsel .lv .ic{position:absolute;left:10px;bottom:8px;z-index:2;width:34px;height:34px;color:var(--c);filter:drop-shadow(0 0 6px var(--c)) drop-shadow(0 2px 0 #000)}
+    #dsel .ic svg{display:block;width:100%;height:100%}
+    #dsel .lv .kb{position:absolute;right:8px;top:8px;z-index:2;min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
+      font:700 12px ui-monospace,monospace;color:#cdd3e6;background:rgba(5,7,12,.78);border:1px solid rgba(255,255,255,.35);border-radius:3px}
+    #dsel .lv .ck{position:absolute;left:8px;top:8px;z-index:2;padding:2px 7px;font-size:10px;letter-spacing:2px;font-weight:700;color:#06080e;background:var(--c);border-radius:3px;
+      box-shadow:0 0 12px var(--c);opacity:0;transform:translateY(-6px);transition:.18s}
+    #dsel .lv.sel .ck{opacity:1;transform:none}
+    #dsel .lv .tx{padding:10px 12px 12px}
+    #dsel .lv .tx em{display:block;font-style:normal;font-size:10px;letter-spacing:3px;color:var(--c);opacity:.9}
+    #dsel .lv .tx b{display:block;margin:2px 0 4px;font-size:18px;letter-spacing:1px;color:#fff;text-shadow:0 0 10px color-mix(in srgb,var(--c) 60%,transparent)}
+    #dsel .lv .tx small{display:block;min-height:46px;font-size:11.5px;line-height:1.4;color:#aeb6cf}
+    #dsel .tg{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+    #dsel .tg u{text-decoration:none;font-size:9.5px;letter-spacing:1px;padding:2px 6px;border-radius:3px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
+    /* kartu kesulitan */
+    #dsel .df{padding:12px 14px 12px;text-align:left}
+    #dsel .df::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c);box-shadow:0 0 12px var(--c)}
+    #dsel .df .ic{position:absolute;right:12px;top:10px;width:30px;height:30px;color:var(--c);opacity:.9;filter:drop-shadow(0 0 6px var(--c))}
+    #dsel .df>b{display:block;font-size:20px;letter-spacing:3px;color:var(--c);text-shadow:0 0 10px color-mix(in srgb,var(--c) 55%,transparent);margin-bottom:8px}
+    #dsel .df .st{display:grid;gap:5px;margin-bottom:8px;font-size:10px;letter-spacing:2px;color:#9aa4c0}
+    #dsel .df .st>div{display:flex;align-items:center;justify-content:space-between}
+    #dsel .sg{display:inline-flex;gap:3px}
+    #dsel .sg i{display:block;width:16px;height:8px;background:rgba(255,255,255,.1);transform:skewX(-18deg);transition:background .2s,box-shadow .2s}
+    #dsel .sg i.on{background:var(--c);box-shadow:0 0 6px var(--c)}
+    #dsel .df small{display:block;font-size:11px;line-height:1.4;color:#aeb6cf}
+    /* ringkasan & tombol */
+    #dsel .sum{display:flex;align-items:center;justify-content:center;gap:14px;margin:16px 0 12px;padding:9px 14px;font-size:15px;font-weight:700;letter-spacing:3px;
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);border-radius:4px}
+    #dsel .sum i{display:block;width:8px;height:8px;background:var(--th);transform:rotate(45deg);box-shadow:0 0 8px var(--th)}
+    #dsel .go{display:flex;justify-content:center;gap:14px}
+    #dsel .go button{cursor:pointer;min-width:150px;padding:11px 22px;font:700 15px system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;letter-spacing:1px;color:#cdd3e6;
+      background:#141a2c;border:2px solid rgba(255,255,255,.28);border-radius:4px;transition:transform .14s,filter .14s,box-shadow .14s}
+    #dsel .go button:hover{transform:translateY(-2px);filter:brightness(1.25)}
+    #dsel .go button:active{transform:translateY(1px)}
+    #dsel .go button.p{color:#06080e;background:linear-gradient(180deg,color-mix(in srgb,var(--th) 100%,#fff 25%),var(--th));border-color:#fff;min-width:210px;font-size:18px;letter-spacing:1.5px;text-shadow:none;
+      animation:dsPulse 1.8s ease-in-out infinite}
+    @keyframes dsPulse{50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--th) 40%,transparent),0 0 26px var(--th)}}
+    #dsel .hint{margin-top:12px;text-align:center;font-size:10.5px;letter-spacing:1.5px;color:#7d86a3}
+    #dsel .cd:focus-visible,#dsel .go button:focus-visible{outline:2px dashed #fff;outline-offset:2px}
+    @media(max-width:760px){
+      #dsel{align-items:flex-start}
+      #dsel .bx{padding:14px 12px 10px}
+      #dsel h2{font-size:19px;letter-spacing:4px}
+      #dsel .row{grid-template-columns:1fr;gap:8px}
+      #dsel .lv{display:grid;grid-template-columns:116px 1fr}
+      #dsel .lv .bn{height:auto;min-height:104px;border-bottom:0;border-right:2px solid color-mix(in srgb,var(--c) 70%,#000)}
+      #dsel .lv .ic{width:26px;height:26px}
+      #dsel .lv .tx{padding:8px 10px}#dsel .lv .tx small{min-height:0;font-size:11px}
+      #dsel .lv.sel,#dsel .cd.sel{transform:none}
+      #dsel .hint{display:none}
+      #dsel .go button{min-width:0;flex:1}#dsel .go button.p{min-width:0;flex:2}
+    }
+    @media(max-height:600px) and (min-width:761px){#dsel .lv .bn{height:84px}#dsel .lv .tx small{min-height:0}}
+    @media(prefers-reduced-motion:reduce){#dsel::before,#dsel .bx,#dsel .go button.p{animation:none}#dsel .cd,#dsel .lv .bn svg{transition:none}}`;
+  document.head.appendChild(dcss);
   const el = document.createElement('div');
   el.id = 'dsel';
+  const dpct = v => Math.round(v * 100) + '%', dmul = v => '\u00D7' + (+v.toFixed(2));
   el.innerHTML = '<div class="bx"><h2>PILIH DUNGEON</h2>'
     + '<div class="sub sl">LEVEL</div><div class="row lvr" role="radiogroup" aria-label="Level">'
-    + LV.map(([n, nm, ds, ic]) => '<div class="cd lv l' + n + '" data-l="' + n + '" role="radio" aria-checked="false"><div class="bn">' + SCN[n] + '<i class="ic">' + IC[ic] + '</i></div><div class="tx"><em>LEVEL ' + n + '</em><b>' + nm + '</b><small>' + ds + '</small></div></div>').join('')
+    + LV.map(([n, nm, ds, ic, tg]) => '<div class="cd lv l' + n + '" data-l="' + n + '" role="radio" aria-checked="false" tabindex="0"><div class="bn">' + SCN[n] + '<i class="ic">' + IC[ic] + '</i><span class="kb">' + n + '</span><span class="ck">\u2714 DIPILIH</span></div><div class="tx"><em>LEVEL ' + n + '</em><b>' + nm + '</b><small>' + ds + '</small><div class="tg">' + tg.map(t => '<u>' + t + '</u>').join('') + '</div></div></div>').join('')
     + '</div><div class="sub">KESULITAN</div><div class="row" role="radiogroup" aria-label="Kesulitan">'
-    + DF.map((d, i) => '<div class="cd df" data-d="' + i + '" role="radio" aria-checked="false" style="--c:' + d.c + '"><i class="ic">' + DIC[i] + '</i><b>' + d.n + '</b>'
+    + DF.map((d, i) => '<div class="cd df" data-d="' + i + '" role="radio" aria-checked="false" tabindex="0" style="--c:' + d.c + '"><i class="ic">' + DIC[i] + '</i><b>' + d.n + '</b>'
       + '<div class="st"><div>JUMLAH' + seg(d.cnt) + '</div><div>NYAWA' + seg(d.hp) + '</div><div>BAHAYA' + seg(d.dmg) + '</div></div>'
-      + '<small>' + d.d + '</small></div>').join('')
-    + '</div><div class="sum" id="dsSum"></div><div class="go"><button id="dsBack">BATAL</button><button class="p" id="dsGo">MASUK ▶</button></div>'
-    + '<div class="hint">← → KESULITAN · 1 2 3 LEVEL · E ENDLESS · ENTER MASUK · ESC BATAL</div></div>';
+      + '<small>' + d.d + '</small>'
+      + '<div class="tg"><u>HP MUSUH ' + dmul(d.hp) + '</u><u>DAMAGE ' + dmul(d.dmg) + '</u><u>HEAL ' + dpct(DFX[i].heal) + '</u><u>ULT ' + dpct(DFX[i].ult) + '</u></div></div>').join('')
+    + '</div><div class="sum" id="dsSum"></div><div class="go"><button id="dsBack">BATAL</button><button class="p" id="dsGo">MASUK \u25B6</button></div>'
+    + '<div class="hint">1 2 3 LEVEL \u00B7 \u2190 \u2192 KESULITAN \u00B7 ENTER MASUK \u00B7 ESC BATAL</div></div>';
   document.body.appendChild(el);
   const LNM = ['', 'Ancient Halls', 'Lava Depths', 'Frost Crypt'], LCC = ['', '#8fe8a0', '#ff8a3a', '#8fe0ff'], sumEl = el.querySelector('#dsSum');
   window.dsSum = () => {
@@ -15562,7 +15665,7 @@ const DF = [
     const c = e.target.closest('.cd'); if (!c)
       return; if (c.dataset.l)
       LVL = +c.dataset.l; if (c.dataset.d)
-      DIFF = +c.dataset.d; sync();
+      DIFF = +c.dataset.d; try { SFX.blip(c.dataset.l ? 360 + LVL * 90 : 300 + DIFF * 110); } catch (e) { } sync();
   });
   const clr = () => {
     try {
@@ -15589,23 +15692,23 @@ const DF = [
     else if (e.code == 'Enter' || e.code == 'Space')
       document.getElementById('dsGo').click();
     else if (e.code == 'Digit1') {
-      LVL = 1;
+      LVL = 1; try { SFX.blip(450); } catch (x) { }
       sync();
     }
     else if (e.code == 'Digit2') {
-      LVL = 2;
+      LVL = 2; try { SFX.blip(540); } catch (x) { }
       sync();
     }
     else if (e.code == 'Digit3') {
-      LVL = 3;
+      LVL = 3; try { SFX.blip(630); } catch (x) { }
       sync();
     }
     else if (e.code == 'ArrowLeft' || e.code == 'KeyA') {
-      DIFF = Math.max(0, DIFF - 1);
+      DIFF = Math.max(0, DIFF - 1); try { SFX.blip(300 + DIFF * 110); } catch (x) { }
       sync();
     }
     else if (e.code == 'ArrowRight' || e.code == 'KeyD') {
-      DIFF = Math.min(2, DIFF + 1);
+      DIFF = Math.min(2, DIFF + 1); try { SFX.blip(300 + DIFF * 110); } catch (x) { }
       sync();
     }
   }, true);
