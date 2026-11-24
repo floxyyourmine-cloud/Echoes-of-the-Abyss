@@ -1647,18 +1647,109 @@
     return { img: c, ox: 13, oy: 52 };
   }
 
+  /* ===== MONUMEN RAJA AURELIUS (versi megah) =====
+     Kolam marmer bertingkat bertepi emas, empat pilar lentera, dua tiang panji,
+     panggung berundak, alas berprasasti, dan patung raja bermahkota yang mengangkat lentera abadi. */
+  const MON = { w: 220, h: 240, cx: 110, oy: 212, by: 200 };
+  const MON_PIL = [[32, 188], [188, 188], [52, 220], [168, 220]];   // pilar lentera: [x, alas y] dalam koordinat sprite
   function monumentSprite() {
-    const [c, q] = mkCv(128, 142), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = 64;
-    ell(q, 'rgba(0,0,0,.28)', cx, 126, 58, 18); ell(q, OLC, cx, 108, 54, 20); ell(q, '#8a867a', cx, 107, 52, 18.5); ell(q, '#b4aea0', cx, 105, 50, 17);
-    ell(q, '#7e7a70', cx, 105, 45, 14.5); ell(q, '#2a78a0', cx, 104, 43, 13.5); ell(q, '#3a9ac8', cx, 103, 39, 11.5); ell(q, '#6ac8f0', cx - 6, 102, 20, 4.5);
-    Q(OLC, 42, 74, 44, 34); Q('#a29e92', 43, 75, 42, 32); Q(SHC, 43, 75, 12, 32); Q(SHD, 74, 75, 11, 32); Q(OLC, 38, 66, 52, 11); Q('#b9b5a8', 39, 67, 50, 8); Q(SHC, 39, 67, 50, 2);
-    Q(GOLD, 44, 84, 40, 2); crownC(q, cx, 90, GOLD);
-    Q(OLC, 54, 40, 20, 28); Q('#a8883a', 55, 41, 18, 26); Q(GOLD, 55, 41, 8, 26); Q('#fff0a0', 55, 41, 3, 26);              // kaki & jubah emas
-    Q(OLC, 52, 22, 24, 24); Q('#a8883a', 53, 23, 22, 22); Q(GOLD, 53, 23, 12, 22); Q('#fff0a0', 53, 23, 3, 22); Q(CR, 53, 33, 22, 3);
-    Q(OLC, 56, 8, 16, 16); Q('#e8c860', 57, 9, 14, 14); Q('#fff0a0', 57, 9, 5, 14);
-    Q(OLC, 55, 3, 18, 7); Q(GOLD, 56, 4, 16, 5); Q(GOLD, 56, 0, 3, 5); Q(GOLD, 62, -1, 4, 6); Q(GOLD, 69, 0, 3, 5);
-    Q(OLC, 76, 4, 5, 38); Q('#e8e4d4', 77, 5, 3, 36); Q(OLC, 72, 40, 13, 5); Q(GOLD, 73, 41, 11, 3);
-    return { img: c, ox: cx, oy: 120 };
+    const [c, q] = mkCv(MON.w, MON.h), Q = (col, a, b, w, h) => Qc(q, col, a, b, w, h), cx = MON.cx;
+    const pil = (px, py, pole) => {
+      Q(OLC, px - 6, py - 3, 12, 5); Q('#8a867a', px - 5, py - 2, 10, 3);
+      Q(OLC, px - 4, py - 34, 8, 32); Q('#a29e92', px - 3, py - 33, 6, 30); Q(SHC, px - 3, py - 33, 2, 30); Q(SHD, px + 1, py - 33, 2, 30); Q(GOLD, px - 3, py - 20, 6, 1);
+      Q(OLC, px - 7, py - 39, 14, 6); Q('#b9b5a8', px - 6, py - 38, 12, 4); Q(GOLD, px - 6, py - 35, 12, 1);
+      Q(OLC, px - 4, py - 53, 8, 14); Q(GOLD, px - 3, py - 52, 6, 12); Q('#ffd870', px - 2, py - 51, 4, 9); Q('#fff3b8', px - 2, py - 51, 2, 4);
+      Q(OLC, px - 5, py - 55, 10, 3); Q(GOLD, px - 4, py - 54, 8, 2);
+      if (pole) { Q(OLC, px - 1, py - 82, 3, 28); Q('#6a5a3a', px, py - 81, 1, 26); Q(GOLD, px - 1, py - 84, 3, 3) } else Q(GOLD, px - 1, py - 59, 2, 4);
+    };
+    /* bayangan & kolam bertingkat */
+    ell(q, 'rgba(0,0,0,.30)', cx, 218, 102, 19);
+    ell(q, OLC, cx, 206, 97, 32); ell(q, '#6e6a60', cx, 205, 95.5, 30.5);
+    ell(q, OLC, cx, 200, 94, 30); ell(q, GOLD, cx, 200, 93, 29); ell(q, '#b9b5a8', cx, 200, 91.5, 27.5); ell(q, '#a29e92', cx, 200, 88, 25.5); ell(q, '#7e7a70', cx, 200, 85, 24);
+    ell(q, '#2a78a0', cx, 200, 83, 22.5); ell(q, '#3a9ac8', cx, 200, 78, 19.5); ell(q, '#6ac8f0', cx - 14, 197, 40, 5); ell(q, '#8ae0ff', cx - 18, 196, 14, 2);
+    for (let i = 0; i < 28; i++) { const a = i * TAU / 28; Q(i % 2 ? '#8a867a' : '#cfcbbd', cx + Math.cos(a) * 90 - 2, 200 + Math.sin(a) * 27.5 - 1, 4, 2) }   // ukiran batu tepi kolam
+    /* pilar belakang + tiang panji */
+    pil(MON_PIL[0][0], MON_PIL[0][1], 1); pil(MON_PIL[1][0], MON_PIL[1][1], 1);
+    /* panggung berundak */
+    ell(q, OLC, cx, 196, 58, 19); ell(q, '#8a867a', cx, 195, 56.5, 18); ell(q, '#b9b5a8', cx, 193, 55, 16.5); ell(q, GOLD, cx, 193, 50, 13.5); ell(q, '#b9b5a8', cx, 193, 49, 12.5);
+    ell(q, OLC, cx, 191, 50, 15); ell(q, '#a29e92', cx, 190, 48.5, 14); ell(q, '#cfcbbd', cx, 188, 47, 12.5);
+    /* alas tingkat 1 */
+    Q(OLC, cx - 39, 166, 78, 27); Q('#a29e92', cx - 38, 167, 76, 25); Q(SHC, cx - 38, 167, 24, 25); Q(SHD, cx + 16, 167, 22, 25); Q(GOLD, cx - 38, 182, 76, 2);
+    for (let i = 0; i < 6; i++) Q('#6a665c', cx - 34 + i * 13, 186, 4, 5);
+    [-30, 16].forEach(dx => { Q(OLC, cx + dx, 170, 14, 11); Q(CR, cx + dx + 1, 171, 12, 9); Q(GOLD, cx + dx + 1, 171, 12, 1); Q(GOLD, cx + dx + 5, 174, 4, 4) });
+    crownC(q, cx, 172, GOLD);
+    Q(OLC, cx - 43, 157, 86, 11); Q('#b9b5a8', cx - 42, 158, 84, 8); Q(SHC, cx - 42, 158, 84, 2); Q(GOLD, cx - 42, 165, 84, 1);
+    /* alas tingkat 2 + prasasti */
+    Q(OLC, cx - 30, 116, 60, 42); Q('#a8a496', cx - 29, 117, 58, 40); Q(SHC, cx - 29, 117, 18, 40); Q(SHD, cx + 13, 117, 16, 40);
+    crownC(q, cx, 121, GOLD);
+    Q(OLC, cx - 17, 132, 34, 22); Q('#5a4a2a', cx - 16, 133, 32, 20); Q(GOLD, cx - 16, 133, 32, 1); Q(GOLD, cx - 16, 152, 32, 1);
+    Q(GOLD, cx - 11, 138, 22, 1); Q(GOLD, cx - 9, 142, 18, 1); Q(GOLD, cx - 11, 146, 22, 1);
+    for (let i = 0; i < 5; i++) { Q('#3a7a3a', cx - 25, 134 + i * 4, 4, 2); Q('#3a7a3a', cx + 21, 134 + i * 4, 4, 2); Q('#5aa05a', cx - 25, 134 + i * 4, 2, 1); Q('#5aa05a', cx + 21, 134 + i * 4, 2, 1) }
+    Q(OLC, cx - 34, 108, 68, 10); Q('#b9b5a8', cx - 33, 109, 66, 7); Q(SHC, cx - 33, 109, 66, 2); Q(GOLD, cx - 33, 115, 66, 1);
+    /* lingkaran cahaya di belakang patung */
+    ell(q, 'rgba(255,230,140,.10)', cx, 38, 38, 38); ell(q, 'rgba(255,230,140,.14)', cx, 38, 30, 30);
+    for (let i = 0; i < 28; i++) { const a = i * TAU / 28, r1 = 22, r2 = i % 2 ? 36 : 30; for (let r = r1; r <= r2; r += 2) Q('rgba(244,214,112,' + (i % 2 ? .5 : .85) + ')', cx + Math.cos(a) * r, 38 + Math.sin(a) * r * .96, 1, 1) }
+    for (let i = 0; i < 40; i++) { const a = i * TAU / 40; Q('rgba(255,236,150,.9)', cx + Math.cos(a) * 20, 38 + Math.sin(a) * 19.5, 1, 1) }
+    /* jubah */
+    for (let j = 0; j < 62; j++) { const wj = Math.round(26 + j * .5), x0 = cx - wj / 2, y = 46 + j; Q(OLC, x0 - 1, y, wj + 2, 1); Q('#8a6e28', x0, y, wj, 1); Q('#a8883a', x0, y, wj / 3, 1); if (j % 9 < 2) Q('#6a5018', x0 + wj * .62, y, 2, 1); Q('#6a5018', x0 + wj - 3, y, 3, 1) }
+    Q(GOLD, cx - 21, 106, 42, 2);
+    /* kaki, badan */
+    Q(OLC, cx - 13, 76, 26, 34); Q('#a8883a', cx - 12, 77, 24, 32); Q(GOLD, cx - 12, 77, 11, 32); Q('#fff0a0', cx - 12, 77, 3, 32); Q('#8a6e28', cx - 1, 80, 1, 28); Q('#8a6e28', cx + 4, 78, 1, 30); Q('#8a6e28', cx + 8, 77, 4, 32);
+    Q(OLC, cx - 12, 106, 10, 5); Q('#8a6e28', cx - 11, 107, 8, 3); Q(OLC, cx + 2, 106, 10, 5); Q('#8a6e28', cx + 3, 107, 8, 3);
+    Q(OLC, cx - 13, 44, 26, 34); Q('#a8883a', cx - 12, 45, 24, 32); Q(GOLD, cx - 12, 45, 13, 32); Q('#fff0a0', cx - 12, 45, 3, 32); Q('#8a6e28', cx + 8, 45, 4, 32);
+    Q(OLC, cx - 4, 50, 8, 9); Q(CR, cx - 3, 51, 6, 7); Q(GOLD, cx - 1, 52, 2, 5);
+    Q(CR, cx - 12, 66, 24, 3); Q(GOLD, cx - 3, 65, 6, 5);
+    Q(OLC, cx - 19, 44, 9, 9); Q(GOLD, cx - 18, 45, 7, 7); Q('#fff0a0', cx - 18, 45, 2, 7); Q(OLC, cx + 10, 44, 9, 9); Q('#a8883a', cx + 11, 45, 7, 7); Q('#8a6e28', cx + 15, 45, 3, 7);
+    /* tangan kiri + pedang */
+    Q(OLC, cx - 25, 74, 4, 34); Q('#e8e4d4', cx - 24, 75, 2, 32); Q('#ffffff', cx - 24, 75, 1, 32);
+    Q(OLC, cx - 29, 70, 12, 4); Q(GOLD, cx - 28, 71, 10, 2); Q(OLC, cx - 25, 60, 4, 11); Q('#6a5a3a', cx - 24, 61, 2, 9); Q(OLC, cx - 26, 56, 6, 5); Q(GOLD, cx - 25, 57, 4, 3);
+    Q(OLC, cx - 20, 53, 7, 12); Q('#a8883a', cx - 19, 54, 5, 10); Q(OLC, cx - 26, 63, 8, 6); Q('#a8883a', cx - 25, 64, 6, 4);
+    /* kepala, janggut, mahkota */
+    Q(OLC, cx - 8, 28, 16, 17); Q('#e8c860', cx - 7, 29, 14, 15); Q('#fff0a0', cx - 7, 29, 5, 15); Q('#b89a3a', cx + 3, 29, 4, 15);
+    Q('#6a5a1a', cx - 4, 35, 2, 1); Q('#6a5a1a', cx + 1, 35, 2, 1); Q('#c8a840', cx - 1, 36, 2, 3);
+    Q(OLC, cx - 7, 40, 14, 8); Q('#c8a840', cx - 6, 41, 12, 6); Q('#e8c860', cx - 6, 41, 4, 6); Q('#a8883a', cx + 2, 42, 4, 5);
+    Q(OLC, cx - 9, 22, 18, 8); Q(GOLD, cx - 8, 23, 16, 5); Q('#fff0a0', cx - 8, 23, 16, 1);
+    [[-8, 4], [-4, 7], [-1, 9], [3, 7], [6, 4]].forEach(([dx, h]) => { Q(OLC, cx + dx - 1, 22 - h - 1, 4, h + 2); Q(GOLD, cx + dx, 22 - h, 2, h + 1); Q('#fff0a0', cx + dx, 22 - h - 1, 2, 1) });
+    Q('#6ac8f0', cx - 6, 25, 2, 2); Q(CR, cx - 1, 25, 2, 2); Q('#6ac8f0', cx + 4, 25, 2, 2);
+    /* tangan kanan terangkat membawa lentera abadi */
+    Q(OLC, cx + 15, 24, 7, 28); Q('#a8883a', cx + 16, 25, 5, 26); Q(GOLD, cx + 16, 25, 2, 26);
+    Q(OLC, cx + 16, 19, 8, 7); Q(GOLD, cx + 17, 20, 6, 5);
+    Q(OLC, cx + 14, 3, 12, 17); Q(GOLD, cx + 15, 4, 10, 15); Q('#ffd870', cx + 16, 6, 8, 10); Q('#fff3b8', cx + 17, 7, 3, 5); Q('#a8883a', cx + 19, 6, 1, 10);
+    Q(OLC, cx + 13, 1, 14, 4); Q(GOLD, cx + 14, 2, 12, 2); Q(GOLD, cx + 18, 0, 4, 1);
+    /* pilar depan */
+    pil(MON_PIL[2][0], MON_PIL[2][1], 0); pil(MON_PIL[3][0], MON_PIL[3][1], 0);
+    return { img: c, ox: cx, oy: MON.oy };
+  }
+
+  /* efek hidup monumen: riak air, pancuran dari pilar depan, kilau air */
+  function fountainFx(o) {
+    const cx0 = o.x, cy0 = o.y - (MON.oy - MON.by), PI = Math.PI;
+    g.strokeStyle = 'rgba(220,250,255,.8)'; g.lineWidth = 1;
+    for (let i = 0; i < 4; i++) { const k = (t * .3 + i / 4) % 1; g.globalAlpha = Math.sin(k * PI) * .75; g.beginPath(); g.ellipse(cx0, cy0, 60 + k * 21, 17 + k * 5.5, 0, 0, PI); g.stroke() }
+    g.globalAlpha = 1;
+    for (const sd of [-1, 1]) {      // pancuran melengkung dari pilar depan ke kolam
+      const sx = cx0 + sd * 58, sy = cy0 + 6, ex = cx0 + sd * 38, ey = cy0 + 17;
+      for (let i = 0; i < 8; i++) { const u = (t * .8 + i / 8) % 1, X = sx + (ex - sx) * u, Y = sy + (ey - sy) * u - 4 * 16 * u * (1 - u); g.globalAlpha = .5 + .5 * Math.sin(u * PI); Rr(i % 3 ? '#bfeaff' : '#ffffff', X, Y, 2, 2) }
+      g.globalAlpha = 1; const k = (t * .8) % 1; g.strokeStyle = 'rgba(230,252,255,' + (1 - k) * .8 + ')'; g.beginPath(); g.ellipse(ex, ey, 2 + k * 9, .8 + k * 3, 0, 0, 7); g.stroke();
+    }
+    g.globalAlpha = 1;
+    for (let i = 0; i < 10; i++) if (Math.sin(t * 2.3 + i * 1.7) > .75) { const a = .15 * PI + i * .28 * PI / 2 * 1.0, X = cx0 + Math.cos(a) * 70, Y = cy0 + Math.sin(a) * 18; Rr('#e8fbff', X, Y, 2, 1) }
+  }
+  /* cahaya monumen (lentera raja, halo, pilar, kolam, butir emas) - digambar aditif agar menyala di malam hari */
+  function monumentGlow() {
+    const o = K.objs.find(q => q.fount); if (!o) return;
+    const vw = W / CAM_Z, vh = H / CAM_Z;
+    if (o.x < camX - 300 || o.x > camX + vw + 300 || o.y < camY - 60 || o.y > camY + vh + 340) return;
+    const n = V.night || 0, ox = o.x - MON.cx, oy = o.y - MON.oy, fl = Math.sin(t * 7) * 3 + Math.sin(t * 13.3) * 1.5;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    lightL(ox + MON.cx + 20, oy + 11, 56 + fl + 30 * n, '255,215,120', .32 + .3 * n);
+    lightL(o.x, oy + 38, 46 + 3 * Math.sin(t * 2), '255,230,150', .14 + .16 * n);
+    MON_PIL.forEach(([a, b], i) => lightL(ox + a, oy + b - 46, 24 + 4 * n + Math.sin(t * 6 + i * 1.7) * 1.5, '255,205,120', .2 + .3 * n));
+    lightL(o.x, o.y - 12, 112, '90,200,255', .07 + .16 * n);
+    g.fillStyle = 'rgba(255,225,140,' + (.03 + .05 * n) + ')';
+    for (let i = 0; i < 8; i++) { const a = t * .06 + i * TAU / 8, cxh = o.x, cyh = oy + 38; g.beginPath(); g.moveTo(cxh, cyh); g.lineTo(cxh + Math.cos(a - .08) * 70, cyh + Math.sin(a - .08) * 70); g.lineTo(cxh + Math.cos(a + .08) * 70, cyh + Math.sin(a + .08) * 70); g.closePath(); g.fill() }
+    for (let i = 0; i < 16; i++) { const u = (t * .08 + i / 16) % 1, a = i * 2.4 + t * .5, r = 28 + 10 * Math.sin(i * 3.1 + t), X = o.x + Math.cos(a) * r, Y = oy + 125 - u * 125; g.fillStyle = 'rgba(255,232,140,' + Math.sin(u * Math.PI) * (.45 + .4 * Math.sin(t * 3 + i)) + ')'; g.fillRect(Math.round(X), Math.round(Y), 1 + (i % 3 === 0), 1 + (i % 3 === 0)) }
+    g.restore();
   }
 
   /* ---------- gambar objek ---------- */
@@ -1674,11 +1765,7 @@
     if (!o.img) return;
     g.drawImage(o.img, o.x - o.ox, o.y - o.oy);
     if (o.flags) for (const f of o.flags) flag(f[0], f[1], f[2], f[3]);
-    if (o.fount) {
-      const fy = o.y - 17; g.strokeStyle = 'rgba(220,250,255,.75)';
-      for (let i = 0; i < 3; i++) { const k = (t * .5 + i / 3) % 1; g.globalAlpha = (1 - k) * .8; g.beginPath(); g.ellipse(o.x, fy, 6 + k * 30, 2.4 + k * 10, 0, 0, 7); g.stroke() } g.globalAlpha = 1;
-      for (let i = 0; i < 5; i++) if (Math.sin(t * 2 + i * 1.9) > .82) Rr('#fff0a0', o.x - 28 + i * 14, fy - 4 + Math.sin(i) * 4, 2, 2);
-    }
+    if (o.fount) fountainFx(o);
   }
   const person = (...a) => WORLD.person(...a);
 
@@ -1779,8 +1866,8 @@
     x.strokeStyle = 'rgba(216,184,74,.7)'; x.lineWidth = 1; x.beginPath(); for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + TAU / 16; x.moveTo(P.x + Math.cos(a) * 110, P.y + Math.sin(a) * 40); x.lineTo(P.x + Math.cos(a) * (P.rx - 18), P.y + Math.sin(a) * (P.ry - 11)) } x.stroke();
     for (let i = 0; i < 56; i++) { const a = i * TAU / 56, sx = P.x + Math.cos(a) * (P.rx - 1), sy = P.y + Math.sin(a) * (P.ry - 1); R(i % 2 ? '#b4aea0' : '#8a867a', sx - 3, sy - 2, 6, 4); R('rgba(0,0,0,.25)', sx - 3, sy + 1, 6, 1) }
     noGo(P.x - P.rx - 20, P.y - P.ry - 20, P.rx * 2 + 40, P.ry * 2 + 40);
-    spr(monumentSprite(), AX, 718, [AX - 52, 690, 104, 30], { fount: 1 });
-    N.push({ n: 'Monumen Raja Aurelius', x: AX, y: 752, sign: 1, rng: 56, verb: 'Baca', _bn: Infinity, lines: ['Raja Aurelius I, Pemersatu Lembah-Lembah. Ia membangun jalan, jembatan, dan menara lentera agar tak seorang pun tersesat dalam gelap.', 'Di dasar patung terukir: "Terang yang dijaga bersama tak akan padam."'] });
+    spr(monumentSprite(), AX, 718, [AX - 90, 676, 180, 62], { fount: 1, flags: [[AX + MON_PIL[0][0] - MON.cx + 2, 718 + MON_PIL[0][1] - 80 - MON.oy, CR, 22], [AX + MON_PIL[1][0] - MON.cx + 2, 718 + MON_PIL[1][1] - 80 - MON.oy, BLU, 22]] });
+    N.push({ n: 'Monumen Raja Aurelius', x: AX, y: 764, sign: 1, rng: 62, verb: 'Baca', _bn: Infinity, lines: ['Raja Aurelius I, Pemersatu Lembah-Lembah. Ia membangun jalan, jembatan, dan menara lentera agar tak seorang pun tersesat dalam gelap.', 'Di dasar patung terukir: "Terang yang dijaga bersama tak akan padam."', 'Di tangan kanan sang raja terangkat lentera abadi yang menyala sepanjang malam, lambang janji Aurelius kepada rakyatnya.'] });
 
     /* tembok kota (gaya sama dengan benteng desa, warna kerajaan) */
     const BAN = [CR, BLU, CR, GOLD];
@@ -1931,6 +2018,7 @@
     g.save(); g.globalCompositeOperation = 'lighter';
     for (const o of K.objs) { if (o.x < camX - 300 || o.x > camX + vw + 300 || o.y < camY - 60 || o.y > camY + vh + 340) continue; if (o.glow) lightL(o.x, o.y - 32, 52 + Math.sin(t * 7 + o.x) * 2, '255,200,110', .36); if (o.lamp) o.lamp.forEach(([a, b]) => lightL(a, b + 4, 26, '255,200,110', .2)) }
     g.restore();
+    guard(monumentGlow);
     for (const o of K.objs) { if (!o.chim || o.x < camX - 100 || o.x > camX + vw + 100 || o.y < camY - 60 || o.y > camY + vh + 140) continue; const sm = o.chim; for (let i = 0; i < 4; i++) { const k = (t * .3 + i / 4 + (o.x % 7) * .1) % 1; g.globalAlpha = (1 - k) * .45; g.fillStyle = '#d8d4dc'; const s = 3 + k * 5; g.fillRect(Math.round(sm[0] + Math.sin(k * 5 + i) * 4 + k * 10), Math.round(sm[1] - k * 34), s, s) } g.globalAlpha = 1 }
     drawLabels();
     g.save(); g.globalCompositeOperation = 'lighter'; for (const f of K.ff) { const X = camX + (((f.bx * vw - t * f.sx * .5 - camX * .15) % vw) + vw) % vw, Y = camY + (((f.by * vh + Math.sin(t * .8 + f.ph) * 12) % vh) + vh) % vh, a = (.3 + .5 * Math.max(0, Math.sin(t * 2 + f.ph))) * V.night; g.fillStyle = 'rgba(255,225,140,' + a + ')'; g.fillRect(Math.round(X), Math.round(Y), 2, 2) } g.restore();

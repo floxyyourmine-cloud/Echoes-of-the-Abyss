@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   const { TAU, clamp, lerp, E, mkRng, mkCv, rc, disc, ell, hash, vnoise, h2r, mixc, dense, distPoly, person, art, S: W_ } = WORLD;
-  const FW = 1800, FH = 720;
+  const FW = 1800, FH0 = 720, FH = 1400;   // FH0 = tinggi hutan lama (isinya tidak berubah), FH = tinggi total setelah diperluas ke selatan
   const MAIN = [[210, 96], [210, 168], [236, 236], [330, 290], [470, 312], [600, 292], [700, 276], [790, 298], [870, 302], [960, 322], [1060, 362], [1170, 378], [1290, 350], [1410, 322], [1530, 326], [1650, 346], [1800, 348]];
   const CAMP = [[470, 312], [500, 372], [540, 430], [565, 468]];
   const SHR = [[1060, 362], [1030, 300], [1010, 236], [1008, 192]];
@@ -23,8 +23,37 @@
   };
   const MAINd = dense(MAIN, 4), CAMPd = dense(CAMP, 4), SHRd = dense(SHR, 4);
   const cliffRect = [30, 0, 362, 94];
+  /* ===== PERLUASAN SELATAN (y 720 -> 1400): Hutan Lumut, Lembah Paku, Danau Cermin =====
+     Koordinat wilayah lama TIDAK berubah (kamp, kuil, pintu dungeon, gerbang desa tetap di tempat semula).
+     Peta hanya bertambah ke selatan, sehingga gerbang timur (x = FW, y = 348) tetap bekerja. */
+  const BR2 = [930, 996], BXA = 786, BXB = 874;                       // jembatan kedua (sungai selatan)
+  const LAKE = { x: 830, y: 1318, rx: 214, ry: 62 };                  // Danau Cermin: muara sungai
+  const MP = { x: 1226, y: 1196, rx: 92, ry: 42 };                    // Kolam Kabut
+  const SC = { x: 320, y: 1072, r: 96 };                              // Lingkaran Batu Tua
+  const HG = { x: 118, y: 1296, r: 78 };                              // Taman Peri (tersembunyi)
+  const WT = { x: 1452, y: 1066, r: 84 };                             // Menara Pengawas Runtuh
+  const GH = { x: 1676, y: 1318, r: 78 };                             // Gua Jamur Bercahaya (tersembunyi)
+  const NK = { x: 160, y: 884, r: 46 };                               // Relung Sunyi (tersembunyi)
+  const SWP = { x: 596, y: 1190, r: 104 };                            // Rawa Lumut (genangan, bisa dilewati)
+  const RIVER_END = LAKE.y - LAKE.ry + 12;
+  const PTH = [
+    { id: 'PA', w: PS, P: [[575, 520], [588, 600], [590, 680], [574, 760], [542, 838], [504, 902], [470, 962], [432, 1016]] },
+    { id: 'PB1', w: PW, P: [[1170, 378], [1128, 440], [1086, 520], [1072, 610], [1076, 700], [1094, 780], [1096, 850], [1060, 912], [998, 950], [930, 962], [874, 963]] },
+    { id: 'PB2', w: PW, P: [[786, 963], [730, 968], [660, 976], [590, 960], [520, 934], [504, 902]] },
+    { id: 'T1', w: PS, P: [[470, 962], [430, 1000], [388, 1030], [350, 1056]] },
+    { id: 'T2', w: PS - 8, P: [[290, 1100], [236, 1130], [178, 1172], [138, 1226], [124, 1262]] },
+    { id: 'T3', w: PS, P: [[504, 902], [520, 990], [552, 1070], [604, 1140], [672, 1196], [742, 1232], [790, 1244]] },
+    { id: 'T4', w: PS, P: [[1096, 850], [1158, 876], [1226, 896], [1296, 928], [1360, 974], [1412, 1020], [1440, 1052]] },
+    { id: 'T5', w: PS - 8, P: [[1470, 1100], [1494, 1160], [1536, 1212], [1590, 1258], [1640, 1290], [1668, 1304]] },
+    { id: 'T6', w: PS, P: [[1060, 912], [1044, 990], [1050, 1070], [1096, 1136], [1100, 1160]] },
+    { id: 'T7', w: PS, P: [[1340, 1184], [1400, 1186], [1470, 1178], [1494, 1160]] },
+    { id: 'T8', w: PS - 10, P: [[542, 838], [486, 826], [420, 816], [350, 812], [282, 826], [222, 850], [180, 872]] }
+  ];
+  PTH.forEach(o => o.d = dense(o.P, 4));
+  const GLADES = [SC, HG, WT, GH, NK];
+  let NEWGEO = false;
   function free(x, y, m) {
-    if (x < 16 || x > FW - 16 || y < 18 || y > FH - 18) return false;
+    if (x < 16 || x > FW - 16 || y < 18 || y > (NEWGEO ? FH : FH0) - 18) return false;   // batas bawah lama dipertahankan saat isi hutan lama dibuat (urutan RNG tetap sama)
     if (x > cliffRect[0] - 10 - m && x < cliffRect[0] + cliffRect[2] + 10 + m && y < 128 + m) return false;
     if (distPoly(x, y, MAINd) < PW / 2 + m || distPoly(x, y, CAMPd) < PS / 2 + m || distPoly(x, y, SHRd) < PS / 2 + m) return false;
     if (Math.abs(x - rx(y)) < rhw(y) + 14 + m) return false;
@@ -33,37 +62,46 @@
     if (x > FW - 150 && Math.abs(y - 348) < 80) return false;
     if (CHESTS.some(c => Math.hypot(x - c.x, y - c.y) < 26 + m)) return false;
     if (SIGNP.some(c => Math.hypot(x - c[0], y - c[1] - 14) < 44 + m)) return false;
+    if (NEWGEO) {   // wilayah selatan (aktif setelah isi hutan lama selesai dibuat)
+      for (const o of PTH) if (distPoly(x, y, o.d) < o.w / 2 + m) return false;
+      if (GLADES.some(c => Math.hypot(x - c.x, y - c.y) < c.r + m)) return false;
+      if (((x - LAKE.x) / (LAKE.rx + 14 + m)) ** 2 + ((y - LAKE.y) / (LAKE.ry + 14 + m)) ** 2 < 1) return false;
+      if (((x - MP.x) / (MP.rx + 12 + m)) ** 2 + ((y - MP.y) / (MP.ry + 12 + m)) ** 2 < 1) return false;
+      if (x > BXA - 6 - m && x < BXB + 6 + m && y > BR2[0] - 10 - m && y < BR2[1] + 10 + m) return false;
+      if (Math.hypot(x - SWP.x, (y - SWP.y) * 1.6) < SWP.r * .5 + m) return false;
+    }
     return true;
   }
   F.free = free;
-  F.geo = { MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect };   // dipakai modul kedalaman
+  F.geo = { MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect, FH0, FH, LAKE, MP, SC, HG, WT, GH, NK, SWP, BR2, RIVER_END,
+    paths: [{ d: MAINd, w: PW }, { d: CAMPd, w: PS }, { d: SHRd, w: PS }, ...PTH.map(o => ({ d: o.d, w: o.w }))], ponds: [POND, MP, LAKE], glades: [SC, WT, NK, HG] };   // dipakai modul kedalaman
 
   F.build = function () {
     const rng = mkRng(2024), [bg, x] = mkCv(FW, FH); F.bg = bg;
     /* --- tanah rumput (per-piksel, cepat lewat ImageData) --- */
-    const id = x.createImageData(FW, FH), d = id.data, GD = h2r('#366e30'), GL = h2r('#68a846'), GY = h2r('#80a03c');
-    for (let yy = 0; yy < FH; yy++) for (let xx = 0; xx < FW; xx++) {
+    const id = x.createImageData(FW, FH0), d = id.data, GD = h2r('#366e30'), GL = h2r('#68a846'), GY = h2r('#80a03c');
+    for (let yy = 0; yy < FH0; yy++) for (let xx = 0; xx < FW; xx++) {
       const v = vnoise(xx / 64, yy / 64, 1) * .62 + vnoise(xx / 15, yy / 15, 2) * .38, yl = vnoise(xx / 170, yy / 170, 3), sp = hash(xx, yy, 9);
       let c = mixc(GD, GL, v); c = mixc(c, GY, yl * .22); if (sp < .05) c = mixc(c, [10, 40, 20], .3); else if (sp > .965) c = mixc(c, [210, 240, 140], .22);
       const o = (yy * FW + xx) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255
     }
     x.putImageData(id, 0, 0);
     // rumput liar & bunga tersebar
-    for (let i = 0; i < 1500; i++) { const a = rng() * FW, b = rng() * FH; art.grassTuft(x, a, b, rng) }
+    for (let i = 0; i < 1500; i++) { const a = rng() * FW, b = rng() * FH0; art.grassTuft(x, a, b, rng) }
     const fcols = ['#ffffff', '#ffd34d', '#ff9ac0', '#b48cff', '#7ab8ff', '#ff7a7a'];
-    for (let i = 0; i < 170; i++) { const a = rng() * FW, b = rng() * FH; art.flower(x, a, b, fcols[(rng() * 6) | 0]) }
+    for (let i = 0; i < 170; i++) { const a = rng() * FW, b = rng() * FH0; art.flower(x, a, b, fcols[(rng() * 6) | 0]) }
     // padang bunga
     for (let i = 0; i < 700; i++) { const an = rng() * TAU, dd = Math.sqrt(rng()) * MEAD.r; art.flower(x, MEAD.x + Math.cos(an) * dd, MEAD.y + Math.sin(an) * dd / 1.15, fcols[(rng() * 6) | 0]) }
 
     /* --- perkemahan: tanah injak --- */
     ell(x, 'rgba(70,48,28,.55)', CAMPC.x, CAMPC.y, 62, 40); ell(x, '#8a6a42', CAMPC.x, CAMPC.y, 58, 36); ell(x, '#9a7a4c', CAMPC.x - 4, CAMPC.y - 3, 46, 28); for (let i = 0; i < 40; i++) rc(x, rng() < .5 ? '#7a5a38' : '#b08a58', CAMPC.x + (rng() - .5) * 100, CAMPC.y + (rng() - .5) * 60, 3, 1);
     /* --- sungai --- */
-    for (let yy = 0; yy < FH; yy++) {
+    for (let yy = 0; yy < FH0; yy++) {
       const c = rx(yy), hw = rhw(yy) | 0, i0 = Math.round(c);
       rc(x, '#7a6a48', i0 - hw - 6, yy, hw * 2 + 12, 1); rc(x, '#a8946a', i0 - hw - 4, yy, hw * 2 + 8, 1); rc(x, '#2a6a8a', i0 - hw - 1, yy, hw * 2 + 2, 1); rc(x, '#3a8ab0', i0 - hw + 1, yy, hw * 2 - 2, 1); rc(x, '#4aa4cc', i0 - hw / 2, yy, hw, 1);
       if ((yy + i0) % 9 < 1) rc(x, '#7ac8e8', i0 - hw / 3 + (yy % 5), yy, 5, 1);
     }
-    for (let i = 0; i < 40; i++) { const yy = rng() * FH, side = rng() < .5 ? -1 : 1, bx = rx(yy) + side * (rhw(yy) + 5); const r = art.rock(i + 5, false); x.drawImage(r.img, bx - r.ox, yy - r.oy) }
+    for (let i = 0; i < 40; i++) { const yy = rng() * FH0, side = rng() < .5 ? -1 : 1, bx = rx(yy) + side * (rhw(yy) + 5); const r = art.rock(i + 5, false); x.drawImage(r.img, bx - r.ox, yy - r.oy) }
     /* --- kolam --- */
     ell(x, '#7a6a48', POND.x, POND.y, POND.rx + 8, POND.ry + 6); ell(x, '#a8946a', POND.x, POND.y, POND.rx + 5, POND.ry + 3); ell(x, '#2a6a8a', POND.x, POND.y, POND.rx, POND.ry); ell(x, '#3a8ab0', POND.x, POND.y, POND.rx - 4, POND.ry - 3); ell(x, '#4aa4cc', POND.x - 6, POND.y - 3, POND.rx - 22, POND.ry - 14); ell(x, '#6ac0e0', POND.x - 14, POND.y - 6, POND.rx - 50, POND.ry - 26);
     for (let i = 0; i < 7; i++) { const a = POND.x + (rng() - .5) * 120, b = POND.y + (rng() - .5) * 50; ell(x, '#2f7a3a', a, b, 6, 3); ell(x, '#4aa04a', a - 1, b - 1, 4, 2); if (rng() < .5) { rc(x, '#ffb0d0', a - 1, b - 2, 3, 2) } }
@@ -169,7 +207,7 @@
     /* ---------- objek ---------- */
     const walls = [[-20, -20, FW + 40, 28], [-20, FH - 8, FW + 40, 30], [-20, -20, 28, FH + 40], [FW - 8, -20, 28, 300], [FW - 8, 410, 28, FH]];
     walls.push([cliffRect[0], -10, cliffRect[2], 92]);
-    walls.push([808, -10, 44, BY0 - 4 + 10], [808, BY1 + 4, 44, FH]);   // sungai (celah jembatan y 294..320)
+    walls.push([808, -10, 44, BY0 - 4 + 10], [808, BY1 + 4, 44, BR2[0] - 4 - (BY1 + 4)], [808, BR2[1] + 4, 44, LAKE.y - LAKE.ry + 8 - (BR2[1] + 4)]);   // sungai (celah jembatan y 294..320 dan y 934..992)
     walls.push([BX0, BY0 - 5, BX1 - BX0, 4], [BX0, BY1 + 3, BX1 - BX0, 4]);   // pagar jembatan
     for (let dy = -POND.ry; dy < POND.ry; dy += 10) { const k = Math.sqrt(1 - Math.pow((dy + 5) / POND.ry, 2)); walls.push([POND.x - POND.rx * k + 6, POND.y + dy, POND.rx * 2 * k - 12, 10]) }
     walls.push([SHRC.x - 18, SHRC.y - 8, 36, 20]);   // kolam mata air
@@ -181,8 +219,8 @@
     // pohon
     const occ = new Map(), ck = (a, b) => ((a / 22) | 0) + ',' + ((b / 22) | 0), canPlace = (a, b, r) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const l = occ.get(((a / 22 | 0) + i) + ',' + ((b / 22 | 0) + j)); if (l && l.some(q => Math.hypot(q[0] - a, q[1] - b) < r)) return false } return true }, mark = (a, b) => { const k = ck(a, b); (occ.get(k) || occ.set(k, []).get(k)).push([a, b]) };
     const trees = [];
-    for (let gy = 22; gy < FH - 10; gy += 27) for (let gx = 8; gx < FW - 8; gx += 27) {
-      const a = gx + rng() * 24, b = gy + rng() * 24, nz = vnoise(a / 150, b / 150, 5), edge = a < 90 || a > FW - 60 || b < 56 || b > FH - 70, dens = edge ? .95 : clamp(.18 + nz * 1.15, .08, .9);
+    for (let gy = 22; gy < FH0 - 10; gy += 27) for (let gx = 8; gx < FW - 8; gx += 27) {
+      const a = gx + rng() * 24, b = gy + rng() * 24, nz = vnoise(a / 150, b / 150, 5), edge = a < 90 || a > FW - 60 || b < 56 || b > FH0 - 70, dens = edge ? .95 : clamp(.18 + nz * 1.15, .08, .9);
       if (rng() > dens || !free(a, b, 6) || !canPlace(a, b, 19) || [MAINd, CAMPd, SHRd].some(P_ => distPoly(a, b - 24, P_) < 30 || distPoly(a, b - 44, P_) < 22)) continue; mark(a, b); trees.push([a, b, rng()])
     }
     trees.forEach(([a, b, k]) => {
@@ -190,7 +228,7 @@
       const s = k < .62 ? OAK[(k * 100 | 0) % OAK.length] : PINE[(k * 100 | 0) % PINE.length]; spr(s, a, b + 4, [a - 4, b - 1, 8, 5]);
     });
     // semak, batu, tunggul, kayu tumbang tersebar
-    for (let i = 0; i < 160; i++) { const a = rng() * FW, b = rng() * FH; if (!free(a, b, 8) || !canPlace(a, b, 13)) continue; mark(a, b); const k = rng(); if (k < .45) spr(rng() < .25 ? BERRY[i % 4] : BUSH[i % 4], a, b); else if (k < .78) spr(ROCK[i % 4], a, b, [a - 7, b - 4, 14, 7]); else if (k < .88) spr(BIG[i % 4], a, b + 3, [a - 12, b - 6, 24, 10]); else if (k < .95) spr(art.stump(), a, b, [a - 6, b - 4, 12, 6]); else spr(art.log(), a, b, [a - 14, b - 4, 28, 6]) }
+    for (let i = 0; i < 160; i++) { const a = rng() * FW, b = rng() * FH0; if (!free(a, b, 8) || !canPlace(a, b, 13)) continue; mark(a, b); const k = rng(); if (k < .45) spr(rng() < .25 ? BERRY[i % 4] : BUSH[i % 4], a, b); else if (k < .78) spr(ROCK[i % 4], a, b, [a - 7, b - 4, 14, 7]); else if (k < .88) spr(BIG[i % 4], a, b + 3, [a - 12, b - 6, 24, 10]); else if (k < .95) spr(art.stump(), a, b, [a - 6, b - 4, 12, 6]); else spr(art.log(), a, b, [a - 14, b - 4, 28, 6]) }
     // perkemahan
     spr(art.tent(), CAMPC.x - 42, CAMPC.y - 14, [CAMPC.x - 70, CAMPC.y - 36, 56, 22]); spr(art.rack(), CAMPC.x + 48, CAMPC.y - 2, [CAMPC.x + 30, CAMPC.y - 8, 36, 8]);
     spr(art.log(), CAMPC.x - 28, CAMPC.y + 16, [CAMPC.x - 42, CAMPC.y + 12, 28, 6]); spr(art.log(), CAMPC.x + 22, CAMPC.y + 22, [CAMPC.x + 8, CAMPC.y + 18, 28, 6]); walls.push([CAMPC.x - 11, CAMPC.y - 14, 22, 12]);
@@ -215,11 +253,11 @@
     /* --- bahan tanaman --- */
     const kinds = ['herb', 'herb', 'herb', 'herb', 'herb', 'herb', 'herb', 'herb', 'mush', 'mush', 'mush', 'mush', 'mush', 'mush', 'flower', 'flower', 'flower', 'flower', 'flower', 'flower', 'flower', 'flower'];
     F.gath = [];
-    kinds.forEach((k, i) => { for (let n = 0; n < 200; n++) { let a, b; if (k === 'flower') { const an = rng() * TAU, dd = Math.sqrt(rng()) * (n < 150 ? MEAD.r - 10 : 400); a = (n < 150 ? MEAD.x : 700 + rng() * 800) + Math.cos(an) * dd; b = (n < 150 ? MEAD.y : 150 + rng() * 500) + Math.sin(an) * dd / 1.2 } else { a = 60 + rng() * (FW - 200); b = 130 + rng() * (FH - 170) } if (!free(a, b, 12) || F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 40)) continue; if (walls.some(w => a > w[0] - 8 && a < w[0] + w[2] + 8 && b > w[1] - 8 && b < w[1] + w[3] + 8)) continue; F.gath.push({ k, x: a, y: b, got: 0, ph: rng() * 6 }); break } });
+    kinds.forEach((k, i) => { for (let n = 0; n < 200; n++) { let a, b; if (k === 'flower') { const an = rng() * TAU, dd = Math.sqrt(rng()) * (n < 150 ? MEAD.r - 10 : 400); a = (n < 150 ? MEAD.x : 700 + rng() * 800) + Math.cos(an) * dd; b = (n < 150 ? MEAD.y : 150 + rng() * 500) + Math.sin(an) * dd / 1.2 } else { a = 60 + rng() * (FW - 200); b = 130 + rng() * (FH0 - 170) } if (!free(a, b, 12) || F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 40)) continue; if (walls.some(w => a > w[0] - 8 && a < w[0] + w[2] + 8 && b > w[1] - 8 && b < w[1] + w[3] + 8)) continue; F.gath.push({ k, x: a, y: b, got: 0, ph: rng() * 6 }); break } });
     // pendamping di jalur (lebih mudah ditemukan)
     [[300, 330, 'herb'], [650, 330, 'flower'], [700, 250, 'mush'], [940, 345, 'herb'], [1140, 412, 'mush']].forEach(([a, b, k]) => { if (!walls.some(w => a > w[0] - 8 && a < w[0] + w[2] + 8 && b > w[1] - 8 && b < w[1] + w[3] + 8)) F.gath.push({ k, x: a, y: b, got: 0, ph: rng() * 6 }) });
     /* --- percikan air --- */
-    F.sparks = []; for (let i = 0; i < 90; i++) { const yy = rng() * FH; F.sparks.push({ x: rx(yy) + (rng() - .5) * rhw(yy) * 1.6, y: yy, ph: rng() * 6 }) } for (let i = 0; i < 40; i++) { const an = rng() * TAU, dd = Math.sqrt(rng()); F.sparks.push({ x: POND.x + Math.cos(an) * dd * (POND.rx - 8), y: POND.y + Math.sin(an) * dd * (POND.ry - 6), ph: rng() * 6 }) }
+    F.sparks = []; for (let i = 0; i < 90; i++) { const yy = rng() * FH0; F.sparks.push({ x: rx(yy) + (rng() - .5) * rhw(yy) * 1.6, y: yy, ph: rng() * 6 }) } for (let i = 0; i < 40; i++) { const an = rng() * TAU, dd = Math.sqrt(rng()); F.sparks.push({ x: POND.x + Math.cos(an) * dd * (POND.rx - 8), y: POND.y + Math.sin(an) * dd * (POND.ry - 6), ph: rng() * 6 }) }
     /* --- NPC --- */
     F.npcs.push({
       n: 'Torvald, Pemburu', x: CAMPC.x + 14, y: CAMPC.y + 6, fc: -1, sk: '#d9a07a', hair: '#6a4a2c', beard: '#6a4a2c', hat: 'hood', hc: '#3a5a3a', c1: '#4a6a3a', c2: '#c2a06b', c3: '#3a3226', prop: 'pack', fresh: 1,
@@ -233,6 +271,162 @@
     F.npcs.push(spring); F.spring = spring;
     /* --- kelinci --- */
     F.crit = []; for (let i = 0; i < 6; i++) { const base = i < 3 ? MEAD : CAMPC; let a, b; for (let n = 0; n < 60; n++) { const an = rng() * TAU, dd = Math.sqrt(rng()) * (base.r - 20); a = base.x + Math.cos(an) * dd; b = base.y + Math.sin(an) * dd * .8; if (!walls.some(w => a > w[0] - 6 && a < w[0] + w[2] + 6 && b > w[1] - 6 && b < w[1] + w[3] + 6)) break } F.crit.push({ x: a, y: b, vx: 0, vy: 0, st: 0, tm: rng() * 3, hz: 0, fc: rng() < .5 ? -1 : 1, col: i % 2 ? '#b8a898' : '#a8845a', ph: rng() * 6 }) }
+    /* ================= PERLUASAN SELATAN =================
+       Memakai RNG sendiri (mkRng(5150)) sehingga letak seluruh isi hutan lama tidak bergeser sedikit pun. */
+    (function () {
+      const r2 = mkRng(5150), rr = (a, b) => a + r2() * (b - a);
+      const oldFree = (a, b, m) => { NEWGEO = false; const v = free(a, b, m); NEWGEO = true; return v };
+      NEWGEO = true;
+      const inWall = (a, b, m) => walls.some(w => a > w[0] - m && a < w[0] + w[2] + m && b > w[1] - m && b < w[1] + w[3] + m);
+
+      /* 1) buka lorong di pagar pohon lama (y 650-720) dan di sepanjang cabang jalan baru */
+      {
+        const dead = objs.filter(o => o.img && !o.lamp && oldFree(o.x, o.y - 4, 0) && PTH.some(P => distPoly(o.x, o.y, P.d) < P.w / 2 + 14));
+        dead.forEach(o => {
+          let bi = -1, bd = 1e9; walls.forEach((w, i) => { if (w[2] > 30 || w[3] > 12) return; const dx = w[0] + w[2] / 2 - o.x, dy = w[1] + w[3] / 2 - o.y; if (Math.abs(dx) > 15 || dy < -10 || dy > 2) return; const d = dx * dx + dy * dy; if (d < bd) { bd = d; bi = i } });
+          if (bi >= 0) walls.splice(bi, 1); objs.splice(objs.indexOf(o), 1)
+        });
+      }
+
+      /* 2) tanah rumput wilayah selatan: menyambung mulus dari y = 720 (rumus noise sama), makin berlumut ke barat-selatan */
+      {
+        const H = FH - FH0, id2 = x.createImageData(FW, H), d2 = id2.data, MOSS = [34, 86, 62];
+        for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < FW; xx++) {
+          const Y = yy + FH0, v = vnoise(xx / 64, Y / 64, 1) * .62 + vnoise(xx / 15, Y / 15, 2) * .38, yl = vnoise(xx / 170, Y / 170, 3), sp = hash(xx, Y, 9);
+          let c = mixc(GD, GL, v); c = mixc(c, GY, yl * .22); if (sp < .05) c = mixc(c, [10, 40, 20], .3); else if (sp > .965) c = mixc(c, [210, 240, 140], .22);
+          const west = clamp(1 - xx / 900, 0, 1), south = clamp(yy / 220, 0, 1); if (west * south > 0) c = mixc(c, MOSS, .24 * west * south);
+          const o = (yy * FW + xx) * 4; d2[o] = c[0]; d2[o + 1] = c[1]; d2[o + 2] = c[2]; d2[o + 3] = 255
+        }
+        x.putImageData(id2, 0, FH0);
+        for (let i = 0; i < 1500; i++) art.grassTuft(x, r2() * FW, FH0 + r2() * H, r2);
+        for (let i = 0; i < 190; i++) art.flower(x, r2() * FW, FH0 + r2() * H, fcols[(r2() * 6) | 0]);
+        // bercak lumut gelap & tanah basah (hanya hiasan)
+        for (let i = 0; i < 70; i++) { const a = rr(20, FW - 20), b = rr(FH0 + 10, FH - 20); ell(x, 'rgba(20,60,40,.18)', a, b, 18 + r2() * 30, 7 + r2() * 12) }
+      }
+
+      /* 3) sungai (lanjutan), batu tepi, danau, kolam kabut, rawa */
+      for (let yy = FH0; yy < RIVER_END; yy++) {
+        const c = rx(yy), hw = rhw(yy) | 0, i0 = Math.round(c);
+        rc(x, '#7a6a48', i0 - hw - 6, yy, hw * 2 + 12, 1); rc(x, '#a8946a', i0 - hw - 4, yy, hw * 2 + 8, 1); rc(x, '#2a6a8a', i0 - hw - 1, yy, hw * 2 + 2, 1); rc(x, '#3a8ab0', i0 - hw + 1, yy, hw * 2 - 2, 1); rc(x, '#4aa4cc', i0 - hw / 2, yy, hw, 1);
+        if ((yy + i0) % 9 < 1) rc(x, '#7ac8e8', i0 - hw / 3 + (yy % 5), yy, 5, 1)
+      }
+      for (let i = 0; i < 34; i++) { const yy = rr(FH0, RIVER_END - 10), side = r2() < .5 ? -1 : 1, bx = rx(yy) + side * (rhw(yy) + 5); const r = art.rock(i + 60, false); x.drawImage(r.img, bx - r.ox, yy - r.oy) }
+      const pondArt = (P, lily) => {
+        ell(x, '#7a6a48', P.x, P.y, P.rx + 8, P.ry + 6); ell(x, '#a8946a', P.x, P.y, P.rx + 5, P.ry + 3); ell(x, '#2a6a8a', P.x, P.y, P.rx, P.ry); ell(x, '#3a8ab0', P.x, P.y, P.rx - 4, P.ry - 3); ell(x, '#4aa4cc', P.x - 6, P.y - 3, P.rx - 22, P.ry - 14); ell(x, '#6ac0e0', P.x - 14, P.y - 6, P.rx - 50, P.ry - 26);
+        for (let i = 0; i < lily; i++) { const a = P.x + (r2() - .5) * P.rx * 1.5, b = P.y + (r2() - .5) * P.ry * 1.2; ell(x, '#2f7a3a', a, b, 6, 3); ell(x, '#4aa04a', a - 1, b - 1, 4, 2); if (r2() < .5) rc(x, '#ffb0d0', a - 1, b - 2, 3, 2) }
+      };
+      pondArt(LAKE, 16); pondArt(MP, 7);
+      for (let i = 0; i < 12; i++) { const an = r2() * TAU, dd = Math.sqrt(r2()) * SWP.r, a = SWP.x + Math.cos(an) * dd, b = SWP.y + Math.sin(an) * dd * .6, w = 10 + r2() * 16; if (Math.hypot(a - 672, b - 1196) < 40) continue; ell(x, '#27483a', a, b, w + 2, w * .4 + 2); ell(x, '#3a6a5a', a, b, w, w * .4); ell(x, '#5a8a7a', a - 2, b - 1, w * .55, w * .2) }
+
+      /* 4) jalan tanah baru + jembatan kedua */
+      const pStamp = (dn, w) => {
+        dn.forEach(([a, b]) => disc(x, '#6e5030', a, b, w / 2 + 3)); dn.forEach(([a, b]) => disc(x, '#a07a4a', a, b, w / 2 + 1)); dn.forEach(([a, b], i) => { if (i % 2 == 0) disc(x, '#b48c58', a + (r2() - .5) * 4, b + (r2() - .5) * 4, w / 2 - 3) });
+        dn.forEach(([a, b], i) => { if (i % 3 == 0) { rc(x, '#8a6640', a + (r2() - .5) * w * .8, b + (r2() - .5) * w * .8, 3 + r2() * 3, 1); if (r2() < .35) rc(x, '#c8a06a', a + (r2() - .5) * w * .8, b + (r2() - .5) * w * .8, 2, 1) } });
+        dn.forEach(([a, b], i) => { if (i % 5 == 0) { const s = r2() < .5 ? -1 : 1, off = w / 2 + 2; art.grassTuft(x, a + s * off * (.8 + r2() * .4), b + (r2() - .5) * 4, r2) } });
+        dn.forEach(([a, b], i) => { if (i % 40 == 0) art.pebbles(x, a + (r2() - .5) * w * .7, b + (r2() - .5) * w * .6, r2) })
+      };
+      PTH.forEach(o => pStamp(o.d, o.w));
+      { const [BY0b, BY1b] = BR2;
+        rc(x, 'rgba(0,0,0,.28)', BXA + 2, BY1b + 2, BXB - BXA, 7);
+        for (let xx = BXA; xx < BXB; xx += 4) { rc(x, '#4a301a', xx, BY0b - 1, 4, BY1b - BY0b + 3); rc(x, xx % 8 ? '#9a7444' : '#8a6440', xx + 1, BY0b, 3, BY1b - BY0b + 1); rc(x, '#b8905a', xx + 1, BY0b, 3, 1) }
+        [BY0b - 3, BY1b + 1].forEach((yy, k) => { rc(x, OLC, BXA - 3, yy - 1, BXB - BXA + 6, 5); rc(x, k ? '#8a6440' : '#a8825a', BXA - 2, yy, BXB - BXA + 4, 3); rc(x, '#c8a46a', BXA - 2, yy, BXB - BXA + 4, 1); for (let xx = BXA; xx <= BXB; xx += 18) { rc(x, OLC, xx - 1, yy - 3, 6, 10); rc(x, '#7a5434', xx, yy - 2, 4, 8); rc(x, '#b8905a', xx, yy - 2, 1, 8) } });
+        // lumut di papan jembatan (lebih tua dari jembatan pertama)
+        for (let i = 0; i < 40; i++) rc(x, i % 2 ? '#4a8a3a' : '#2f5a34', rr(BXA, BXB), rr(BY0b, BY1b), 3, 1);
+        walls.push([BXA, BY0b - 5, BXB - BXA, 4], [BXA, BY1b + 3, BXB - BXA, 4]);
+      }
+
+      /* 5) sprite khusus wilayah baru */
+      const standing = (h, k) => { const w = 16, [c, q] = mkCv(w, h + 6); rc(q, OLC, 2, 2, w - 4, h + 3); rc(q, '#6a6a78', 3, 3, w - 6, h + 1); rc(q, '#8e8e9c', 3, 3, 4, h + 1); rc(q, '#4a4a58', w - 7, 3, 3, h + 1); rc(q, '#4a8a3a', 3, 2, w - 6, 3); rc(q, '#6aaa4a', 4, 2, 5, 2); for (let i = 0; i < 4; i++) rc(q, '#3a7a3a', 4 + ((i * 5 + k) % 8), 6 + i * (h / 5 | 0), 2, 3); rc(q, '#1a2a3a', 7, h / 2 | 0, 2, 7); rc(q, '#8fe8ff', 7, (h / 2 | 0) + 1, 2, 5); return { img: c, ox: w / 2, oy: h + 3 } };
+      const tower = () => {
+        const W = 64, H = 96, [c, q] = mkCv(W, H), ST = ['#5e5e6c', '#6e6e7c', '#7e7e8c'], MO = ['#2f5a34', '#4a8a3a'];
+        for (let xx = 6; xx < 58; xx++) { const top = 16 + (xx < 22 ? 0 : xx < 34 ? 16 : xx < 46 ? 6 : 24) + ((hash(xx, 3, 5) * 6) | 0); for (let yy = top; yy < 92; yy++) { const row = (yy / 6) | 0, mort = yy % 6 === 0 || (xx + row * 7) % 11 === 0, n = vnoise(xx / 4, yy / 4, 81); let col = mort ? '#3e3e4a' : n < .33 ? ST[0] : n < .66 ? ST[1] : ST[2]; if (xx > 50) col = mort ? '#2e2e38' : '#4a4a58'; else if (xx < 9) col = mort ? '#4a4a58' : '#9a9aa8'; if (yy - top < 2) col = MO[1]; else if (vnoise(xx / 7, yy / 6, 82) > .72 && !mort) col = MO[0]; rc(q, col, xx, yy, 1, 1) } rc(q, OLC, xx, top - 1, 1, 1) }
+        rc(q, OLC, 5, 20, 1, 72); rc(q, OLC, 58, 40, 1, 52); rc(q, OLC, 6, 92, 52, 2);
+        rc(q, OLC, 23, 60, 18, 32); rc(q, '#12101a', 25, 62, 14, 30); rc(q, OLC, 25, 58, 14, 4); rc(q, '#3e3e4a', 26, 59, 12, 2);
+        [[12, 34], [44, 50]].forEach(([a, b]) => { rc(q, OLC, a - 1, b - 1, 7, 13); rc(q, '#0c0a14', a, b, 5, 11); rc(q, '#8a5af0', a + 1, b + 3, 3, 5) });
+        for (let i = 0; i < 6; i++) { const vx = 8 + i * 8 + ((i * 3) % 5), len = 10 + ((i * 7) % 16); for (let k = 0; k < len; k++) rc(q, k % 5 < 3 ? MO[1] : MO[0], vx + (k % 6 < 3 ? 0 : 1), 20 + k + (i % 2) * 6, 1, 1) }
+        return { img: c, ox: 32, oy: 90 }
+      };
+      const wallPiece = (w) => { const h = 26, [c, q] = mkCv(w, h); for (let xx = 0; xx < w; xx++) { const top = 4 + ((hash(xx, w, 7) * 8) | 0); for (let yy = top; yy < h; yy++) { const mort = yy % 6 === 0 || (xx + ((yy / 6) | 0) * 5) % 10 === 0, n = vnoise(xx / 4, yy / 4, 83); rc(q, yy - top < 2 ? '#4a8a3a' : mort ? '#3e3e4a' : n < .5 ? '#5e5e6c' : '#72727f', xx, yy, 1, 1) } rc(q, OLC, xx, top - 1, 1, 1) } rc(q, OLC, 0, 6, 1, 20); rc(q, OLC, w - 1, 6, 1, 20); rc(q, OLC, 0, h - 1, w, 1); return { img: c, ox: w / 2, oy: h - 3 } };
+      const gShroom = (k) => { const W = 40, H = 46, [c, q] = mkCv(W, H), cap = [['#2a8a8a', '#5ad8c8', '#c8fff0'], ['#5a3aa8', '#9a7aff', '#e0d0ff'], ['#2a7a5a', '#6ae0a0', '#d8ffe8']][k % 3]; rc(q, OLC, 15, 20, 10, 24); rc(q, '#d8c8a0', 16, 21, 8, 22); rc(q, '#f4e8c8', 16, 21, 3, 22); rc(q, '#9a8a68', 22, 21, 2, 22); ell(q, OLC, 20, 18, 19, 13); ell(q, cap[0], 20, 17, 17, 11); ell(q, cap[1], 19, 15, 14, 8); ell(q, cap[2], 15, 12, 6, 3); [[10, 15], [24, 12], [28, 18], [18, 19]].forEach(([a, b]) => rc(q, '#fff8e0', a, b, 2, 2)); return { img: c, ox: 20, oy: 42 } };
+      const altar = () => { const [c, q] = mkCv(30, 24); rc(q, OLC, 2, 8, 26, 15); rc(q, '#6a6a78', 3, 9, 24, 13); rc(q, '#9a9aa8', 3, 9, 24, 3); rc(q, '#4a4a58', 3, 19, 24, 3); rc(q, OLC, 6, 2, 18, 8); rc(q, '#8a8a98', 7, 3, 16, 6); rc(q, '#bcbcc8', 7, 3, 16, 2); rc(q, '#8fe8ff', 13, 4, 4, 3); rc(q, '#e0ffff', 14, 4, 2, 1); return { img: c, ox: 15, oy: 20 } };
+      F.glows = [];   // titik cahaya wilayah baru (dipakai efek di F.env)
+
+      /* 6) lantai & dekorasi wilayah khusus */
+      // -- Lingkaran Batu Tua: lantai batu, altar, 9 batu berdiri (celah di timur laut & barat daya = jalan masuk/keluar)
+      ell(x, 'rgba(0,0,0,.22)', SC.x, SC.y + 4, 74, 48); ell(x, '#4a4a56', SC.x, SC.y, 70, 44); ell(x, '#6a6a78', SC.x, SC.y, 66, 41); ell(x, '#7c7c8a', SC.x - 2, SC.y - 2, 58, 35);
+      for (let i = 0; i < 120; i++) { const an = r2() * TAU, dd = 6 + Math.sqrt(r2()) * 58; rc(x, r2() < .5 ? '#5e5e6c' : '#8e8e9c', SC.x + Math.cos(an) * dd, SC.y + Math.sin(an) * dd * .62, 4, 1) }
+      for (let i = 0; i < 60; i++) { const an = r2() * TAU, dd = 20 + r2() * 48; rc(x, r2() < .5 ? '#3a7a3a' : '#4a8a3a', SC.x + Math.cos(an) * dd, SC.y + Math.sin(an) * dd * .62, 2 + (r2() * 3 | 0), 1) }
+      ell(x, '#2a5a6a', SC.x, SC.y, 22, 13); ell(x, '#3a8ab0', SC.x, SC.y, 18, 10); ell(x, '#8fe8ff', SC.x, SC.y, 10, 5);
+      spr(altar(), SC.x, SC.y + 10, [SC.x - 13, SC.y + 1, 26, 10]); F.glows.push([SC.x, SC.y - 2, 60, '110,220,255', .22, 0]);
+      for (let i = 0; i < 9; i++) { const an = i / 9 * TAU + .3, dx = Math.cos(an), dy = Math.sin(an); if (Math.hypot(dx - .88, dy + .47) < .62 || Math.hypot(dx + .72, dy - .7) < .62) continue; const a = SC.x + dx * 64, b = SC.y + dy * 40, h = 30 + (i % 3) * 8; spr(standing(h, i), a, b + 3, [a - 7, b - 3, 14, 6]); F.glows.push([a, b - h / 2, 18, '110,220,255', .12, i]) }
+      // -- Taman Peri: pohon pusat besar, cincin bunga, kunang-kunang
+      ell(x, 'rgba(10,50,30,.35)', HG.x, HG.y, HG.r - 6, HG.r * .72); for (let i = 0; i < 520; i++) { const an = r2() * TAU, dd = Math.sqrt(r2()) * (HG.r - 8); art.flower(x, HG.x + Math.cos(an) * dd, HG.y + Math.sin(an) * dd * .8, fcols[(r2() * 6) | 0]) }
+      for (let i = 0; i < 14; i++) { const an = i / 14 * TAU, a = HG.x + Math.cos(an) * 40, b = HG.y + Math.sin(an) * 30, sh = gShroom(i + 1); x.drawImage(sh.img, Math.round(a - 12), Math.round(b - 14), 24, 28) }
+      spr(art.oak(61, 1.55), HG.x, HG.y - 8, [HG.x - 6, HG.y - 13, 12, 6]); F.glows.push([HG.x, HG.y - 30, 90, '170,255,200', .16, 3], [HG.x, HG.y, 70, '255,230,150', .12, 5]);
+      // -- Menara Pengawas Runtuh: lantai batu, menara, tembok patah, puing
+      ell(x, 'rgba(0,0,0,.25)', WT.x, WT.y + 6, 72, 44); ell(x, '#5a5a66', WT.x, WT.y, 68, 41); ell(x, '#707080', WT.x, WT.y, 62, 36);
+      for (let i = 0; i < 110; i++) { const an = r2() * TAU, dd = 6 + Math.sqrt(r2()) * 58; rc(x, r2() < .5 ? '#5e5e6c' : '#8a8a98', WT.x + Math.cos(an) * dd, WT.y + Math.sin(an) * dd * .6, 4, 1) }
+      spr(tower(), WT.x - 4, WT.y - 6, [WT.x - 32, WT.y - 20, 56, 16]);
+      [[-58, 18, 34], [52, 12, 40], [-30, 34, 30]].forEach(([dx, dy, w]) => spr(wallPiece(w), WT.x + dx, WT.y + dy, [WT.x + dx - w / 2 + 2, WT.y + dy - 7, w - 4, 8]));
+      for (let i = 0; i < 9; i++) { const an = r2() * TAU, dd = 34 + r2() * 34, a = WT.x + Math.cos(an) * dd, b = WT.y + Math.sin(an) * dd * .6; if (a > WT.x - 40 && a < WT.x + 34 && b < WT.y + 6 && b > WT.y - 30) continue; spr(ROCK[i % 4], a, b, [a - 7, b - 4, 14, 7]) }
+      F.glows.push([WT.x - 4 + 6, WT.y - 38, 34, '150,90,255', .12, 7]);
+      // -- Gua Jamur Bercahaya: tanah ungu-kehijauan, jamur raksasa berpendar
+      ell(x, 'rgba(40,20,90,.35)', GH.x, GH.y, GH.r + 4, GH.r * .72); ell(x, 'rgba(30,90,110,.28)', GH.x, GH.y, GH.r - 12, GH.r * .55);
+      for (let i = 0; i < 160; i++) { const an = r2() * TAU, dd = Math.sqrt(r2()) * (GH.r - 8); rc(x, ['#5ad8c8', '#9a7aff', '#c8fff0'][(r2() * 3) | 0], GH.x + Math.cos(an) * dd, GH.y + Math.sin(an) * dd * .75, 1, 1) }
+      for (let i = 0; i < 6; i++) { const an = i / 6 * TAU + .5, dd = i % 2 ? 54 : 34, a = GH.x + Math.cos(an) * dd, b = GH.y + Math.sin(an) * dd * .7; if (Math.hypot(a - GH.x + 30, b - GH.y + 28) < 22) continue; spr(gShroom(i), a, b + 6, [a - 7, b - 1, 14, 6]); F.glows.push([a, b - 22, 40, i % 3 === 1 ? '150,120,255' : '90,255,220', .22, i]) }
+      // -- Relung Sunyi: lantai tanah berlumut + kayu tumbang
+      ell(x, 'rgba(20,60,30,.3)', NK.x, NK.y, NK.r, NK.r * .7); for (let i = 0; i < 60; i++) art.flower(x, NK.x + (r2() - .5) * NK.r * 1.6, NK.y + (r2() - .5) * NK.r, fcols[(r2() * 6) | 0]);
+      spr(art.log(), NK.x - 22, NK.y + 18, [NK.x - 36, NK.y + 14, 28, 6]);
+
+      /* 7) pohon, semak, batu (sebaran wilayah baru; memakai occ/canPlace yang sama supaya menyatu dengan sabuk pohon lama) */
+      const SPOTS = [SC, HG, WT, GH, NK];
+      const nearSpot = (a, b, d) => SPOTS.some(s => Math.hypot(a - s.x, b - s.y) < s.r + d);
+      const trees2 = [], pathsAll = [MAINd, CAMPd, SHRd, ...PTH.map(o => o.d)];
+      for (let gy = FH0 + 6; gy < FH - 10; gy += 27) for (let gx = 8; gx < FW - 8; gx += 27) {
+        const a = gx + r2() * 24, b = gy + r2() * 24, nz = vnoise(a / 150, b / 150, 5), ring = [HG, GH, NK].some(q => Math.hypot(a - q.x, b - q.y) < q.r + 70), edge = a < 90 || a > FW - 60 || b > FH - 80 || (ring && !nearSpot(a, b, 6)), west = a < 780 ? .1 : 0, dens = edge ? .95 : clamp(.2 + nz * 1.1 + west, .08, .9);
+        if (r2() > dens || !free(a, b, 6) || !canPlace(a, b, 19) || pathsAll.some(P_ => distPoly(a, b - 24, P_) < 30 || distPoly(a, b - 44, P_) < 22)) continue; mark(a, b); trees2.push([a, b, r2()])
+      }
+      trees2.forEach(([a, b, k]) => {
+        ell(x, 'rgba(0,12,4,.24)', a + 4, b - 2, 17, 8); ell(x, 'rgba(0,12,4,.1)', a + 2, b - 12, 28, 15);
+        const s = k < .55 ? OAK[(k * 100 | 0) % OAK.length] : PINE[(k * 100 | 0) % PINE.length]; spr(s, a, b + 4, [a - 4, b - 1, 8, 5])
+      });
+      for (let i = 0; i < 230; i++) {
+        const a = rr(30, FW - 30), b = rr(FH0 + 10, FH - 30); if (!free(a, b, 8) || !canPlace(a, b, 13)) continue; mark(a, b); const k = r2();
+        if (k < .42) spr(r2() < .25 ? BERRY[i % 4] : BUSH[i % 4], a, b); else if (k < .76) spr(ROCK[i % 4], a, b, [a - 7, b - 4, 14, 7]); else if (k < .88) spr(BIG[i % 4], a, b + 3, [a - 12, b - 6, 24, 10]); else if (k < .95) spr(art.stump(), a, b, [a - 6, b - 4, 12, 6]); else spr(art.log(), a, b, [a - 14, b - 4, 28, 6])
+      }
+      // semak penyamar di mulut jalan rahasia (tidak menghalangi)
+      [['T2', 2], ['T5', 3], ['T8', 3]].forEach(([id, n]) => { const P_ = PTH.find(q => q.id === id).P, pt = P_[P_.length - 1]; for (let i = 0; i < n; i++) spr(BUSH[i % 4], pt[0] + (i - 1) * 22 + rr(-6, 6), pt[1] - 26 - (i % 2) * 8) });
+
+      /* 8) dinding: danau, kolam kabut, batas selatan sudah ada di walls utama */
+      const ellWalls = P => { for (let dy = -P.ry; dy < P.ry; dy += 10) { const k = Math.sqrt(Math.max(0, 1 - Math.pow((dy + 5) / P.ry, 2))); walls.push([P.x - P.rx * k + 6, P.y + dy, P.rx * 2 * k - 12, 10]) } };
+      ellWalls(LAKE); ellWalls(MP);
+
+      /* 9) peti baru (tersembunyi di wilayah baru) */
+      [{ id: 'f5', x: WT.x + 50, y: WT.y - 30, g: 120 }, { id: 'f6', x: HG.x + 34, y: HG.y + 38, g: 160 }, { id: 'f7', x: GH.x + 36, y: GH.y + 34, g: 150 }, { id: 'f8', x: SC.x + 4, y: SC.y + 36, g: 100 }, { id: 'f9', x: NK.x + 8, y: NK.y + 6, g: 90 }].forEach(nc => {
+        CHESTS.push(nc); const c = { ...nc, open: !!W_.chests[nc.id], t: 0 }; c.s0 = art.chest(false); c.s1 = art.chest(true); F.chests.push(c); walls.push([c.x - 8, c.y - 5, 16, 6]);
+        for (let i = 0; i < 4; i++) { const a = c.x + (i < 2 ? -1 : 1) * (18 + r2() * 6), b = c.y + (r2() - .3) * 14; spr(BUSH[(i + c.x) % 4 | 0], a, b) } for (let i = 0; i < 8; i++) art.flower(x, c.x + (r2() - .5) * 50, c.y + 10 + (r2() - .5) * 20, fcols[(r2() * 6) | 0])
+      });
+
+      /* 10) papan petunjuk baru (interaktif, sama seperti papan lama) */
+      [[1172, 462, 'Papan Jalur Selatan', ['Jalur Selatan. Jalan lebar ini menuju Hutan Lumut, Lembah Paku, dan Danau Cermin.', 'Hutan di selatan lebih lebat dan sunyi. Bawa ramuan secukupnya.']],
+      [628, 742, 'Papan Hutan Lumut', ['Hutan Lumut. Batu-batu tua berdiri di barat daya, di balik jalan setapak yang berkelok.', 'Konon ada sebuah taman kecil yang tak pernah layu, tersembunyi jauh di sudut barat.']],
+      [762, 1010, 'Papan Jembatan Batu', ['Jembatan Lumut. Lebih tua dari jembatan di utara, namun papannya masih kuat.', 'Ke timur: Lembah Paku dan Menara Pengawas. Ke barat: Lingkaran Batu dan Rawa Lumut.']],
+      [1336, 1012, 'Papan Menara Tua', ['Menara Pengawas yang runtuh. Dulu ia menjaga jalan ke Abyss sebelum hutan menelannya.', 'Beberapa penjelajah bilang ada jalan setapak sempit di balik menara, mengarah ke cahaya aneh di tenggara.']],
+      [774, 1210, 'Papan Danau Cermin', ['Danau Cermin. Sungai Sunyi berakhir di sini dan airnya tenang seperti kaca.', 'Mata Air Suci di utara adalah hulu dari sungai ini, atau begitu kata orang.']]
+      ].forEach(([a, b, nm, ln]) => { SIGNP.push([a, b]); spr(art.sign(), a, b, [a - 5, b - 4, 10, 6]); F.npcs.push({ n: nm, x: a, y: b - 6, sign: 1, rng: 34, lines: ln }) });
+
+      /* 11) bahan tanaman tambahan (baru; tidak menggeser bahan lama) */
+      const zone = (k) => k === 'flower' ? [[MP.x, MP.y, 150], [HG.x, HG.y, 60], [1560, 900, 160], [NK.x, NK.y, 30]] : k === 'mush' ? [[GH.x, GH.y, 60], [SC.x, SC.y, 150], [SWP.x, SWP.y, 110], [400, 780, 150]] : [[900, 1080, 360], [1400, 880, 260], [300, 900, 220], [640, 1080, 200], [1560, 1200, 200]];
+      const KN = ['herb', 'herb', 'herb', 'herb', 'herb', 'herb', 'herb', 'herb', 'mush', 'mush', 'mush', 'mush', 'mush', 'mush', 'mush', 'flower', 'flower', 'flower', 'flower', 'flower', 'flower', 'flower', 'flower', 'herb', 'mush', 'flower', 'herb', 'mush', 'flower', 'herb'];
+      KN.forEach((k, i) => { for (let n = 0; n < 120; n++) { const Z = zone(k), z = Z[(r2() * Z.length) | 0], an = r2() * TAU, dd = Math.sqrt(r2()) * z[2], a = z[0] + Math.cos(an) * dd, b = z[1] + Math.sin(an) * dd * .8; if (a < 40 || a > FW - 40 || b < FH0 + 14 || b > FH - 40) continue; const inGlade = SPOTS.some(s => Math.hypot(a - s.x, b - s.y) < s.r - 6); if (!inGlade && !free(a, b, 12)) continue; if (F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 40) || inWall(a, b, 8)) continue; F.gath.push({ k, x: a, y: b, got: 0, ph: r2() * 6 }); break } });
+      // pendamping di jalur baru (lebih mudah ditemukan)
+      [[604, 704, 'herb'], [1090, 740, 'mush'], [512, 930, 'flower'], [1300, 945, 'herb'], [1050, 1030, 'flower']].forEach(([a, b, k]) => { if (!inWall(a, b, 8)) F.gath.push({ k, x: a, y: b, got: 0, ph: r2() * 6 }) });
+
+      /* 12) kelinci tambahan, percikan air */
+      [[MP.x - 110, MP.y - 50], [MP.x + 120, MP.y - 56], [SC.x + 90, SC.y + 70], [WT.x - 100, WT.y + 90]].forEach(([a, b], i) => { if (!inWall(a, b, 6)) F.crit.push({ x: a, y: b, vx: 0, vy: 0, st: 0, tm: r2() * 3, hz: 0, fc: r2() < .5 ? -1 : 1, col: i % 2 ? '#b8a898' : '#a8845a', ph: r2() * 6 }) });
+      for (let i = 0; i < 70; i++) { const yy = rr(FH0, RIVER_END); F.sparks.push({ x: rx(yy) + (r2() - .5) * rhw(yy) * 1.6, y: yy, ph: r2() * 6 }) }
+      [[LAKE, 70], [MP, 30]].forEach(([P, n]) => { for (let i = 0; i < n; i++) { const an = r2() * TAU, dd = Math.sqrt(r2()); F.sparks.push({ x: P.x + Math.cos(an) * dd * (P.rx - 8), y: P.y + Math.sin(an) * dd * (P.ry - 6), ph: r2() * 6 }) } });
+    })();
     F.objs.sort((a, b) => a.y - b.y);
     F.dyn = [...F.npcs.filter(n => !n.sign).map((n, i) => ({ n, i, get y() { return n.y } })), ...F.crit.map(c => ({ c, get y() { return c.y } })), ...F.chests.map(c => ({ ch: c, y: c.y }))];
     // butiran cahaya
@@ -242,10 +436,13 @@
   };
   const OLC = '#0f1a12';
 
-  F.enter = function () { };
+  F.enter = function () { syncWorld() };
+  // pastikan batas kamera/dunia memakai ukuran hutan yang sudah diperluas (WW/WH dibaca main.js untuk membatasi kamera)
+  function syncWorld() { try { if (typeof WW !== 'undefined' && WW !== FW) WW = FW; if (typeof WH !== 'undefined' && WH !== FH) WH = FH } catch (e) { } }
 
   /* ---------- update ---------- */
   F.tick = function (dt) {
+    if (window.AREA === 'forest') syncWorld();
     if (TR_on()) return;
     // tanaman
     for (const q of F.gath) { if (q.got) continue; if (Math.hypot(q.x - p.x, q.y - p.y) < 13) { q.got = 1; W_.inv[q.k]++; WORLD.save(); try { SFX.pickup() } catch (e) { } dn(p.x, p.y - 18, '+' + KIND[q.k][0], 0, KIND[q.k][1]); for (let i = 0; i < 6; i++)dp.push({ k: 'p', x: q.x, y: q.y - 4, vx: (Math.random() - .5) * 40, vy: -20 - Math.random() * 30, life: .5, max: .5, s: 1.5, c: KIND[q.k][1] }) } }
@@ -286,7 +483,7 @@
     for (const s of F.sparks) { if (s.x < vx0 || s.x > vx1 || s.y < vy0 || s.y > vy1) continue; const a = Math.max(0, Math.sin(t * 2.2 + s.ph)); if (a < .3) continue; g.fillStyle = 'rgba(255,255,255,' + (a * .55) + ')'; g.fillRect(Math.round(s.x), Math.round(s.y), 3, 1); g.fillRect(Math.round(s.x + 1), Math.round(s.y - 1), 1, 3) }
     g.restore();
     // aliran sungai (garis bergerak)
-    if (vx1 > 780 && vx0 < 880) { g.save(); g.globalAlpha = .35; g.fillStyle = '#d8f4ff'; for (let i = 0; i < 26; i++) { const yy = ((i * 29 + t * 22) % FH), xx = rx(yy) + Math.sin(i * 7.3) * rhw(yy) * .7; if (yy > vy0 && yy < vy1) g.fillRect(Math.round(xx), Math.round(yy), 1, 5) } g.restore() }
+    if (vx1 > 780 && vx0 < 880) { g.save(); g.globalAlpha = .35; g.fillStyle = '#d8f4ff'; for (let i = 0; i < 52; i++) { const yy = ((i * 29 + t * 22) % RIVER_END), xx = rx(yy) + Math.sin(i * 7.3) * rhw(yy) * .7; if (yy > vy0 && yy < vy1) g.fillRect(Math.round(xx), Math.round(yy), 1, 5) } g.restore() }
     // kolam mata air bersinar
     if (Math.abs(camX + W / CAM_Z / 2 - SHRC.x) < 400) { lightL(SHRC.x, SHRC.y, 70, '120,220,255', .22 + .06 * Math.sin(t * 2)); g.save(); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 8; i++) { const k = (t * .35 + i / 8) % 1, a = Math.sin(k * Math.PI); g.fillStyle = 'rgba(190,245,255,' + (.8 * a) + ')'; g.fillRect(Math.round(SHRC.x + Math.sin(i * 2.3 + t) * 12), Math.round(SHRC.y - k * 40), 2, 2) } g.restore() }
     // api unggun
@@ -375,12 +572,28 @@
   };
 })();
 
+/* ===== Cahaya wilayah selatan: batu rune, jamur raksasa, taman peri, menara ===== */
+(function () {
+  const F = WORLD.AREAS.forest; if (!F) return;
+  const lightL = WORLD.lightL, _env = F.env;
+  F.env = function () {
+    _env.apply(this, arguments);
+    const G = F.glows; if (!G || !G.length || camY < 560) return;
+    const vx0 = camX - 90, vx1 = camX + W / CAM_Z + 90, vy0 = camY - 90, vy1 = camY + H / CAM_Z + 90;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (const q of G) { if (q[0] < vx0 || q[0] > vx1 || q[1] < vy0 || q[1] > vy1) continue; const night = WORLD.WX ? WORLD.WX.night : 0; lightL(q[0], q[1], q[2], q[3], q[4] * (.85 + .3 * night) * (.8 + .2 * Math.sin(t * 1.7 + q[5] * 1.9))) }
+    // kunang-kunang peri di Taman Peri & Gua Jamur
+    for (let i = 0; i < 14; i++) { const C = i < 8 ? F.geo.HG : F.geo.GH, a = t * .4 + i * 1.7, X = C.x + Math.sin(a * 1.3 + i) * (C.r - 14), Y = C.y - 10 + Math.cos(a * .9 + i * 2) * (C.r * .5) - Math.abs(Math.sin(a * 2)) * 6; if (X < vx0 || X > vx1 || Y < vy0 || Y > vy1) continue; const al = .4 + .5 * Math.max(0, Math.sin(t * 2.2 + i)); g.fillStyle = i < 8 ? 'rgba(200,255,190,' + al + ')' : 'rgba(150,255,235,' + al + ')'; g.fillRect(Math.round(X), Math.round(Y), 2, 2); g.fillStyle = i < 8 ? 'rgba(200,255,190,' + al * .25 + ')' : 'rgba(150,255,235,' + al * .25 + ')'; g.fillRect(Math.round(X) - 1, Math.round(Y) - 1, 4, 4) }
+    g.restore()
+  };
+})();
+
 /* ===== KEDALAMAN HUTAN: bayangan terarah, cahaya, pohon raksasa, semak, kabut ===== */
 (function () {
   'use strict';
   const F = WORLD.AREAS.forest; if (!F || !F.geo) return;
   const { clamp, mkRng, mkCv, rc, hash, vnoise, art } = WORLD;
-  const FW = 1800, FH = 720, GEO = F.geo;
+  const FW = 1800, GEO = F.geo, FH = GEO.FH, FH0 = GEO.FH0;
   const CFG = F.depthCfg = {
     fadeCanopy: true,   // pohon yang menutupi pemain jadi tembus pandang
     sway: true,         // tajuk pohon, pakis & rumput bergoyang pelan
@@ -503,17 +716,17 @@
 
   function depthPass() {
     const rng = mkRng(31337), objs = F.objs, walls = F.walls, free = F.free, bgc = F.bg.getContext('2d');
-    const { MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect } = GEO;
+    const { MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect, ponds, paths, glades, LAKE, MP, BR2, RIVER_END } = GEO;
     const addObj = (s, px, py, solid, extra) => { const o = Object.assign({ x: Math.round(px), y: Math.round(py), img: s.img, ox: s.ox, oy: s.oy, oh: s.img.height }, extra || {}); objs.push(o); if (solid) walls.push(solid); return o };
     const treeObjs = () => objs.filter(o => o.img && (o.img.__k === 'oak' || o.img.__k === 'pine'));
     const farFromTrees = (a, b, m) => !objs.some(o => o.img && o.img.__k && (o.img.__k === 'oak' || o.img.__k === 'pine') && Math.hypot(o.x - a, o.y - b) < m);
-    const pathClear = (a, b, m) => [MAINd, CAMPd, SHRd].every(P => WORLD.distPoly(a, b, P) > m);
+    const pathClear = (a, b, m) => paths.every(P => WORLD.distPoly(a, b, P.d) > m);
 
     /* 1) pohon raksasa + anakan: variasi ukuran supaya siluet hutan tidak seragam */
     ACTIVE = true;
     if (CFG.giants > 0) {
-      const want = Math.round(14 * CFG.giants), giants = [];
-      for (let n = 0; n < 900 && giants.length < want; n++) {
+      const want = Math.round(26 * CFG.giants), giants = [];
+      for (let n = 0; n < 1700 && giants.length < want; n++) {
         const a = 60 + rng() * (FW - 200), b = 150 + rng() * (FH - 190);
         if (!free(a, b, 30) || !farFromTrees(a, b, 26) || giants.some(q => Math.hypot(q[0] - a, q[1] - b) < 110)) continue;
         if (!pathClear(a, b - 50, 40) || !pathClear(a, b - 85, 30) || !pathClear(a, b, 40)) continue;
@@ -521,7 +734,7 @@
       }
       giants.forEach(([a, b], i) => { const s = i % 3 === 2 ? art.pine(120 + i, 1.55) : art.oak(100 + i, 1.5 + (i % 3) * .12); addObj(s, a, b + 4, [a - 7, b - 1, 14, 6]) })
     }
-    for (let n = 0, put = 0; n < 500 && put < 40; n++) {
+    for (let n = 0, put = 0; n < 900 && put < 72; n++) {
       const a = 40 + rng() * (FW - 120), b = 140 + rng() * (FH - 170);
       if (!free(a, b, 10) || !farFromTrees(a, b, 20) || F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 22)) continue;
       addObj(rng() < .6 ? art.oak(200 + put, .55 + rng() * .15) : art.pine(220 + put, .55 + rng() * .15), a, b + 3); put++
@@ -544,20 +757,20 @@
     // tanah di kaki tebing, tepi jalan, tepi sungai & kolam: sedikit lebih gelap supaya terasa cekung
     { const [cx0, , cw] = cliffRect; for (let y = 96; y < 156; y++) for (let x = cx0 - 14; x < cx0 + cw + 14; x++) { const fx = Math.min(1, Math.min(x - (cx0 - 14), cx0 + cw + 14 - x) / 24), v = .5 * Math.pow(1 - (y - 96) / 60, 1.3) * fx; if (v > 0) { const i = y * FW + x; S[i] = 1 - (1 - S[i]) * (1 - v) } } }
     const ring = (pts, w) => { const R = w / 2 + 8; pts.forEach(([px, py], k) => { if (k % 2) return; for (let y = Math.max(0, Math.floor(py - R)); y <= Math.min(FH - 1, Math.ceil(py + R)); y++) for (let x = Math.max(0, Math.floor(px - R)); x <= Math.min(FW - 1, Math.ceil(px + R)); x++) { const dd = Math.sqrt((x - px) * (x - px) + (y - py) * (y - py)); if (dd > w / 2 + 1 && dd < R) { const v = .26 * (1 - (dd - w / 2) / 8), i = y * FW + x; S[i] = 1 - (1 - S[i]) * (1 - v) } } }) };
-    ring(MAINd, PW); ring(CAMPd, PS); ring(SHRd, PS);
-    for (let y = 0; y < FH; y++) { const c = rx(y), hw = rhw(y); for (let k = 0; k < 11; k++) { const v = .34 * (1 - k / 11);[c - hw - 7 - k, c + hw + 7 + k].forEach(xx => { xx = Math.round(xx); if (xx >= 0 && xx < FW) { const i = y * FW + xx; S[i] = 1 - (1 - S[i]) * (1 - v) } }) } }
-    for (let y = Math.floor(POND.y - POND.ry - 18); y < POND.y + POND.ry + 18; y++) for (let x = Math.floor(POND.x - POND.rx - 18); x < POND.x + POND.rx + 18; x++) { const dd = ((x - POND.x) / (POND.rx + 8)) ** 2 + ((y - POND.y) / (POND.ry + 6)) ** 2; if (dd > 1 && dd < 1.6) { const v = .3 * (1 - (dd - 1) / .6), i = y * FW + x; S[i] = 1 - (1 - S[i]) * (1 - v) } }
+    paths.forEach(P => ring(P.d, P.w));
+    for (let y = 0; y < RIVER_END; y++) { const c = rx(y), hw = rhw(y); for (let k = 0; k < 11; k++) { const v = .34 * (1 - k / 11);[c - hw - 7 - k, c + hw + 7 + k].forEach(xx => { xx = Math.round(xx); if (xx >= 0 && xx < FW) { const i = y * FW + xx; S[i] = 1 - (1 - S[i]) * (1 - v) } }) } }
+    ponds.forEach(P => { for (let y = Math.floor(P.y - P.ry - 18); y < P.y + P.ry + 18; y++) for (let x = Math.floor(P.x - P.rx - 18); x < P.x + P.rx + 18; x++) { const dd = ((x - P.x) / (P.rx + 8)) ** 2 + ((y - P.y) / (P.ry + 6)) ** 2; if (dd > 1 && dd < 1.6) { const v = .3 * (1 - (dd - 1) / .6), i = y * FW + x; S[i] = 1 - (1 - S[i]) * (1 - v) } } });
 
     // gundukan tanah: terang di kiri-atas, gelap di kanan-bawah (memberi kesan ketinggian)
     const mounds = [];
-    for (let n = 0; n < 400 && mounds.length < 26; n++) {
+    for (let n = 0; n < 700 && mounds.length < 46; n++) {
       const a = 40 + rng() * (FW - 100), b = 150 + rng() * (FH - 190), rr = 26 + rng() * 34, i = (b | 0) * FW + (a | 0);
       if (!free(a, b, 16) || S[i] > .16 || mounds.some(q => Math.hypot(q[0] - a, q[1] - b) < 90)) continue; mounds.push([a, b, rr]);
       stamp(L, a - rr * .2, b - rr * .12, rr * .66, rr * .26, .6); stamp(S, a + rr * .28, b + rr * .2, rr * .8, rr * .24, .42)
     }
     // sinar matahari: padang bunga, kuil, perkemahan, sepanjang jalan, dan celah tajuk
     stamp(L, MEAD.x, MEAD.y, MEAD.r * 1.2, MEAD.r * .9, .55); stamp(L, SHRC.x, SHRC.y, 96, 62, .38); stamp(L, CAMPC.x, CAMPC.y, 72, 46, .26);
-    MAINd.forEach(([px, py], k) => { if (k % 3 === 0) stamp(L, px, py, 16, 11, .14) });
+    paths.forEach(P => P.d.forEach(([px, py], k) => { if (k % 3 === 0) stamp(L, px, py, 16, 11, .14) })); glades.forEach(G => stamp(L, G.x, G.y, G.r * 1.1, G.r * .8, .3));
     for (let gy = 150; gy < FH - 30; gy += 38) for (let gx = 40; gx < FW - 60; gx += 38) {
       const a = gx + (rng() - .5) * 20, b = gy + (rng() - .5) * 20; let sum = 0; for (let k = 0; k < 5; k++) { const sx = Math.min(FW - 1, Math.max(0, (a + (k - 2) * 12) | 0)), sy = Math.min(FH - 1, Math.max(0, (b + ((k * 7) % 5 - 2) * 6) | 0)); sum += S[sy * FW + sx] }
       if (sum / 5 < .07 && vnoise(a / 90, b / 90, 14) > .45) stamp(L, a, b, 24 + rng() * 14, 11 + rng() * 6, .3)
@@ -586,15 +799,15 @@
       [-1, 1].forEach(sd => { const n = big ? 3 : 2; for (let k = 0; k < n; k++) { const L0 = 5 + ((rng() * (big ? 9 : 5)) | 0), y0 = o.y - 3 + k * 2; for (let j = 0; j < L0; j++) rc(bgc, '#1b130c', o.x + sd * (3 + j), y0 + (j * .45 | 0) - 1, 1, 3); for (let j = 0; j < L0; j++) { rc(bgc, '#5a3d24', o.x + sd * (3 + j), y0 + (j * .45 | 0), 1, 1); if (j < L0 - 2) rc(bgc, '#7a5636', o.x + sd * (3 + j), y0 + (j * .45 | 0) - 1, 1, 1) } } });
       for (let k = 0; k < (big ? 14 : 7); k++) { const an = rng() * 6.283, dd = 6 + rng() * (big ? 26 : 16); rc(bgc, ['#b8742a', '#d89a3a', '#8a5a28', '#6a4a24'][(rng() * 4) | 0], o.x + Math.cos(an) * dd, o.y + Math.sin(an) * dd * .4, 2, 1) }
     });
-    for (let n = 0, put = 0; n < 4000 && put < 420 * CFG.undergrowth; n++) { const a = rng() * FW, b = rng() * FH; if (L[(b | 0) * FW + (a | 0)] > .18 && free(a, b, 2)) { art.grassTuft(bgc, a, b, rng); put++ } }
+    for (let n = 0, put = 0; n < 8000 && put < 760 * CFG.undergrowth; n++) { const a = rng() * FW, b = rng() * FH; if (L[(b | 0) * FW + (a | 0)] > .18 && free(a, b, 2)) { art.grassTuft(bgc, a, b, rng); put++ } }
 
     /* 5) sprite bawah-tegakan (tertata Y, menutupi kaki pemain): pakis, rumput tinggi, jamur, ilalang */
     const FERN = [], GRASS = [], SHR = [], CAT = [];
     for (let i = 0; i < 7; i++) FERN.push(fern(500 + i)); for (let i = 0; i < 6; i++) GRASS.push(tallGrass(600 + i)); for (let i = 0; i < 3; i++) SHR.push(shroom(700 + i)); for (let i = 0; i < 4; i++) CAT.push(cattail(800 + i));
     if (CFG.undergrowth > 0) {
       const cell = new Map(), key = (a, b) => ((a / 12) | 0) + ',' + ((b / 12) | 0), okSpot = (a, b) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const l = cell.get(((a / 12 | 0) + i) + ',' + ((b / 12 | 0) + j)); if (l && l.some(q => Math.hypot(q[0] - a, q[1] - b) < 11)) return false } return true };
-      const tgt = Math.round(1100 * CFG.undergrowth);
-      for (let n = 0, put = 0; n < 9000 && put < tgt; n++) {
+      const tgt = Math.round(2000 * CFG.undergrowth);
+      for (let n = 0, put = 0; n < 16000 && put < tgt; n++) {
         const a = 24 + rng() * (FW - 48), b = 130 + rng() * (FH - 160); if (!free(a, b, 5)) continue;
         const s = S[(b | 0) * FW + (a | 0)], lit = L[(b | 0) * FW + (a | 0)]; if (!okSpot(a, b) || F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 18)) continue;
         const k = rng(); let spr;
@@ -604,8 +817,8 @@
         addObj(spr, a, b, null, { sway: spr.oy > 12 ? 1 : 0 }); (cell.get(key(a, b)) || cell.set(key(a, b), []).get(key(a, b))).push([a, b]); put++
       }
       // ilalang di tepi sungai & kolam
-      for (let i = 0; i < 70; i++) { const y = 20 + rng() * (FH - 40), sd = rng() < .5 ? -1 : 1, a = rx(y) + sd * (rhw(y) + 9 + rng() * 8); if (Math.abs(a - 830) < 70 && y > 240 && y < 360) continue; addObj(CAT[(rng() * 4) | 0], a, y, null, { sway: 1 }) }
-      for (let i = 0; i < 16; i++) { const an = rng() * 6.283, a = POND.x + Math.cos(an) * (POND.rx + 12 + rng() * 6), b = POND.y + Math.sin(an) * (POND.ry + 8 + rng() * 4); addObj(CAT[(rng() * 4) | 0], a, b, null, { sway: 1 }) }
+      for (let i = 0; i < 120; i++) { const y = 20 + rng() * (RIVER_END - 30), sd = rng() < .5 ? -1 : 1, a = rx(y) + sd * (rhw(y) + 9 + rng() * 8); if (Math.abs(a - 830) < 70 && ((y > 240 && y < 360) || (y > BR2[0] - 30 && y < BR2[1] + 30))) continue; addObj(CAT[(rng() * 4) | 0], a, y, null, { sway: 1 }) }
+      [[POND, 16], [MP, 16], [LAKE, 34]].forEach(([P, n]) => { for (let i = 0; i < n; i++) { const an = rng() * 6.283, a = P.x + Math.cos(an) * (P.rx + 12 + rng() * 6), b = P.y + Math.sin(an) * (P.ry + 8 + rng() * 4); if (b > FH - 14) continue; addObj(CAT[(rng() * 4) | 0], a, b, null, { sway: 1 }) } });
     }
 
     /* 6) tandai objek untuk goyangan & tembus pandang, buat peta topeng cahaya bintik */
@@ -646,7 +859,7 @@
     // kabut tipis berlapis (melintas di depan objek => kedalaman)
     if (CFG.mist > 0) {
       g.save(); g.globalAlpha = (.07 + .06 * night) * CFG.mist;
-      const spots = [[GEO.POND.x, GEO.POND.y, 1.5], [GEO.SHRC.x, GEO.SHRC.y + 30, 1.3], [GEO.CAMPC.x - 60, GEO.CAMPC.y + 60, 1]]; for (let y = 60; y < FH; y += 110) spots.push([GEO.rx(y), y, 1.1]);
+      const RIVER_END = GEO.RIVER_END, spots = [[GEO.POND.x, GEO.POND.y, 1.5], [GEO.SHRC.x, GEO.SHRC.y + 30, 1.3], [GEO.CAMPC.x - 60, GEO.CAMPC.y + 60, 1]]; for (let y = 60; y < RIVER_END; y += 110) spots.push([GEO.rx(y), y, 1.1]); spots.push([GEO.MP.x, GEO.MP.y, 1.4], [GEO.LAKE.x - 130, GEO.LAKE.y - 20, 2], [GEO.LAKE.x + 130, GEO.LAKE.y - 12, 2]);
       spots.forEach(([mx, my, sc], i) => { const X = mx + Math.sin(t * .17 + i * 1.9) * 26 - 60 * sc, Y = my - 14 + Math.sin(t * .23 + i) * 3; if (X > camX + vw || X + 120 * sc < camX || Y > camY + vh || Y + 44 * sc < camY) return; g.drawImage(misty, Math.round(X), Math.round(Y), 120 * sc, 44 * sc) });
       g.restore()
     }
@@ -682,7 +895,7 @@
 (function () {
   'use strict';
   const F = WORLD.AREAS.forest; if (!F) return;
-  const FW = 1800, FH = 720, TAU = Math.PI * 2, lightL = WORLD.lightL;
+  const FW = 1800, FH = F.h, TAU = Math.PI * 2, lightL = WORLD.lightL;   // FH mengikuti tinggi hutan (diperluas) agar serigala bisa muncul di seluruh peta
   const WOLF = {
     chance: .5,             // peluang ada serigala tiap malam (0.5 = 50%)
     minPack: 1, maxPack: 3, // jumlah serigala sekali muncul (acak, rata)
