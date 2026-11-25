@@ -552,16 +552,18 @@
     };
     const dWall = dt(1), dFloor = dt(0);
     const RK0 = h2r('#13101b'), RK1 = h2r('#262033'), B0 = h2r('#1f1a2c'), B1 = h2r('#3a3150'), BM = h2r('#0e0b16'), F0 = h2r('#2c2838'), F1 = h2r('#403a52'), FM = h2r('#1a1724'), CP = h2r('#5a1020'), CPD = h2r('#2a060e'), CPL = h2r('#7a1c30'), GOLD = h2r('#a8843a'), RIM = h2r('#6a5f86');
+    // [perf] mixc versi tanpa alokasi: memakai satu array sementara, bukan array baru per piksel (~400rb piksel)
+    const S3 = [0, 0, 0], mixP = (a, b, k) => { S3[0] = a[0] + (b[0] - a[0]) * k; S3[1] = a[1] + (b[1] - a[1]) * k; S3[2] = a[2] + (b[2] - a[2]) * k; return S3 };
     const id = x.createImageData(CW, CH), d = id.data;
     for (let yy = 0; yy < CH; yy++) for (let xx = 0; xx < CW; xx++) {
       const i = yy * CW + xx, o4 = i * 4; let c;
       if (op[i]) {                                           // lantai batu + karpet merah
         const row = (yy / 16) | 0, off = (row & 1) * 11, col = ((xx + off) / 22) | 0, sh = hash(col, row, 5), mort = yy % 16 === 0 || (xx + off) % 22 === 0, cd = Math.abs(xx - CX);
-        c = mixc(F0, F1, sh * .75 + vnoise(xx / 6, yy / 6, 6) * .25); if (mort) c = FM;
+        c = mixP(F0, F1, sh * .75 + vnoise(xx / 6, yy / 6, 6) * .25); if (mort) c = FM;
         if (yy >= 60 && yy < 498 && cd < 30) {
-          c = mixc(CP, CPL, vnoise(xx / 3, yy / 3, 7) * .25);
+          c = mixP(CP, CPL, vnoise(xx / 3, yy / 3, 7) * .25);
           if (cd >= 27) c = CPD; else if (cd >= 24 && cd < 26) c = GOLD;
-          else { const ddy = ((yy - 60) % 26) - 13, m = cd + Math.abs(ddy); if (m < 9 && cd < 22) c = m < 5 ? CPL : mixc(CP, CPL, .55) }
+          else { const ddy = ((yy - 60) % 26) - 13, m = cd + Math.abs(ddy); if (m < 9 && cd < 22) c = m < 5 ? CPL : mixP(CP, CPL, .55) }
           if (yy < 63 || yy >= 495) c = ((xx + yy) & 1) ? GOLD : CPD;
         }
         const ao = dFloor[i]; if (ao < 10) { const k = 1 - (10 - ao) / 10 * .55; c = [c[0] * k, c[1] * k, c[2] * k] }
@@ -569,9 +571,9 @@
         const dd = dWall[i], lim = (yy < 80 || yy > 480) ? 46 : 28;
         if (dd <= lim) {
           const row = (yy / 6) | 0, mort = yy % 6 === 0 || (xx + (row & 1) * 5) % 11 === 0, n = vnoise(xx / 6, yy / 4, 31);
-          c = mixc(B0, B1, n); if (mort) c = BM; const k = .55 + .45 * (1 - dd / lim); c = [c[0] * k, c[1] * k, c[2] * k];
+          c = mixP(B0, B1, n); if (mort) c = BM; const k = .55 + .45 * (1 - dd / lim); c = [c[0] * k, c[1] * k, c[2] * k];
           if (dd <= 1) c = RIM;
-        } else c = mixc(RK0, RK1, vnoise(xx / 18, yy / 14, 3) * .6 + vnoise(xx / 5, yy / 5, 4) * .4);
+        } else c = mixP(RK0, RK1, vnoise(xx / 18, yy / 14, 3) * .6 + vnoise(xx / 5, yy / 5, 4) * .4);
       }
       d[o4] = c[0]; d[o4 + 1] = c[1]; d[o4 + 2] = c[2]; d[o4 + 3] = 255;
     }
@@ -678,6 +680,21 @@
     for (let i = 0; i < 28; i++) C.ff.push({ x: 268 + rng() * 184, y: 70 + rng() * 420, sp: 2 + rng() * 4, ph: rng() * 6 });
   };
   C.enter = function () { };
+
+  /* ---------- [perf] pra-bangun Lorong di latar belakang ----------
+     Sebelumnya Lorong baru dibangun tepat saat transisi pintu (freeze 1 frame). Sekarang dibangun lebih awal,
+     tapi hanya ketika pemain sudah berada di lobby dan tidak sedang transisi. Hutan tidak disentuh (tetap seperti aslinya).
+     Kalau ada masalah, ubah PREWARM_CORRIDOR menjadi false untuk kembali ke perilaku semula. */
+  const PREWARM_CORRIDOR = true;
+  function prewarmCorridor(tries) {
+    if (!PREWARM_CORRIDOR || C.ready) return;
+    const inGame = window.AREA === 'lobby' && !TR.on && typeof p !== 'undefined' && p;
+    if (!inGame) { if (tries < 30) setTimeout(() => prewarmCorridor(tries + 1), 2000); return }
+    C.ready = 1;
+    try { const t0 = performance.now(); C.build(); console.log('[prewarm] lorong siap dalam ' + Math.round(performance.now() - t0) + ' ms') }
+    catch (e) { C.ready = 0; console.warn('[prewarm] gagal, lorong akan dibangun saat dibutuhkan', e) }
+  }
+  setTimeout(() => { if ('requestIdleCallback' in window) requestIdleCallback(() => prewarmCorridor(0), { timeout: 4000 }); else prewarmCorridor(0) }, 2500);
 
   /* ---------- rutinitas NPC lorong ---------- */
   const OL = '#120e18', FIREP = [206, 447];

@@ -36,21 +36,25 @@
   const NK = { x: 160, y: 884, r: 46 };                               // Relung Sunyi (tersembunyi)
   const SWP = { x: 596, y: 1190, r: 104 };                            // Rawa Lumut (genangan, bisa dilewati)
   const RIVER_END = LAKE.y - LAKE.ry + 12;
+  const MON = { x: 1262, y: 806, r: 112, rx: 104, ry: 66 };           // Monumen Kuno "Gerbang Para Penjaga" (landmark besar)
+  const smooth = P => { const o = [], n = P.length; for (let i = 0; i < n - 1; i++) { const a = P[Math.max(0, i - 1)], b = P[i], c = P[i + 1], d = P[Math.min(n - 1, i + 2)]; for (let k = 0; k < 8; k++) { const u = k / 8, u2 = u * u, u3 = u2 * u, f = j => .5 * (2 * b[j] + (-a[j] + c[j]) * u + (2 * a[j] - 5 * b[j] + 4 * c[j] - d[j]) * u2 + (-a[j] + 3 * b[j] - 3 * c[j] + d[j]) * u3); o.push([f(0), f(1)]) } } o.push(P[n - 1]); return o };
+  // k: 'main' = jalan raya (lebar, tepi batu, tanah terang); 'trail' = jalan setapak (sempit, tanah gelap). Semua kurva dihaluskan.
   const PTH = [
-    { id: 'PA', w: PS, P: [[575, 520], [588, 600], [590, 680], [574, 760], [542, 838], [504, 902], [470, 962], [432, 1016]] },
-    { id: 'PB1', w: PW, P: [[1170, 378], [1128, 440], [1086, 520], [1072, 610], [1076, 700], [1094, 780], [1096, 850], [1060, 912], [998, 950], [930, 962], [874, 963]] },
-    { id: 'PB2', w: PW, P: [[786, 963], [730, 968], [660, 976], [590, 960], [520, 934], [504, 902]] },
-    { id: 'T1', w: PS, P: [[470, 962], [430, 1000], [388, 1030], [350, 1056]] },
-    { id: 'T2', w: PS - 8, P: [[290, 1100], [236, 1130], [178, 1172], [138, 1226], [124, 1262]] },
-    { id: 'T3', w: PS, P: [[504, 902], [520, 990], [552, 1070], [604, 1140], [672, 1196], [742, 1232], [790, 1244]] },
-    { id: 'T4', w: PS, P: [[1096, 850], [1158, 876], [1226, 896], [1296, 928], [1360, 974], [1412, 1020], [1440, 1052]] },
-    { id: 'T5', w: PS - 8, P: [[1470, 1100], [1494, 1160], [1536, 1212], [1590, 1258], [1640, 1290], [1668, 1304]] },
-    { id: 'T6', w: PS, P: [[1060, 912], [1044, 990], [1050, 1070], [1096, 1136], [1100, 1160]] },
-    { id: 'T7', w: PS, P: [[1340, 1184], [1400, 1186], [1470, 1178], [1494, 1160]] },
-    { id: 'T8', w: PS - 10, P: [[542, 838], [486, 826], [420, 816], [350, 812], [282, 826], [222, 850], [180, 872]] }
+    { id: 'PA', k: 'trail', w: PS, P: [[575, 520], [588, 600], [590, 680], [574, 760], [548, 830], [530, 890], [520, 930]] },
+    { id: 'PB1', k: 'main', w: PW, P: [[1170, 378], [1128, 440], [1086, 520], [1072, 610], [1076, 700], [1094, 780], [1096, 850]] },
+    { id: 'PB1W', k: 'main', w: PW, P: [[1096, 850], [1062, 894], [1002, 934], [934, 958], [874, 963]] },
+    { id: 'PB2', k: 'main', w: PW, P: [[786, 963], [730, 966], [660, 962], [600, 950], [556, 940], [520, 930]] },
+    { id: 'AV', k: 'main', w: PW, P: [[1094, 780], [1128, 794], [1160, 806]] },
+    { id: 'T1', k: 'trail', w: PS, P: [[520, 930], [482, 972], [432, 1012], [382, 1044], [350, 1058]] },
+    { id: 'T2', k: 'trail', w: PS - 8, P: [[290, 1100], [240, 1128], [184, 1170], [142, 1222], [124, 1262]] },
+    { id: 'T3', k: 'trail', w: PS, P: [[520, 930], [528, 1000], [556, 1070], [604, 1130], [668, 1184], [736, 1222], [788, 1240]] },
+    { id: 'T4', k: 'trail', w: PS, P: [[1096, 850], [1140, 902], [1200, 950], [1280, 990], [1360, 1016], [1416, 1036], [1440, 1052]] },
+    { id: 'T5', k: 'trail', w: PS - 8, P: [[1470, 1100], [1494, 1160], [1536, 1212], [1590, 1258], [1640, 1290], [1668, 1304]] },
+    { id: 'T6', k: 'trail', w: PS, P: [[1096, 850], [1106, 920], [1102, 990], [1104, 1060], [1112, 1124], [1108, 1190], [1160, 1262], [1262, 1276], [1340, 1258], [1366, 1206], [1410, 1186], [1470, 1178], [1494, 1160]] },
+    { id: 'T8', k: 'trail', w: PS - 10, P: [[548, 830], [490, 820], [422, 812], [352, 810], [284, 822], [224, 846], [182, 870]] }
   ];
-  PTH.forEach(o => o.d = dense(o.P, 4));
-  const GLADES = [SC, HG, WT, GH, NK];
+  PTH.forEach(o => o.d = dense(smooth(o.P), 4));
+  const GLADES = [SC, HG, WT, GH, NK, MON];
   let NEWGEO = false;
   function free(x, y, m) {
     if (x < 16 || x > FW - 16 || y < 18 || y > (NEWGEO ? FH : FH0) - 18) return false;   // batas bawah lama dipertahankan saat isi hutan lama dibuat (urutan RNG tetap sama)
@@ -69,12 +73,16 @@
       if (((x - MP.x) / (MP.rx + 12 + m)) ** 2 + ((y - MP.y) / (MP.ry + 12 + m)) ** 2 < 1) return false;
       if (x > BXA - 6 - m && x < BXB + 6 + m && y > BR2[0] - 10 - m && y < BR2[1] + 10 + m) return false;
       if (Math.hypot(x - SWP.x, (y - SWP.y) * 1.6) < SWP.r * .5 + m) return false;
+      if (Math.hypot(x - MON.x, (y - MON.y) * 1.4) < MON.rx + 64 + m) return false;   // halaman lapang di sekeliling monumen
+      if (x > MON.x - MON.rx - 74 && x < MON.x && Math.abs(y - MON.y) < 104) return false;   // jalan masuk monumen dibiarkan lapang
     }
     return true;
   }
   F.free = free;
-  F.geo = { MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect, FH0, FH, LAKE, MP, SC, HG, WT, GH, NK, SWP, BR2, RIVER_END,
-    paths: [{ d: MAINd, w: PW }, { d: CAMPd, w: PS }, { d: SHRd, w: PS }, ...PTH.map(o => ({ d: o.d, w: o.w }))], ponds: [POND, MP, LAKE], glades: [SC, WT, NK, HG] };   // dipakai modul kedalaman
+  F.geo = {
+    MAINd, CAMPd, SHRd, PW, PS, POND, CAMPC, SHRC, MEAD, rx, rhw, cliffRect, FH0, FH, LAKE, MP, SC, HG, WT, GH, NK, MON, SWP, BR2, RIVER_END,
+    paths: [{ d: MAINd, w: PW }, { d: CAMPd, w: PS }, { d: SHRd, w: PS }, ...PTH.map(o => ({ d: o.d, w: o.w }))], ponds: [POND, MP, LAKE], glades: [SC, WT, NK, HG, MON]
+  };   // dipakai modul kedalaman
 
   F.build = function () {
     const rng = mkRng(2024), [bg, x] = mkCv(FW, FH); F.bg = bg;
@@ -319,14 +327,16 @@
       for (let i = 0; i < 12; i++) { const an = r2() * TAU, dd = Math.sqrt(r2()) * SWP.r, a = SWP.x + Math.cos(an) * dd, b = SWP.y + Math.sin(an) * dd * .6, w = 10 + r2() * 16; if (Math.hypot(a - 672, b - 1196) < 40) continue; ell(x, '#27483a', a, b, w + 2, w * .4 + 2); ell(x, '#3a6a5a', a, b, w, w * .4); ell(x, '#5a8a7a', a - 2, b - 1, w * .55, w * .2) }
 
       /* 4) jalan tanah baru + jembatan kedua */
-      const pStamp = (dn, w) => {
-        dn.forEach(([a, b]) => disc(x, '#6e5030', a, b, w / 2 + 3)); dn.forEach(([a, b]) => disc(x, '#a07a4a', a, b, w / 2 + 1)); dn.forEach(([a, b], i) => { if (i % 2 == 0) disc(x, '#b48c58', a + (r2() - .5) * 4, b + (r2() - .5) * 4, w / 2 - 3) });
-        dn.forEach(([a, b], i) => { if (i % 3 == 0) { rc(x, '#8a6640', a + (r2() - .5) * w * .8, b + (r2() - .5) * w * .8, 3 + r2() * 3, 1); if (r2() < .35) rc(x, '#c8a06a', a + (r2() - .5) * w * .8, b + (r2() - .5) * w * .8, 2, 1) } });
-        dn.forEach(([a, b], i) => { if (i % 5 == 0) { const s = r2() < .5 ? -1 : 1, off = w / 2 + 2; art.grassTuft(x, a + s * off * (.8 + r2() * .4), b + (r2() - .5) * 4, r2) } });
-        dn.forEach(([a, b], i) => { if (i % 40 == 0) art.pebbles(x, a + (r2() - .5) * w * .7, b + (r2() - .5) * w * .6, r2) })
+      const pStamp = (dn, w, kind) => {
+        const C = kind === 'main' ? ['#6e5030', '#a07a4a', '#b48c58', '#8a6640'] : ['#5a4228', '#8a6a42', '#9a7a4c', '#74562e'];
+        dn.forEach(([a, b]) => disc(x, C[0], a, b, w / 2 + 3)); dn.forEach(([a, b]) => disc(x, C[1], a, b, w / 2 + 1)); dn.forEach(([a, b], i) => { if (i % 2 == 0) disc(x, C[2], a, b, w / 2 - 3) });
+        dn.forEach(([a, b], i) => { if (i % 4 == 0) rc(x, C[3], a + ((i * 7) % 11 - 5) * w / 14, b + ((i * 5) % 9 - 4) * w / 12, 3 + (i % 3), 1) });
+        // tepi jalan yang rapi: jalan raya = batu pinggir teratur, jalan setapak = rumput pendek seragam
+        dn.forEach(([a, b], i) => { if (i % 5 || i < 1 || i >= dn.length - 1) return; const p0 = dn[i - 1], p1 = dn[i + 1], tx = p1[0] - p0[0], ty = p1[1] - p0[1], l = Math.hypot(tx, ty) || 1, nx = -ty / l, ny = tx / l;[-1, 1].forEach(sd => { const ex = a + nx * sd * (w / 2 + 2), ey = b + ny * sd * (w / 2 + 2); if (kind === 'main') { rc(x, '#4a4036', ex - 1, ey, 4, 3); rc(x, '#9a8c78', ex - 1, ey, 3, 2); rc(x, '#c4b8a0', ex - 1, ey, 2, 1) } else art.grassTuft(x, ex + nx * sd * 2, ey + ny * sd * 2, r2) }) });
       };
-      PTH.forEach(o => pStamp(o.d, o.w));
-      { const [BY0b, BY1b] = BR2;
+      [...PTH].sort((p_, q_) => (p_.k === 'main') - (q_.k === 'main')).forEach(o => pStamp(o.d, o.w, o.k));   // setapak dulu, jalan raya di atasnya => simpangan bersih
+      {
+        const [BY0b, BY1b] = BR2;
         rc(x, 'rgba(0,0,0,.28)', BXA + 2, BY1b + 2, BXB - BXA, 7);
         for (let xx = BXA; xx < BXB; xx += 4) { rc(x, '#4a301a', xx, BY0b - 1, 4, BY1b - BY0b + 3); rc(x, xx % 8 ? '#9a7444' : '#8a6440', xx + 1, BY0b, 3, BY1b - BY0b + 1); rc(x, '#b8905a', xx + 1, BY0b, 3, 1) }
         [BY0b - 3, BY1b + 1].forEach((yy, k) => { rc(x, OLC, BXA - 3, yy - 1, BXB - BXA + 6, 5); rc(x, k ? '#8a6440' : '#a8825a', BXA - 2, yy, BXB - BXA + 4, 3); rc(x, '#c8a46a', BXA - 2, yy, BXB - BXA + 4, 1); for (let xx = BXA; xx <= BXB; xx += 18) { rc(x, OLC, xx - 1, yy - 3, 6, 10); rc(x, '#7a5434', xx, yy - 2, 4, 8); rc(x, '#b8905a', xx, yy - 2, 1, 8) } });
@@ -347,7 +357,7 @@
         return { img: c, ox: 32, oy: 90 }
       };
       const wallPiece = (w) => { const h = 26, [c, q] = mkCv(w, h); for (let xx = 0; xx < w; xx++) { const top = 4 + ((hash(xx, w, 7) * 8) | 0); for (let yy = top; yy < h; yy++) { const mort = yy % 6 === 0 || (xx + ((yy / 6) | 0) * 5) % 10 === 0, n = vnoise(xx / 4, yy / 4, 83); rc(q, yy - top < 2 ? '#4a8a3a' : mort ? '#3e3e4a' : n < .5 ? '#5e5e6c' : '#72727f', xx, yy, 1, 1) } rc(q, OLC, xx, top - 1, 1, 1) } rc(q, OLC, 0, 6, 1, 20); rc(q, OLC, w - 1, 6, 1, 20); rc(q, OLC, 0, h - 1, w, 1); return { img: c, ox: w / 2, oy: h - 3 } };
-      const gShroom = (k) => { const W = 40, H = 46, [c, q] = mkCv(W, H), cap = [['#2a8a8a', '#5ad8c8', '#c8fff0'], ['#5a3aa8', '#9a7aff', '#e0d0ff'], ['#2a7a5a', '#6ae0a0', '#d8ffe8']][k % 3]; rc(q, OLC, 15, 20, 10, 24); rc(q, '#d8c8a0', 16, 21, 8, 22); rc(q, '#f4e8c8', 16, 21, 3, 22); rc(q, '#9a8a68', 22, 21, 2, 22); ell(q, OLC, 20, 18, 19, 13); ell(q, cap[0], 20, 17, 17, 11); ell(q, cap[1], 19, 15, 14, 8); ell(q, cap[2], 15, 12, 6, 3); [[10, 15], [24, 12], [28, 18], [18, 19]].forEach(([a, b]) => rc(q, '#fff8e0', a, b, 2, 2)); return { img: c, ox: 20, oy: 42 } };
+      const gShroom = (k) => { const W = 40, H = 46, [c, q] = mkCv(W, H), cap = [['#2a8a8a', '#5ad8c8', '#c8fff0'], ['#5a3aa8', '#9a7aff', '#e0d0ff'], ['#2a7a5a', '#6ae0a0', '#d8ffe8']][k % 3]; rc(q, OLC, 15, 20, 10, 24); rc(q, '#d8c8a0', 16, 21, 8, 22); rc(q, '#f4e8c8', 16, 21, 3, 22); rc(q, '#9a8a68', 22, 21, 2, 22); ell(q, OLC, 20, 18, 19, 13); ell(q, cap[0], 20, 17, 17, 11); ell(q, cap[1], 19, 15, 14, 8); ell(q, cap[2], 15, 12, 6, 3);[[10, 15], [24, 12], [28, 18], [18, 19]].forEach(([a, b]) => rc(q, '#fff8e0', a, b, 2, 2)); return { img: c, ox: 20, oy: 42 } };
       const altar = () => { const [c, q] = mkCv(30, 24); rc(q, OLC, 2, 8, 26, 15); rc(q, '#6a6a78', 3, 9, 24, 13); rc(q, '#9a9aa8', 3, 9, 24, 3); rc(q, '#4a4a58', 3, 19, 24, 3); rc(q, OLC, 6, 2, 18, 8); rc(q, '#8a8a98', 7, 3, 16, 6); rc(q, '#bcbcc8', 7, 3, 16, 2); rc(q, '#8fe8ff', 13, 4, 4, 3); rc(q, '#e0ffff', 14, 4, 2, 1); return { img: c, ox: 15, oy: 20 } };
       F.glows = [];   // titik cahaya wilayah baru (dipakai efek di F.env)
 
@@ -378,6 +388,88 @@
       ell(x, 'rgba(20,60,30,.3)', NK.x, NK.y, NK.r, NK.r * .7); for (let i = 0; i < 60; i++) art.flower(x, NK.x + (r2() - .5) * NK.r * 1.6, NK.y + (r2() - .5) * NK.r, fcols[(r2() * 6) | 0]);
       spr(art.log(), NK.x - 22, NK.y + 18, [NK.x - 36, NK.y + 14, 28, 6]);
 
+      /* -- MONUMEN KUNO "Gerbang Para Penjaga": obelisk 190px, gerbang tersegel, 4 pilar api, 2 penjaga, lantai rune -- */
+      const MN = MON;
+      const sp = (q, xx, yy, tone, seed, moss) => { const n = vnoise(xx / 3 + seed, yy / 3, 90), mort = (yy % 8 === 0) || ((xx + ((yy / 8) | 0) * 11 + seed) % 17 === 0), pal = tone === 0 ? ['#868294', '#9692a4', '#a8a4b6'] : tone === 1 ? ['#6c6878', '#7a7686', '#8a8696'] : ['#46424f', '#524e5e', '#605c6c']; let col = mort ? (tone === 2 ? '#2e2b38' : '#4a4656') : pal[n < .33 ? 0 : n < .66 ? 1 : 2]; if (moss && vnoise(xx / 5 + seed, yy / 4, 77) > .78 - moss) col = vnoise(xx, yy, 5) < .5 ? '#2f5a34' : '#4a8a3a'; rc(q, col, xx, yy, 1, 1) };
+      const GOLD = ['#a88830', '#e8c860', '#fff0a0'], RUNE = ['#3aa0c0', '#8fe8ff', '#e0ffff'];
+      const obelisk = () => {
+        const W = 64, H = 196, [c, q] = mkCv(W, H), mid = 32;
+        [[2, 181, 60, 14], [8, 167, 48, 14], [14, 153, 36, 14]].forEach(([a, b, w, h], k) => { rc(q, OLC, a - 1, b - 1, w + 2, h + 2); for (let yy = b; yy < b + h; yy++) for (let xx = a; xx < a + w; xx++) sp(q, xx, yy, xx < a + w / 2 ? 0 : 2, k * 3, .12); rc(q, '#c8c4d8', a, b, w, 1) });
+        for (let yy = 34; yy < 153; yy++) { const hw = Math.round(10 + (yy - 34) / 119 * 6); rc(q, OLC, mid - hw - 1, yy, 1, 1); rc(q, OLC, mid + hw, yy, 1, 1); for (let xx = mid - hw; xx < mid + hw; xx++) sp(q, xx, yy, xx < mid ? 0 : 2, 1, yy > 130 ? .2 : 0); rc(q, '#c8c4d8', mid - 1, yy, 1, 1) }
+        for (let k = 0; k < 5; k++) { const by = 52 + k * 20, hw = Math.round(10 + (by - 34) / 119 * 6); rc(q, '#12303c', mid - hw + 3, by, hw * 2 - 6, 7); rc(q, RUNE[1], mid - hw + 5, by + 1, hw * 2 - 10, 5); for (let i = 0; i < hw - 2; i++) { rc(q, '#12303c', mid - hw + 6 + i * 4, by + 1 + ((i + k) % 2), 2, 3); rc(q, RUNE[2], mid - hw + 6 + i * 4, by + 2, 1, 1) } }
+        [40, 146].forEach(yy => { const hw = Math.round(10 + (yy - 34) / 119 * 6) + 1; rc(q, OLC, mid - hw - 1, yy - 1, hw * 2 + 2, 6); rc(q, GOLD[0], mid - hw, yy, hw * 2, 4); rc(q, GOLD[1], mid - hw, yy, hw * 2, 2); rc(q, GOLD[2], mid - hw, yy, hw * 2, 1) });
+        for (let yy = 10; yy < 34; yy++) { const hw = Math.round(1 + (yy - 10) / 24 * 11); rc(q, OLC, mid - hw - 1, yy, 1, 1); rc(q, OLC, mid + hw, yy, 1, 1); for (let xx = mid - hw; xx < mid + hw; xx++) rc(q, xx < mid ? (yy % 6 === 0 ? '#8a8696' : '#b8b4c8') : (yy % 6 === 0 ? '#3a3644' : '#5a566a'), xx, yy, 1, 1) }
+        rc(q, OLC, mid - 4, 1, 8, 12); rc(q, GOLD[1], mid - 3, 2, 6, 10); rc(q, GOLD[2], mid - 3, 2, 2, 10); rc(q, RUNE[1], mid - 1, 5, 3, 4);
+        for (let i = 0; i < 6; i++) { let cx = 24 + i * 3, cy = 70 + i * 17; for (let k = 0; k < 9; k++) { rc(q, '#2a2630', cx, cy, 1, 1); cx += (k % 3 ? 1 : 0); cy += 1 } }
+        return { img: c, ox: mid, oy: H - 3 }
+      };
+      const pillar = () => {
+        const W = 34, H = 108, [c, q] = mkCv(W, H), mid = 17;
+        rc(q, OLC, 2, H - 16, 30, 15); for (let yy = H - 15; yy < H - 1; yy++) for (let xx = 3; xx < 31; xx++) sp(q, xx, yy, xx < mid ? 0 : 2, 20, .1); rc(q, '#c8c4d8', 3, H - 15, 28, 1);
+        rc(q, OLC, 8, 26, 18, H - 42); for (let yy = 27; yy < H - 16; yy++) for (let xx = 9; xx < 25; xx++) { sp(q, xx, yy, xx < mid ? 0 : 2, 21, yy > 80 ? .18 : 0); if ((xx - 9) % 5 === 3) rc(q, xx < mid ? '#6c6878' : '#34303e', xx, yy, 1, 1) }
+        rc(q, OLC, 3, 15, 28, 13); for (let yy = 16; yy < 27; yy++) for (let xx = 4; xx < 30; xx++) sp(q, xx, yy, xx < mid ? 0 : 1, 22); rc(q, '#c8c4d8', 4, 16, 26, 1); rc(q, GOLD[0], 4, 28, 26, 3); rc(q, GOLD[1], 4, 28, 26, 1);
+        ell(q, OLC, mid, 14, 16, 7); ell(q, '#4a4654', mid, 13, 14, 5); ell(q, '#2a2430', mid, 12, 11, 3); ell(q, '#e8741a', mid, 11, 9, 2);
+        rc(q, '#e8741a', mid - 5, 5, 4, 7); rc(q, '#ffb040', mid - 3, 1, 5, 10); rc(q, '#fff0a0', mid - 1, 0, 3, 8);
+        return { img: c, ox: mid, oy: H - 3 }
+      };
+      const statue = flip => {
+        const W = 44, H = 94, [c, q] = mkCv(W, H), X = (a, w) => flip ? W - a - w : a, R = (col, a, b, w, h) => rc(q, col, X(a, w), b, w, h);
+        R(OLC, 3, 76, 38, 17); for (let yy = 77; yy < 92; yy++) for (let xx = 4; xx < 40; xx++) sp(q, xx, yy, xx < 22 ? 0 : 2, 5, .15); R('#c8c4d8', 4, 77, 36, 1);
+        R(OLC, 12, 52, 20, 25); R('#6c6878', 13, 53, 8, 23); R('#46424f', 23, 53, 8, 23); R('#2a2630', 21, 60, 2, 17); R('#3a3644', 12, 72, 9, 5); R('#3a3644', 23, 72, 9, 5);
+        R(OLC, 9, 28, 26, 26); R('#868294', 10, 29, 12, 24); R('#605c6c', 22, 29, 12, 24); R('#a8a4b6', 21, 30, 2, 18); R(GOLD[0], 10, 49, 24, 3); R(GOLD[1], 10, 49, 24, 1); R(RUNE[1], 20, 35, 4, 4); R(RUNE[2], 21, 36, 1, 1);
+        R(OLC, 3, 27, 12, 10); R('#9692a4', 4, 28, 10, 8); R(OLC, 29, 27, 12, 10); R('#605c6c', 30, 28, 10, 8);
+        R(OLC, 14, 6, 16, 22); R('#7a7686', 15, 7, 14, 20); R('#a8a4b6', 15, 7, 5, 18); R('#2a2430', 17, 16, 10, 3); R(OLC, 20, 0, 4, 8); R(GOLD[1], 21, 1, 2, 7);
+        R(OLC, 0, 34, 12, 22); R('#7a7686', 1, 35, 10, 20); R(GOLD[0], 1, 35, 10, 2); R(RUNE[1], 4, 41, 4, 6); R('#5a5668', 1, 50, 10, 5);
+        R(OLC, 38, 6, 4, 66); R('#8a6a44', 39, 8, 2, 64); R(OLC, 37, 0, 6, 10); R('#d8d4e4', 39, 1, 2, 8); R('#605c6c', 36, 44, 6, 6);
+        for (let i = 0; i < 18; i++) R(vnoise(i, 3, 4) < .5 ? '#2f5a34' : '#4a8a3a', 4 + ((i * 13) % 36), 40 + ((i * 17) % 50), 2, 1);
+        return { img: c, ox: 22, oy: H - 3 }
+      };
+      const sealedGate = () => {
+        const W = 124, H = 112, [c, q] = mkCv(W, H);
+        const pylon = x0 => { rc(q, OLC, x0 - 1, 24, 34, H - 38); for (let yy = 25; yy < H - 15; yy++) for (let xx = x0; xx < x0 + 32; xx++) { let tone = xx < x0 + 14 ? 0 : xx < x0 + 24 ? 1 : 2; if ((xx - x0) % 8 === 7) tone = 2; sp(q, xx, yy, tone, x0, yy > 85 ? .18 : 0) } rc(q, '#c8c4d8', x0, 25, 32, 1); rc(q, OLC, x0 - 3, H - 16, 38, 14); for (let yy = H - 15; yy < H - 3; yy++) for (let xx = x0 - 2; xx < x0 + 34; xx++) sp(q, xx, yy, xx < x0 + 16 ? 0 : 2, x0 + 3, .15); rc(q, GOLD[0], x0, 50, 32, 4); rc(q, GOLD[1], x0, 50, 32, 2); rc(q, '#12303c', x0 + 13, 62, 6, 24); rc(q, RUNE[1], x0 + 15, 64, 2, 20) };
+        pylon(2); pylon(W - 34);
+        rc(q, OLC, 0, 8, W, 24); for (let yy = 9; yy < 31; yy++) for (let xx = 1; xx < W - 1; xx++) sp(q, xx, yy, yy < 15 ? 0 : yy < 25 ? 1 : 2, 9, yy < 12 ? .12 : 0); rc(q, '#c8c4d8', 0, 7, W, 2); for (let i = 0; i < 9; i++) if (i !== 4) { rc(q, GOLD[1], 10 + i * 12, 17, 4, 4); rc(q, GOLD[2], 10 + i * 12, 17, 1, 2) }
+        rc(q, OLC, W / 2 - 9, 4, 18, 34); rc(q, GOLD[0], W / 2 - 8, 5, 16, 32); rc(q, GOLD[1], W / 2 - 8, 5, 5, 32); rc(q, RUNE[1], W / 2 - 3, 14, 6, 9); rc(q, RUNE[2], W / 2 - 2, 15, 2, 3);
+        rc(q, OLC, 34, 31, 56, H - 47); rc(q, '#14101c', 35, 32, 54, H - 49);
+        for (let yy = 40; yy < H - 18; yy++) for (let xx = 38; xx < 86; xx++) sp(q, xx, yy, xx < 62 ? 1 : 2, 50, yy > 90 ? .1 : 0); rc(q, '#14101c', 61, 40, 2, H - 58);
+        for (let a = 0; a < 6.283; a += .06) { rc(q, RUNE[1], 62 + Math.cos(a) * 15, 68 + Math.sin(a) * 15, 1, 1); rc(q, RUNE[0], 62 + Math.cos(a) * 11, 68 + Math.sin(a) * 11, 1, 1) } for (let k = 0; k < 8; k++) { const a = k / 8 * 6.283; for (let r = 2; r < 12; r += 2) rc(q, RUNE[2], 62 + Math.cos(a) * r, 68 + Math.sin(a) * r, 1, 1) }
+        [[40, 44], [84, 44], [40, 96], [84, 96]].forEach(([a, b]) => { rc(q, GOLD[0], a - 1, b - 1, 3, 3); rc(q, GOLD[2], a - 1, b - 1, 1, 1) });
+        for (let i = 0; i < 20; i++) { const vx = 4 + ((i * 29) % 116), len = 4 + ((i * 7) % 14); for (let k = 0; k < len; k++) rc(q, k % 4 < 2 ? '#4a8a3a' : '#2f5a34', vx, 30 + k, 1, 1) }
+        return { img: c, ox: 62, oy: H - 3 }
+      };
+      const lantern = () => { const W = 14, H = 42, [c, q] = mkCv(W, H); rc(q, OLC, 5, 14, 4, H - 15); rc(q, '#5a4028', 6, 14, 2, H - 16); rc(q, OLC, 2, 3, 10, 14); rc(q, '#ffd070', 3, 5, 8, 10); rc(q, '#fff0b0', 4, 6, 3, 6); rc(q, OLC, 1, 1, 12, 4); rc(q, '#6a6a78', 2, 2, 10, 2); rc(q, OLC, 3, H - 5, 8, 4); return { img: c, ox: 7, oy: H - 2 } };
+      const finger = dirs => {
+        const n = dirs.length, W = 44, H = 20 + n * 11, [c, q] = mkCv(W, H), COLS = { m: '#c8a06a', g: '#e8c860', w: '#5ab0e0', r: '#e07a6a', p: '#a88aff', h: '#6aca6a' };
+        rc(q, OLC, 19, 4, 6, H - 6); rc(q, '#7a5434', 20, 4, 4, H - 8); rc(q, '#a8825a', 20, 4, 1, H - 8);
+        dirs.forEach(([d, col], i) => {
+          const y = 4 + i * 11, e = /E/.test(d), wd = /W/.test(d), nn = /N/.test(d), ss = /S/.test(d), C = COLS[col] || COLS.m;
+          if (e || wd) { const x0 = 6, x1 = 38; rc(q, OLC, x0, y, x1 - x0, 10); rc(q, C, x0 + 1, y + 1, x1 - x0 - 2, 8); rc(q, '#ffffff', x0 + 1, y + 1, x1 - x0 - 2, 1); for (let k = 0; k < 5; k++) { const X = e ? x1 + k : x0 - 1 - k, h = 10 - 2 * k; rc(q, OLC, X, y + k, 1, h); if (h > 2) rc(q, C, X, y + k + 1, 1, h - 2) } if (nn || ss) { const gx = e ? x1 - 9 : x0 + 5; rc(q, '#2a1a0a', gx, y + (nn ? 3 : 5), 1, 2); rc(q, '#2a1a0a', gx + 1, y + (nn ? 2 : 6), 1, 1); rc(q, '#2a1a0a', gx - 1, y + (nn ? 2 : 6), 1, 1) } }
+          else { const x0 = 10, x1 = 34; rc(q, OLC, x0, y, x1 - x0, 10); rc(q, C, x0 + 1, y + 1, x1 - x0 - 2, 8); rc(q, '#ffffff', x0 + 1, y + 1, x1 - x0 - 2, 1); const cx = 22; if (nn) { rc(q, '#2a1a0a', cx, y + 2, 1, 1); rc(q, '#2a1a0a', cx - 1, y + 3, 3, 1); rc(q, '#2a1a0a', cx - 2, y + 4, 5, 1); rc(q, '#2a1a0a', cx, y + 5, 1, 3) } else { rc(q, '#2a1a0a', cx, y + 2, 1, 3); rc(q, '#2a1a0a', cx - 2, y + 5, 5, 1); rc(q, '#2a1a0a', cx - 1, y + 6, 3, 1); rc(q, '#2a1a0a', cx, y + 7, 1, 1) } }
+        });
+        rc(q, OLC, 17, H - 5, 10, 4); return { img: c, ox: 22, oy: H - 3, h: H }
+      };
+      // lantai plaza: undak berlapis, lingkaran rune emas-cyan, bintang kompas, retakan & lumut
+      {
+        const ringPts = (rxx, ryy, col, st, w) => { for (let a = 0; a < 6.283; a += st) rc(x, col, MN.x + Math.cos(a) * rxx, MN.y + Math.sin(a) * ryy, w || 1, 1) };
+        ell(x, 'rgba(0,0,0,.32)', MN.x + 8, MN.y + 10, MN.rx + 8, MN.ry + 8); ell(x, OLC, MN.x, MN.y + 4, MN.rx + 3, MN.ry + 3); ell(x, '#4a4656', MN.x, MN.y + 4, MN.rx, MN.ry); ell(x, '#8a869a', MN.x, MN.y, MN.rx, MN.ry - 2); ell(x, '#6c6878', MN.x, MN.y, MN.rx - 7, MN.ry - 8); ell(x, '#7c7888', MN.x, MN.y, MN.rx - 13, MN.ry - 14);
+        for (let a = 0; a < 6.283; a += .07) for (let k = .35; k < 1; k += .03) if (hash(a * 100 | 0, k * 100 | 0, 12) > .55) rc(x, hash(a * 100 | 0, k * 100 | 0, 13) < .5 ? '#6a6678' : '#8a869a', MN.x + Math.cos(a) * (MN.rx - 13) * k, MN.y + Math.sin(a) * (MN.ry - 14) * k, 2, 1);
+        for (let a = 0; a < 6.283; a += Math.PI / 12) for (let k = .3; k < 1; k += .02) rc(x, '#56526a', MN.x + Math.cos(a) * (MN.rx - 13) * k, MN.y + Math.sin(a) * (MN.ry - 14) * k, 1, 1);
+        ringPts(MN.rx - 24, MN.ry - 25, '#2a5a6a', .02, 2); ringPts(MN.rx - 28, MN.ry - 29, RUNE[1], .02, 1); ringPts(MN.rx - 50, MN.ry - 46, GOLD[1], .03, 1);
+        for (let k = 0; k < 24; k++) { const a = k / 24 * 6.283; rc(x, k % 2 ? RUNE[1] : GOLD[1], MN.x + Math.cos(a) * (MN.rx - 37), MN.y + Math.sin(a) * (MN.ry - 37), 3, 2) }
+        for (let k = 0; k < 8; k++) { const a = k / 8 * 6.283; for (let r = 6; r < 36; r += 1) rc(x, r % 4 < 2 ? GOLD[1] : GOLD[0], MN.x + Math.cos(a) * r * 1.5, MN.y + Math.sin(a) * r * .9, 1, 1) }
+        // undak masuk (barat)
+        for (let i = 0; i < 3; i++) { rc(x, OLC, MN.x - MN.rx - 12 + i * 5, MN.y - 30 + i * 4, 6, 60 - i * 8); rc(x, ['#8a869a', '#9a96aa', '#aaa6ba'][i], MN.x - MN.rx - 11 + i * 5, MN.y - 29 + i * 4, 5, 58 - i * 8) }
+        for (let i = 0; i < 60; i++) { const a = r2() * 6.283, k = .2 + r2() * .8, px = MN.x + Math.cos(a) * (MN.rx - 8) * k, py = MN.y + Math.sin(a) * (MN.ry - 8) * k; rc(x, r2() < .5 ? '#2f5a34' : '#4a8a3a', px, py, 2 + (r2() * 3 | 0), 1) }
+        for (let i = 0; i < 9; i++) { let px = MN.x + (r2() - .5) * 150, py = MN.y + (r2() - .5) * 70; for (let k = 0; k < 10; k++) { rc(x, '#3a3644', px, py, 1, 1); px += r2() < .6 ? 1 : 0; py += r2() < .5 ? 1 : 0 } }
+      }
+      const gateY = MN.y - 40, obY = MN.y + 18;
+      spr(sealedGate(), MN.x, gateY, [MN.x - 60, gateY - 14, 120, 14]);
+      spr(obelisk(), MN.x, obY, [MN.x - 26, obY - 6, 52, 14]);
+      [[-74, -6], [74, -6], [-68, 36], [68, 36]].forEach(([dx, dy], i) => { const a = MN.x + dx, b = MN.y + dy; spr(pillar(), a, b, [a - 11, b - 5, 22, 8]); F.glows.push([a, b - 96, 40, '255,170,80', .32, i + 3]) });
+      spr(statue(false), MN.x - MN.rx - 2, MN.y - 52, [MN.x - MN.rx - 16, MN.y - 58, 28, 10]); spr(statue(true), MN.x - MN.rx - 2, MN.y + 52, [MN.x - MN.rx - 16, MN.y + 46, 28, 10]);
+      F.glows.push([MN.x, obY - 150, 46, '110,220,255', .26, 0], [MN.x, obY - 110, 40, '110,220,255', .2, 1], [MN.x, obY - 186, 44, '255,220,120', .34, 2], [MN.x, gateY - 42, 52, '110,220,255', .3, 5]);
+      for (let k = 0; k < 8; k++) { const a = k / 8 * 6.283; F.glows.push([MN.x + Math.cos(a) * (MN.rx - 37), MN.y + Math.sin(a) * (MN.ry - 37), 22, k % 2 ? '110,220,255' : '255,220,120', .12, k]) }
+
       /* 7) pohon, semak, batu (sebaran wilayah baru; memakai occ/canPlace yang sama supaya menyatu dengan sabuk pohon lama) */
       const SPOTS = [SC, HG, WT, GH, NK];
       const nearSpot = (a, b, d) => SPOTS.some(s => Math.hypot(a - s.x, b - s.y) < s.r + d);
@@ -391,7 +483,7 @@
         const s = k < .55 ? OAK[(k * 100 | 0) % OAK.length] : PINE[(k * 100 | 0) % PINE.length]; spr(s, a, b + 4, [a - 4, b - 1, 8, 5])
       });
       for (let i = 0; i < 230; i++) {
-        const a = rr(30, FW - 30), b = rr(FH0 + 10, FH - 30); if (!free(a, b, 8) || !canPlace(a, b, 13)) continue; mark(a, b); const k = r2();
+        const a = rr(30, FW - 30), b = rr(FH0 + 10, FH - 30); if (!free(a, b, 14) || !canPlace(a, b, 13)) continue; mark(a, b); const k = r2();
         if (k < .42) spr(r2() < .25 ? BERRY[i % 4] : BUSH[i % 4], a, b); else if (k < .76) spr(ROCK[i % 4], a, b, [a - 7, b - 4, 14, 7]); else if (k < .88) spr(BIG[i % 4], a, b + 3, [a - 12, b - 6, 24, 10]); else if (k < .95) spr(art.stump(), a, b, [a - 6, b - 4, 12, 6]); else spr(art.log(), a, b, [a - 14, b - 4, 28, 6])
       }
       // semak penyamar di mulut jalan rahasia (tidak menghalangi)
@@ -407,13 +499,26 @@
         for (let i = 0; i < 4; i++) { const a = c.x + (i < 2 ? -1 : 1) * (18 + r2() * 6), b = c.y + (r2() - .3) * 14; spr(BUSH[(i + c.x) % 4 | 0], a, b) } for (let i = 0; i < 8; i++) art.flower(x, c.x + (r2() - .5) * 50, c.y + 10 + (r2() - .5) * 20, fcols[(r2() * 6) | 0])
       });
 
-      /* 10) papan petunjuk baru (interaktif, sama seperti papan lama) */
-      [[1172, 462, 'Papan Jalur Selatan', ['Jalur Selatan. Jalan lebar ini menuju Hutan Lumut, Lembah Paku, dan Danau Cermin.', 'Hutan di selatan lebih lebat dan sunyi. Bawa ramuan secukupnya.']],
-      [628, 742, 'Papan Hutan Lumut', ['Hutan Lumut. Batu-batu tua berdiri di barat daya, di balik jalan setapak yang berkelok.', 'Konon ada sebuah taman kecil yang tak pernah layu, tersembunyi jauh di sudut barat.']],
-      [762, 1010, 'Papan Jembatan Batu', ['Jembatan Lumut. Lebih tua dari jembatan di utara, namun papannya masih kuat.', 'Ke timur: Lembah Paku dan Menara Pengawas. Ke barat: Lingkaran Batu dan Rawa Lumut.']],
-      [1336, 1012, 'Papan Menara Tua', ['Menara Pengawas yang runtuh. Dulu ia menjaga jalan ke Abyss sebelum hutan menelannya.', 'Beberapa penjelajah bilang ada jalan setapak sempit di balik menara, mengarah ke cahaya aneh di tenggara.']],
-      [774, 1210, 'Papan Danau Cermin', ['Danau Cermin. Sungai Sunyi berakhir di sini dan airnya tenang seperti kaca.', 'Mata Air Suci di utara adalah hulu dari sungai ini, atau begitu kata orang.']]
-      ].forEach(([a, b, nm, ln]) => { SIGNP.push([a, b]); spr(art.sign(), a, b, [a - 5, b - 4, 10, 6]); F.npcs.push({ n: nm, x: a, y: b - 6, sign: 1, rng: 34, lines: ln }) });
+      /* 10) papan penunjuk arah di setiap simpangan + lentera (jalan raya & simpang), supaya pemain selalu tahu arah */
+      const pathsAll2 = [[MAINd, PW], [CAMPd, PS], [SHRd, PS], ...PTH.map(o => [o.d, o.w])];
+      const okSpot = (a, b, m) => a > 20 && a < FW - 20 && b > 30 && b < FH - 30 && !inWall(a, b, 8) && canPlace(a, b, 12) && !F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 24) && !F.chests.some(q => Math.hypot(q.x - a, q.y - b) < 34) && pathsAll2.every(([d, w]) => distPoly(a, b, d) > w / 2 + m) && !(b < RIVER_END && Math.abs(a - rx(b)) < rhw(b) + 22) && !(a > BXA - 14 && a < BXB + 14 && b > BR2[0] - 16 && b < BR2[1] + 16) && ((a - LAKE.x) / (LAKE.rx + 22)) ** 2 + ((b - LAKE.y) / (LAKE.ry + 22)) ** 2 > 1 && ((a - MP.x) / (MP.rx + 22)) ** 2 + ((b - MP.y) / (MP.ry + 22)) ** 2 > 1;
+      const nudge = (a, b, m) => { if (okSpot(a, b, m)) return [a, b]; for (let r_ = 6; r_ <= 80; r_ += 6) for (let k = 0; k < 16; k++) { const an = k / 16 * TAU, px = a + Math.cos(an) * r_, py = b + Math.sin(an) * r_; if (okSpot(px, py, m)) return [px, py] } return [a, b] };
+      [
+        [1198, 404, 'Simpang Jalur Selatan', [['W', 'r'], ['E', 'm'], ['S', 'g']], ['Jalan utama membujur barat-timur. Barat (kiri): kamp, Mata Air Suci, dan Pintu Dungeon. Timur (kanan): Gerbang Desa.', 'Jalur Selatan (arah bawah): Monumen Kuno, Jembatan Lumut, Danau Cermin, dan hutan baru di selatan.']],
+        [1122, 742, 'Simpang Monumen', [['E', 'g'], ['S', 'm'], ['N', 'm']], ['Jalan Agung ke timur (kanan): Monumen Kuno, tempat para penjaga berjaga sejak zaman dahulu.', 'Selatan (bawah): Simpang Timur dan Jembatan Lumut. Utara (atas): kembali ke jalan utama.']],
+        [1040, 836, 'Simpang Timur', [['SW', 'm'], ['SE', 'p'], ['S', 'w'], ['N', 'g']], ['Simpang Timur. Barat daya (kiri-bawah): Jembatan Lumut dan Hutan Lumut. Tenggara (kanan-bawah): Menara Pengawas.', 'Selatan (bawah): Kolam Kabut dan Danau Cermin. Utara (atas): Monumen Kuno dan jalan utama.']],
+        [762, 1010, 'Papan Jembatan Batu', [['E', 'm'], ['W', 'm']], ['Jembatan Lumut. Timur (kanan): Simpang Timur, Monumen Kuno, dan Menara Pengawas.', 'Barat (kiri): Simpang Lumut, Lingkaran Batu, dan Rawa Lumut.']],
+        [576, 896, 'Simpang Lumut', [['N', 'r'], ['E', 'm'], ['SW', 'p'], ['S', 'w']], ['Simpang Lumut. Utara (atas): kamp. Timur (kanan): Jembatan Lumut.', 'Barat daya (kiri-bawah): Lingkaran Batu Tua. Selatan (bawah): Rawa Lumut dan Danau Cermin.']],
+        [628, 744, 'Papan Hutan Lumut', [['S', 'm'], ['N', 'r']], ['Hutan Lumut. Terus ke selatan menuju Simpang Lumut. Utara (atas): kamp.', 'Di cabang sempit sebelah barat jalan ini, orang bilang ada relung sunyi yang jarang dikunjungi.']],
+        [590, 812, 'Papan Jalan Setapak', [['W', 'h']], ['Jalan setapak sempit menuju barat. Tidak banyak yang pernah melewatinya.']],
+        [1318, 962, 'Papan Menara Tua', [['SE', 'p'], ['W', 'm']], ['Menara Pengawas yang runtuh. Dulu ia menjaga jalan ke Abyss sebelum hutan menelannya.', 'Jalan sempit berlanjut ke tenggara, mengarah ke cahaya aneh di balik pepohonan. Barat (kiri): Simpang Timur.']],
+        [1524, 1122, 'Simpang Tenggara', [['N', 'p'], ['SE', 'h'], ['W', 'w']], ['Simpang Tenggara. Utara (atas): Menara Pengawas. Barat (kiri): jalan di sekeliling Kolam Kabut menuju Simpang Timur.', 'Tenggara (kanan-bawah): jalan sempit yang sepi.']],
+        [774, 1210, 'Papan Danau Cermin', [['N', 'm'], ['W', 'm']], ['Danau Cermin. Sungai Sunyi berakhir di sini dan airnya tenang seperti kaca.', 'Kembali ke utara (atas) lewat jalan setapak menuju Simpang Lumut.']]
+      ].forEach(([a0, b0, nm, dirs, ln]) => { const [a, b] = nudge(a0, b0, 10), fp = finger(dirs); mark(a, b); SIGNP.push([a, b]); spr(fp, a, b, [a - 5, b - 4, 10, 6]); F.npcs.push({ n: nm, x: a, y: b - 6, sign: 1, rng: 36, lines: ln }) });
+      { const a = MN.x, b = MN.y + 52; SIGNP.push([a, b]); spr(art.sign(), a, b, [a - 5, b - 4, 10, 6]); F.npcs.push({ n: 'Prasasti Kuno', x: a, y: b - 6, sign: 1, rng: 38, lines: ['Prasasti kuno: Di sini para Penjaga bersumpah menahan kegelapan Abyss agar tidak merayap ke lembah.', 'Gerbang di belakang obelisk telah tersegel sejak lama. Huruf-huruf rune berpendar pelan, seakan masih menunggu seseorang yang layak.'] }) }
+      const addLantern = (a0, b0) => { const [a, b] = nudge(a0, b0, 8); mark(a, b); spr(lantern(), a, b, [a - 3, b - 3, 6, 5]); F.glows.push([a, b - 30, 34, '255,196,100', .3, a * .01, 1]) };
+      [[1214, 384], [1150, 464], [1140, 740], [1038, 872], [556, 912], [560, 962], [772, 928], [888, 1000], [1330, 1016], [1500, 1138], [1126, 1230], [770, 1236]].forEach(([a, b]) => addLantern(a, b));
+      { const av = PTH.find(o => o.id === 'AV').d; for (let i = 5; i < av.length - 3; i += 10) { const p0 = av[i - 1], p1 = av[i + 1], tx = p1[0] - p0[0], ty = p1[1] - p0[1], l = Math.hypot(tx, ty) || 1, nx = -ty / l, ny = tx / l;[-1, 1].forEach(sd => { const a = av[i][0] + nx * sd * (PW / 2 + 12), b = av[i][1] + ny * sd * (PW / 2 + 12); if (okSpot(a, b, 6)) { mark(a, b); spr(lantern(), a, b, [a - 3, b - 3, 6, 5]); F.glows.push([a, b - 30, 34, '255,196,100', .3, i * .3, 1]) } }) } }
 
       /* 11) bahan tanaman tambahan (baru; tidak menggeser bahan lama) */
       const zone = (k) => k === 'flower' ? [[MP.x, MP.y, 150], [HG.x, HG.y, 60], [1560, 900, 160], [NK.x, NK.y, 30]] : k === 'mush' ? [[GH.x, GH.y, 60], [SC.x, SC.y, 150], [SWP.x, SWP.y, 110], [400, 780, 150]] : [[900, 1080, 360], [1400, 880, 260], [300, 900, 220], [640, 1080, 200], [1560, 1200, 200]];
@@ -581,10 +686,31 @@
     const G = F.glows; if (!G || !G.length || camY < 560) return;
     const vx0 = camX - 90, vx1 = camX + W / CAM_Z + 90, vy0 = camY - 90, vy1 = camY + H / CAM_Z + 90;
     g.save(); g.globalCompositeOperation = 'lighter';
-    for (const q of G) { if (q[0] < vx0 || q[0] > vx1 || q[1] < vy0 || q[1] > vy1) continue; const night = WORLD.WX ? WORLD.WX.night : 0; lightL(q[0], q[1], q[2], q[3], q[4] * (.85 + .3 * night) * (.8 + .2 * Math.sin(t * 1.7 + q[5] * 1.9))) }
+    for (const q of G) { if (q[0] < vx0 || q[0] > vx1 || q[1] < vy0 || q[1] > vy1) continue; const night = WORLD.WX ? WORLD.WX.night : 0; lightL(q[0], q[1], q[2], q[3], q[4] * (q[6] ? .22 + .95 * night : .85 + .3 * night) * (.8 + .2 * Math.sin(t * 1.7 + q[5] * 1.9))) }
     // kunang-kunang peri di Taman Peri & Gua Jamur
     for (let i = 0; i < 14; i++) { const C = i < 8 ? F.geo.HG : F.geo.GH, a = t * .4 + i * 1.7, X = C.x + Math.sin(a * 1.3 + i) * (C.r - 14), Y = C.y - 10 + Math.cos(a * .9 + i * 2) * (C.r * .5) - Math.abs(Math.sin(a * 2)) * 6; if (X < vx0 || X > vx1 || Y < vy0 || Y > vy1) continue; const al = .4 + .5 * Math.max(0, Math.sin(t * 2.2 + i)); g.fillStyle = i < 8 ? 'rgba(200,255,190,' + al + ')' : 'rgba(150,255,235,' + al + ')'; g.fillRect(Math.round(X), Math.round(Y), 2, 2); g.fillStyle = i < 8 ? 'rgba(200,255,190,' + al * .25 + ')' : 'rgba(150,255,235,' + al * .25 + ')'; g.fillRect(Math.round(X) - 1, Math.round(Y) - 1, 4, 4) }
     g.restore()
+  };
+})();
+
+/* ===== Nama wilayah: banner "Memasuki: ..." saat pemain masuk area, membantu orientasi ===== */
+(function () {
+  const F = WORLD.AREAS.forest; if (!F) return; const G = F.geo;
+  const el = (P, k, px, py) => ((px - P.x) / (P.rx * k)) ** 2 + ((py - P.y) / (P.ry * k)) ** 2 < 1, ci = (P, r, px, py) => Math.hypot(px - P.x, py - P.y) < r;
+  const ZN = [
+    ['Monumen Kuno', (x, y) => el(G.MON, 1.5, x, y)], ['Lingkaran Batu Tua', (x, y) => ci(G.SC, 120, x, y)], ['Taman Peri', (x, y) => ci(G.HG, 95, x, y)], ['Gua Jamur Bercahaya', (x, y) => ci(G.GH, 95, x, y)],
+    ['Menara Pengawas', (x, y) => ci(G.WT, 105, x, y)], ['Relung Sunyi', (x, y) => ci(G.NK, 62, x, y)], ['Danau Cermin', (x, y) => el(G.LAKE, 1.3, x, y)], ['Kolam Kabut', (x, y) => el(G.MP, 1.5, x, y)], ['Rawa Lumut', (x, y) => ci(G.SWP, G.SWP.r, x, y)],
+    ['Perkemahan Pemburu', (x, y) => ci(G.CAMPC, 110, x, y)], ['Mata Air Suci', (x, y) => ci(G.SHRC, 110, x, y)],
+    ['Hutan Lumut', (x, y) => y > 740 && x < 760], ['Lembah Paku', (x, y) => y > 740 && x > 900]
+  ];
+  let cur = null, since = 0, last = -99;
+  const _tick = F.tick;
+  F.tick = function (dt) {
+    _tick.apply(this, arguments);
+    if (window.AREA !== 'forest') return;
+    let z = null; for (const q of ZN) if (q[1](p.x, p.y)) { z = q[0]; break }
+    if (z !== cur) { cur = z; since = t } else if (z && z !== F._zoneShown && t - since > 1 && t - last > 7) { F._zoneShown = z; last = t; msg('Memasuki: ' + z) }
+    if (!z) F._zoneShown = null
   };
 })();
 
@@ -808,7 +934,7 @@
       const cell = new Map(), key = (a, b) => ((a / 12) | 0) + ',' + ((b / 12) | 0), okSpot = (a, b) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const l = cell.get(((a / 12 | 0) + i) + ',' + ((b / 12 | 0) + j)); if (l && l.some(q => Math.hypot(q[0] - a, q[1] - b) < 11)) return false } return true };
       const tgt = Math.round(2000 * CFG.undergrowth);
       for (let n = 0, put = 0; n < 16000 && put < tgt; n++) {
-        const a = 24 + rng() * (FW - 48), b = 130 + rng() * (FH - 160); if (!free(a, b, 5)) continue;
+        const a = 24 + rng() * (FW - 48), b = 130 + rng() * (FH - 160); if (!free(a, b, 16)) continue;
         const s = S[(b | 0) * FW + (a | 0)], lit = L[(b | 0) * FW + (a | 0)]; if (!okSpot(a, b) || F.gath.some(q => Math.hypot(q.x - a, q.y - b) < 18)) continue;
         const k = rng(); let spr;
         if (s > .34) spr = k < .1 ? SHR[(rng() * 3) | 0] : k < .65 ? FERN[(rng() * 7) | 0] : GRASS[(rng() * 6) | 0];
