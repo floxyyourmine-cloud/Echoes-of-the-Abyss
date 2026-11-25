@@ -1,4 +1,70 @@
 /* ===== UI Block 1 ===== */
+/* ===== PWA UPDATE BANNER ===== */
+.pwa-update-banner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99999;
+  background: rgba(18, 14, 28, 0.95);
+  border: 1px solid #ffaa33;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 10px rgba(255, 170, 51, 0.3);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #fff;
+  font-family: 'Cinzel', serif, sans-serif;
+  animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.pwa-update-banner.hidden {
+  display: none !important;
+}
+.pwa-update-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pwa-update-icon {
+  color: #ffaa33;
+  font-size: 16px;
+}
+.pwa-update-text {
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: #eeddbb;
+}
+.pwa-update-btn {
+  background: linear-gradient(135deg, #ff9900, #cc5500);
+  border: 1px solid #ffeebb;
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.pwa-update-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+.pwa-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #887766;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.pwa-dismiss-btn:hover {
+  color: #eeddbb;
+}
+@keyframes slideInUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 /* ===== TEMA FONT & POPUP ===== */
     :root {
       --f-title: "Cinzel", "Trajan Pro", Georgia, "Times New Roman", serif;

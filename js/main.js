@@ -16686,21 +16686,61 @@ upd = function (dt) {
   }, 100);
 })();
 
-/* ===== SERVICE WORKER REGISTRATION FOR PWA ===== */
+/* ===== SERVICE WORKER REGISTRATION & UPDATE BANNER FOR PWA ===== */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
+    let waitingWorker = null;
+    const banner = document.getElementById('pwaUpdateBanner');
+    const reloadBtn = document.getElementById('pwaReloadBtn');
+    const dismissBtn = document.getElementById('pwaDismissBtn');
+
+    function showUpdateUI(worker) {
+      waitingWorker = worker;
+      if (banner) banner.classList.remove('hidden');
+    }
+
+    if (reloadBtn) {
+      reloadBtn.addEventListener('click', function () {
+        if (waitingWorker) {
+          waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+        } else {
+          window.location.reload();
+        }
+      });
+    }
+
+    if (dismissBtn && banner) {
+      dismissBtn.addEventListener('click', function () {
+        banner.classList.add('hidden');
+      });
+    }
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+
     navigator.serviceWorker.register('/sw.js').then(function (reg) {
       console.log('ServiceWorker registered with scope:', reg.scope);
+
+      // Cek apakah ada update yang sedang menunggu
+      if (reg.waiting) {
+        showUpdateUI(reg.waiting);
+      }
+
       // Cek pembaruan ke server setiap kali aplikasi dibuka
       reg.update().catch(() => {});
-      // Jika service worker baru selesai diinstall dan mengambil alih
+
+      // Ketika update baru ditemukan
       reg.addEventListener('updatefound', function () {
         const newWorker = reg.installing;
         if (newWorker) {
           newWorker.addEventListener('statechange', function () {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('New PWA update available, refreshing client...');
-              window.location.reload();
+              showUpdateUI(newWorker);
             }
           });
         }

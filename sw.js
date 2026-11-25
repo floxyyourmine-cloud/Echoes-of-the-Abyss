@@ -1,4 +1,4 @@
-const CACHE_NAME = 'echoes-of-the-abyss-v3';
+const CACHE_NAME = 'echoes-abyss-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -30,7 +30,7 @@ const ASSETS_TO_CACHE = [
   '/assets/images/logo.jpeg'
 ];
 
-// Install: Cache core assets & take over immediately
+// Install: Simpan aset awal dan langsung aktifkan
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -39,7 +39,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate: Clean up old caches & claim clients
+// Activate: Bersihkan cache versi lama dan klaim kontrol
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -54,14 +54,24 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: Network-first for navigation, Cache-first for assets with offline fallback
+// Listener untuk pesan skipWaiting dari UI client
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Fetch: Menggunakan Stale-While-Revalidate untuk script & style, Network-first untuk HTML
 self.addEventListener('fetch', event => {
   const req = event.request;
-
-  // Non-GET requests should bypass service worker
   if (req.method !== 'GET') return;
 
-  // For HTML page requests: Network-first to get latest updates, fallback to cache
+  const url = new URL(req.url);
+
+  // Jangan cache eksternal selain origin sendiri
+  if (url.origin !== self.location.origin) return;
+
+  // 1. Dokumen HTML / Navigasi: Network-First (cek update halaman utama lebih dulu)
   if (req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(req)
@@ -77,21 +87,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // For static assets (scripts, styles, audio, images): Cache-first, fallback to network
+  // 2. Skrip JS, CSS, Media: Stale-While-Revalidate
+  // Berikan cache lokal instan (0 detik), lalu di background download versi baru dari server jika ada perubahan
   event.respondWith(
     caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(res => {
-        if (res && res.status === 200 && res.type === 'basic') {
-          const clone = res.clone();
+      const fetchPromise = fetch(req).then(networkRes => {
+        if (networkRes && networkRes.status === 200 && networkRes.type === 'basic') {
+          const clone = networkRes.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
         }
-        return res;
-      });
+        return networkRes;
+      }).catch(() => null);
+
+      // Kembalikan versi cache instan jika ada, jika belum ada tunggu jaringan
+      return cached || fetchPromise;
     }).catch(() => {
-      // Offline fallback for images
       if (req.headers.get('accept')?.includes('image/')) {
-        return caches.match('/assets/images/icon-192.png') || caches.match('/assets/icon-192.png');
+        return caches.match('/assets/images/icon-192.png');
       }
     })
   );
