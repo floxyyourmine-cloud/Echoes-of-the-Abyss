@@ -2357,7 +2357,7 @@
     const py = p.y + 3; for (const o of IN._L) if (o.y > py) drawObj(o);
     const vw = W / CAM_Z, vh = H / CAM_Z, night = V.night || 0, day = (1 - night) * (1 - V.rain * .55);
     g.save(); g.globalCompositeOperation = 'lighter';
-    /* sinar kaca patri (siang) / cahaya bulan (malam) + bercak di lantai */
+    /* sinar kaca patri (siang) /cahaya bulan (malam) + bercak di lantai */
     const shaft = (wx, c, a) => { g.fillStyle = 'rgba(' + c + ',' + a + ')'; g.beginPath(); g.moveTo(wx - 28, 130); g.lineTo(wx + 28, 130); g.lineTo(wx + 150, 470); g.lineTo(wx + 60, 470); g.closePath(); g.fill(); g.beginPath(); g.ellipse(wx + 105, 474, 62, 20, 0, 0, 7); g.fill() };
     if (day > .02) { [[150, '255,200,120'], [310, '255,170,140'], [970, '170,200,255'], [1130, '170,255,190']].forEach(([wx, c]) => shaft(wx, c, .08 * day)); g.fillStyle = 'rgba(255,230,170,' + .06 * day + ')'; g.beginPath(); g.moveTo(MX - 40, 110); g.lineTo(MX + 40, 110); g.lineTo(MX + 120, 420); g.lineTo(MX - 120, 420); g.closePath(); g.fill() }
     if (night > .05) { const mo = night * (1 - V.rain * .6) * .05; WINX.forEach(wx => shaft(wx, '130,160,255', mo)) }
