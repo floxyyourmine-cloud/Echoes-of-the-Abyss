@@ -110,6 +110,15 @@
         </div>
       </div>
 
+      <div class="setting-row">
+        <div class="sr-top"><span>DATA GAME (STORAGE)</span></div>
+        <div class="save-storage-opts">
+          <button type="button" class="save-file-btn" onclick="GameSave.exportToFile()">📥 SIMPAN KE FILE HP</button>
+          <button type="button" class="save-file-btn" onclick="document.getElementById('saveFileInput').click()">📤 MUAT DARI FILE HP</button>
+          <input type="file" id="saveFileInput" accept=".json" style="display:none" onchange="GameSave.importFromFile(this)">
+        </div>
+      </div>
+
       <button class="back-button" onclick="closeSettings()">BACK</button>
     </div>
   </div>

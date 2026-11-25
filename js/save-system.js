@@ -283,7 +283,7 @@
       });
     })();
 
-/* ===== SAVE SYSTEM EXTENSIONS & HELPERS ===== */
+/* ===== SAVE SYSTEM EXTENSIONS & FILE EXPORT/IMPORT ===== */
 window.GameSave = {
   saveSettings: function() {
     try {
@@ -302,5 +302,73 @@ window.GameSave = {
       var br = localStorage.getItem('ea_brightness');
       if (br && document.getElementById('brightness')) document.getElementById('brightness').value = br;
     } catch(e) {}
+  },
+  exportToFile: function() {
+    try {
+      // Kumpulkan semua data save game dari localStorage
+      const saveData = {
+        title: "Echoes of the Abyss",
+        version: "1.0",
+        exportDate: new Date().toISOString(),
+        world: localStorage.getItem('eoa_world_v1'),
+        endlessBest: localStorage.getItem('eoa_endless_best'),
+        heroGender: localStorage.getItem('eoa_hero'),
+        tutorial: localStorage.getItem('eoa_tutorial_v1'),
+        controlLock: localStorage.getItem('eoa_lock'),
+        settings: {
+          lang: localStorage.getItem('eota_lang') || 'id',
+          musicVol: localStorage.getItem('ea_music_vol') || '70',
+          sfxVol: localStorage.getItem('ea_sfx_vol') || '80',
+          brightness: localStorage.getItem('ea_brightness') || '100'
+        }
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(saveData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const filename = "Echoes_Abyss_Save_" + new Date().toISOString().slice(0, 10) + ".json";
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      alert("Data berhasil disimpan ke file:\n" + filename);
+    } catch (err) {
+      alert("Gagal mengekspor data: " + err.message);
+    }
+  },
+  importFromFile: function(fileInput) {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const json = JSON.parse(e.target.result);
+        if (!json || json.title !== "Echoes of the Abyss") {
+          throw new Error("File ini bukan save-an valid untuk Echoes of the Abyss.");
+        }
+
+        if (json.world) localStorage.setItem('eoa_world_v1', json.world);
+        if (json.endlessBest !== undefined) localStorage.setItem('eoa_endless_best', json.endlessBest);
+        if (json.heroGender) localStorage.setItem('eoa_hero', json.heroGender);
+        if (json.tutorial) localStorage.setItem('eoa_tutorial_v1', json.tutorial);
+        if (json.controlLock) localStorage.setItem('eoa_lock', json.controlLock);
+
+        if (json.settings) {
+          if (json.settings.lang) localStorage.setItem('eota_lang', json.settings.lang);
+          if (json.settings.musicVol) localStorage.setItem('ea_music_vol', json.settings.musicVol);
+          if (json.settings.sfxVol) localStorage.setItem('ea_sfx_vol', json.settings.sfxVol);
+          if (json.settings.brightness) localStorage.setItem('ea_brightness', json.settings.brightness);
+        }
+
+        alert("Data berhasil dimuat! Game akan dimuat ulang...");
+        window.location.reload();
+      } catch (err) {
+        alert("Gagal membaca file save: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    fileInput.value = ""; // Reset input
   }
 };

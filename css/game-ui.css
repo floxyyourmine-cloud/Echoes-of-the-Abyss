@@ -1,5 +1,41 @@
 /* ===== UI Block 1 ===== */
 /* ===== PWA UPDATE BANNER ===== */
+.save-storage-opts {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.save-file-btn {
+  flex: 1;
+  background: rgba(35, 28, 50, 0.8);
+  border: 1px solid #c9a95a;
+  color: #eeddbb;
+  padding: 8px 10px;
+  font-size: 11px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  font-family: var(--f-title);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.save-file-btn:hover {
+  background: rgba(201, 169, 90, 0.25);
+  color: #fff;
+  border-color: #ffd777;
+  transform: translateY(-1px);
+}
+
+.save-file-btn:active {
+  transform: translateY(1px);
+}
+
 .pwa-update-banner {
   position: fixed;
   bottom: 20px;
