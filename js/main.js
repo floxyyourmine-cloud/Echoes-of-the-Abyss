@@ -16691,6 +16691,20 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('/sw.js').then(function (reg) {
       console.log('ServiceWorker registered with scope:', reg.scope);
+      // Cek pembaruan ke server setiap kali aplikasi dibuka
+      reg.update().catch(() => {});
+      // Jika service worker baru selesai diinstall dan mengambil alih
+      reg.addEventListener('updatefound', function () {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', function () {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('New PWA update available, refreshing client...');
+              window.location.reload();
+            }
+          });
+        }
+      });
     }).catch(function (err) {
       console.log('ServiceWorker registration failed:', err);
     });

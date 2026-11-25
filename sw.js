@@ -1,4 +1,4 @@
-const CACHE_NAME = 'echoes-of-the-abyss-v2';
+const CACHE_NAME = 'echoes-of-the-abyss-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
